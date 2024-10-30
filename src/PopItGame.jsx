@@ -4,7 +4,6 @@ import { useSettings } from './Settings';
 import { updatePlayerStats } from './utils/playerStats';
 import AchievementNotification from './AchievementNotification';
 import { Heart } from 'lucide-react';
-import { Paper } from '@mui/material';
 
 const PopItGame = () => {
   const navigate = useNavigate();
@@ -145,8 +144,11 @@ const PopItGame = () => {
     }));
 
     playSound('miss');
-    setTimeout(() => setGridShake(false), 500);
-  }, [playSound]);
+    // Reset the shake and flash after animation completes
+    setTimeout(() => {
+      setGridShake(false);
+      }, 500);
+    }, [playSound]);
 
   const endGame = useCallback(() => {
     const endTime = Date.now();
@@ -310,7 +312,11 @@ const PopItGame = () => {
         {/* Main Game Area */}
         <div className="pt-20">
           {/* Game Grid Container */}
-          <div className="flex justify-center items-center min-h-[60vh] relative">
+          <div 
+            className={`flex justify-center items-center min-h-[60vh] relative ${
+              gridShake ? 'flash-red' : ''
+            }`}
+          >
             {/* Stats Overlay */}
             <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-40 bg-opacity-80 rounded-lg px-4 py-2">
               <div className="flex items-center gap-6">
@@ -358,8 +364,9 @@ const PopItGame = () => {
             {/* Game Grid */}
             <div 
               className={`grid gap-2 w-full max-w-2xl mx-auto ${
-                gridShake ? 'animate-shake flash-red' : ''
+                gridShake ? 'animate-shake' : ''
               }`}
+
               style={{
                 gridTemplateColumns: `repeat(${settings.gridSize}, minmax(0, 1fr))`,
                 aspectRatio: '1/1'

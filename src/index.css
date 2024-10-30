@@ -63,14 +63,25 @@ code {
   transform: scale(0.95);
 }
 
-.flash-red {
-  animation: flashRed 0.5s;
+@keyframes flashRed {
+  0% { 
+    background-color: transparent; 
+  }
+  50% { 
+    background-color: rgba(239, 68, 68, 0.8); /* Bright red with high opacity */
+  }
+  75% {
+    background-color: rgba(239, 68, 68, 0.8);
+  }
+  100% { 
+    background-color: transparent; 
+  }
 }
 
-@keyframes flashRed {
-  0% { background-color: transparent; }
-  50% { background-color: rgba(255, 0, 0, 0.3); }
-  100% { background-color: transparent; }
+.flash-red {
+  animation: flashRed 0.4s ease-out;
+  position: relative;
+  z-index: 1;
 }
 
 @keyframes shake {
@@ -80,17 +91,8 @@ code {
   75% { transform: translate(8px, -8px); }
 }
 
-@keyframes flash {
-  0%, 100% { background-color: transparent; }
-  50% { background-color: rgba(239, 68, 68, 0.2); } /* Red flash with opacity */
-}
-
 .animate-shake {
   animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-}
-
-.animate-flash {
-  animation: flash 0.5s ease-out both;
 }
 
 @keyframes flash-light {
