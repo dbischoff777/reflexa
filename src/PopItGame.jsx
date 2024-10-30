@@ -311,14 +311,11 @@ const PopItGame = () => {
   
         {/* Main Game Area */}
         <div className="pt-20">
-          {/* Game Grid Container */}
-          <div 
-            className={`flex justify-center items-center min-h-[60vh] relative ${
-              gridShake ? 'flash-red' : ''
-            }`}
-          >
-            {/* Stats Overlay */}
-            <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-40 bg-opacity-80 rounded-lg px-4 py-2">
+          {/* Stats Section - Moved outside and above the game grid */}
+          <div className="flex justify-center mb-4">
+            <div className={`bg-opacity-80 rounded-lg px-4 py-2 ${
+              settings.theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+            }`}>
               <div className="flex items-center gap-6">
                 {/* Lives */}
                 <div className="flex gap-1">
@@ -348,7 +345,14 @@ const PopItGame = () => {
                 )}
               </div>
             </div>
-  
+          </div>
+
+          {/* Game Grid Container */}
+          <div 
+            className={`flex justify-center items-center min-h-[60vh] relative ${
+              gridShake ? 'flash-red' : ''
+            }`}
+          >
             {/* Countdown Overlay */}
             {gameState === 'countdown' && (
               <div className="absolute inset-0 flex items-center justify-center z-50">
