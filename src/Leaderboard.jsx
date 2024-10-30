@@ -55,7 +55,6 @@ const Leaderboard = () => {
                     <th className="px-6 py-3 text-left">Rank</th>
                     <th className="px-6 py-3 text-left">Player</th>
                     <th className="px-6 py-3 text-left">Score</th>
-                    <th className="px-6 py-3 text-left">Multiplier</th>
                     <th className="px-6 py-3 text-left">Date</th>
                 </tr>
                 </thead>
@@ -92,11 +91,6 @@ const Leaderboard = () => {
                         <td className="px-6 py-4">
                         <span className={index === 0 ? 'text-yellow-400' : ''}>
                             {score.score}</span>
-                        
-                        </td>
-                        <td className="px-6 py-4">
-                        <span className={index === 0 ? 'text-yellow-400' : ''}>
-                            x{score.multiplier.toFixed(1)}</span>
                         
                         </td>
                         <td className="px-6 py-4">{formatDate(score.timestamp)}</td>
