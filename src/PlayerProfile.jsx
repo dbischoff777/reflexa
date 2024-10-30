@@ -7,37 +7,41 @@ import { useSettings } from './Settings';
 import { getPlayerStats } from './utils/playerStats';
 import { ACHIEVEMENTS } from './achievements';
 
+const StatCard = ({ icon, label, value, theme }) => (
+  <div className={`p-4 rounded-lg ${
+    theme === 'dark' ? 'bg-gray-600' : 'bg-gray-50'
+  }`}>
+    <div className="flex items-center gap-2 mb-2">
+      <span className={theme === 'dark' ? 'text-purple-300' : 'text-purple-600'}>
+        {icon}</span>
+      
+      <span className="font-medium">{label}</span>
+    </div>
+    <div className="text-xl font-bold">{value}</div>
+  </div>
+);
+
 const PlayerProfile = () => {
   const { settings } = useSettings();
   const [stats, setStats] = useState(() => getPlayerStats());
-  const [profile, setProfile] = useState({
-    achievements: [],
-    recentGames: []
-  });
   const [achievementProgress, setAchievementProgress] = useState({});
+  const [unlockedAchievements, setUnlockedAchievements] = useState([]);
   const [recentGames, setRecentGames] = useState([]);
 
-  // Load profile data on mount
+  // Load data on mount
   useEffect(() => {
-    // Load recent games from localStorage
+    // Load recent games
     const savedGames = JSON.parse(localStorage.getItem('recentGames') || '[]');
     setRecentGames(savedGames);
 
-    // Load achievements
-    const savedAchievements = JSON.parse(localStorage.getItem('achievements') || '[]');
-    setProfile(prev => ({
-      ...prev,
-      achievements: savedAchievements
-    }));
+    // Load achievements progress
+    const savedProgress = JSON.parse(localStorage.getItem('achievementProgress') || '{}');
+    setAchievementProgress(savedProgress);
 
-    // Calculate achievement progress
-    const progress = {};
-    Object.values(ACHIEVEMENTS).flat().forEach(achievement => {
-      // This is a simple example - adjust based on your achievement criteria
-      progress[achievement.id] = calculateAchievementProgress(achievement, stats);
-    });
-    setAchievementProgress(progress);
-  }, [stats]);
+    // Load unlocked achievements
+    const savedUnlocked = JSON.parse(localStorage.getItem('unlockedAchievements') || '[]');
+    setUnlockedAchievements(savedUnlocked);
+  }, []);
 
   // Format functions
   const formatNumber = (num) => new Intl.NumberFormat().format(Math.round(num));
@@ -56,21 +60,28 @@ const PlayerProfile = () => {
     });
   };
 
-  // Calculate achievement progress
-  const calculateAchievementProgress = (achievement, stats) => {
-    switch (achievement.id) {
+  // Calculate achievement progress percentage
+  const getProgressPercentage = (achievement) => {
+    const progress = achievementProgress;
+    
+    switch (achievement.type) {
       case 'GAMES_PLAYED':
-        return Math.min((stats.basic.gamesPlayed / achievement.requirement) * 100, 100);
+        return Math.min(100, ((progress.gamesPlayed || 0) / achievement.requirement) * 100);
       case 'HIGH_SCORE':
-        return Math.min((stats.basic.highestScore / achievement.requirement) * 100, 100);
-      case 'PERFECT_ACCURACY':
-        return Math.min((stats.performance.accuracy * 100), 100);
-      case 'REACTION_MASTER':
-        return stats.performance.bestReactionTime <= achievement.requirement ? 100 : 0;
-      case 'STREAK_MASTER':
-        return Math.min((stats.session.longestStreak / achievement.requirement) * 100, 100);
+        return Math.min(100, ((progress.highestScore || 0) / achievement.requirement) * 100);
+      case 'TOTAL_SCORE':
+        return Math.min(100, ((progress.totalScore || 0) / achievement.requirement) * 100);
+      case 'ACCURACY':
+        return Math.min(100, ((progress.accuracy || 0) * 100));
+      case 'REACTION_TIME':
+        return progress.bestReactionTime <= achievement.requirement ? 100 : 
+          Math.min(100, (achievement.requirement / (progress.bestReactionTime || Infinity)) * 100);
+      case 'STREAK':
+        return Math.min(100, ((progress.longestStreak || 0) / achievement.requirement) * 100);
+      case 'PERFECT_GAMES':
+        return Math.min(100, ((progress.perfectGames || 0) / achievement.requirement) * 100);
       default:
-        return 0;
+        return unlockedAchievements.includes(achievement.id) ? 100 : 0;
     }
   };
 
@@ -89,7 +100,7 @@ const PlayerProfile = () => {
           <span>Back to Game</span>
         </Link>
 
-        {/* Profile Header with Level */}
+        {/* Profile Header */}
         <div className={`rounded-lg shadow-lg p-6 mb-6 ${
           settings.theme === 'dark' ? 'bg-gray-700' : 'bg-white'
         }`}>
@@ -104,8 +115,8 @@ const PlayerProfile = () => {
               <div className="flex items-center gap-2">
                 <span className={`text-sm ${
                   settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
-                }`}></span>
-                  Level {stats.progress.level}
+                }`}>
+                  Level {stats.progress.level}</span>
                 
                 <div className="flex-1 h-2 bg-gray-200 rounded-full w-32">
                   <div
@@ -211,54 +222,44 @@ const PlayerProfile = () => {
           )}
         </div>
 
-        {/* Achievements section */}
+        {/* Achievements */}
         <div className={`rounded-lg shadow-lg p-6 ${
           settings.theme === 'dark' ? 'bg-gray-700' : 'bg-white'
         }`}>
           <h2 className="text-xl font-bold mb-4">
-            Achievements ({profile.achievements.length})
+            Achievements ({unlockedAchievements.length})
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {Object.values(ACHIEVEMENTS).flat().map((achievement) => {
-              const isEarned = profile.achievements.some(a => a.id === achievement.id);
-              const progress = achievementProgress[achievement.id] || 0;
+              const isUnlocked = unlockedAchievements.includes(achievement.id);
+              const progress = getProgressPercentage(achievement);
               
               return (
                 <div 
                   key={achievement.id}
                   className={`p-4 rounded-lg ${
                     settings.theme === 'dark' 
-                      ? isEarned ? 'bg-gray-600' : 'bg-gray-700 opacity-75' 
-                      : isEarned ? 'bg-gray-50' : 'bg-gray-100 opacity-75'
-                  } transform hover:scale-105 transition-transform duration-200`}
+                      ? isUnlocked ? 'bg-gray-600' : 'bg-gray-700 opacity-75'
+                      : isUnlocked ? 'bg-white' : 'bg-gray-50 opacity-75'
+                  }`}
                 >
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className={`text-2xl ${!isEarned && 'opacity-50'}`}>
-                      {achievement.icon}
-                    </div>
-                    <div>
-                      <div className="font-bold">{achievement.title}</div>
-                      <div className={`text-sm ${
-                        settings.theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                      }`}>
-                        {achievement.description}
-                      </div>
-                    </div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Award className={isUnlocked ? 'text-yellow-400' : 'text-gray-400'} />
+                    <h3 className="font-bold">{achievement.title}</h3>
                   </div>
-                  
-                  {/* Progress bar */}
-                  <div className="mt-2">
-                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full ${
-                          isEarned ? 'bg-green-500' : 'bg-purple-500'
-                        } transition-all duration-1000`}
-                        style={{ width: `${progress}%` }}
-                      />
-                    </div>
-                    <div className="text-xs mt-1 text-right">
-                      {isEarned ? 'Completed!' : `${Math.round(progress)}%`}
-                    </div>
+                  <p className={`text-sm mb-2 ${
+                    settings.theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+                  }`}>
+                    {achievement.description}
+                  </p>
+                  <div className="h-2 bg-gray-200 rounded-full">
+                    <div
+                      className="h-2 bg-purple-600 rounded-full transition-all duration-300"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                  <div className="text-right text-sm mt-1">
+                    {Math.round(progress)}%
                   </div>
                 </div>
               );
@@ -269,28 +270,5 @@ const PlayerProfile = () => {
     </div>
   );
 };
-
-// Stat Card Component
-const StatCard = ({ icon, label, value, theme }) => (
-  <div className={`p-4 rounded-lg ${
-    theme === 'dark' ? 'bg-gray-600' : 'bg-gray-50'
-  }`}>
-    <div className="flex items-center gap-3">
-      <div className={`text-2xl ${
-        theme === 'dark' ? 'text-purple-400' : 'text-purple-600'
-      }`}>
-        {icon}
-      </div>
-      <div>
-        <div className={`text-sm ${
-          theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-        }`}>
-          {label}
-        </div>
-        <div className="text-lg font-bold">{value}</div>
-      </div>
-    </div>
-  </div>
-);
 
 export default PlayerProfile;
