@@ -320,43 +320,55 @@ const PopItGame = () => {
   
         {/* Main Game Area */}
         <div className="pt-20">
-          {/* Game Grid */}
-          <div className="flex justify-center items-center min-h-[60vh]">
-            <div 
-              className={`grid gap-2 w-full max-w-2xl mx-auto ${gridShake ? 'animate-shake' : ''}`}
-              style={{
-                gridTemplateColumns: `repeat(${settings.gridSize}, minmax(0, 1fr))`,
-                aspectRatio: '1/1'
+          {/* Game Grid Container */}
+          <div className="flex justify-center items-center min-h-[60vh] relative">
+            {/* Countdown Overlay */}
+            {gameState === 'countdown' && (
+              <div className="absolute inset-0 flex items-center justify-center z-50">
+                <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg" />
+                <div className={`relative text-8xl font-bold animate-pulse ${
+                  settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-500'
+                }`}>
+                  {countdown}
+                </div>
+              </div>
+            )}
+    
+        {/* Game Grid */}
+        <div 
+          className={`grid gap-2 w-full max-w-2xl mx-auto ${gridShake ? 'animate-shake' : ''}`}
+          style={{
+            gridTemplateColumns: `repeat(${settings.gridSize}, minmax(0, 1fr))`,
+            aspectRatio: '1/1'
+          }}
+        >
+          {Array.from({ length: settings.gridSize * settings.gridSize }).map((_, index) => (
+            <button
+              key={index}
+              className={`aspect-square rounded-lg transition-all duration-200 ${
+                targetButton === index
+                  ? settings.theme === 'dark'
+                    ? 'bg-purple-500 hover:bg-purple-400'
+                    : 'bg-purple-600 hover:bg-purple-500'
+                  : settings.theme === 'dark'
+                  ? 'bg-gray-700 hover:bg-gray-600'
+                  : 'bg-white hover:bg-gray-50'
+              } ${gameState !== 'playing' ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+              onClick={() => {
+                if (gameState === 'playing') {
+                  if (index === targetButton) {
+                    handleSuccess();
+                    setTargetButton(getRandomButton());
+                  } else {
+                    handleMiss();
+                  }
+                }
               }}
-            >
-              {Array.from({ length: settings.gridSize * settings.gridSize }).map((_, index) => (
-                <button
-                  key={index}
-                  className={`aspect-square rounded-lg transition-all duration-200 ${
-                    targetButton === index
-                      ? settings.theme === 'dark'
-                        ? 'bg-purple-500 hover:bg-purple-400'
-                        : 'bg-purple-600 hover:bg-purple-500'
-                      : settings.theme === 'dark'
-                      ? 'bg-gray-700 hover:bg-gray-600'
-                      : 'bg-white hover:bg-gray-50'
-                  } ${gameState !== 'playing' ? 'cursor-not-allowed' : 'cursor-pointer'}`}
-                  onClick={() => {
-                    if (gameState === 'playing') {
-                      if (index === targetButton) {
-                        handleSuccess();
-                        setTargetButton(getRandomButton());
-                      } else {
-                        handleMiss();
-                      }
-                    }
-                  }}
-                  disabled={gameState !== 'playing'}
-                />
-              ))}
-            </div>
-          </div>
-  
+              disabled={gameState !== 'playing'}
+            />
+          ))}
+        </div>
+      </div>
           {/* Game State UI */}
           {gameState === 'idle' && (
             <div className="text-center mt-8">
@@ -370,17 +382,6 @@ const PopItGame = () => {
               >
                 Start Game
               </button>
-            </div>
-          )}
-  
-          {/* Countdown Overlay */}
-          {gameState === 'countdown' && (
-            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-              <div className={`text-8xl font-bold ${
-                settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-500'
-              }`}>
-                {countdown}
-              </div>
             </div>
           )}
   
