@@ -63,51 +63,42 @@ code {
   transform: scale(0.95);
 }
 
-@keyframes shake-and-flash {
-  0% { 
-    transform: translateX(0);
-    background-color: rgba(239, 68, 68, 0);
-  }
-  25% { 
-    transform: translateX(-5px);
-    background-color: rgba(239, 68, 68, 0.2);
-  }
-  75% { 
-    transform: translateX(5px);
-    background-color: rgba(239, 68, 68, 0.2);
-  }
-  100% { 
-    transform: translateX(0);
-    background-color: rgba(239, 68, 68, 0);
-  }
+@keyframes shake {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-8px, 8px); }
+  50% { transform: translate(-8px, -8px); }
+  75% { transform: translate(8px, -8px); }
 }
 
-.animate-shake-and-flash {
-  animation: shake-and-flash 0.3s cubic-bezier(.36,.07,.19,.97) both;
+@keyframes flash {
+  0%, 100% { background-color: transparent; }
+  50% { background-color: rgba(239, 68, 68, 0.2); } /* Red flash with opacity */
 }
 
-/* For an even more subtle effect in dark mode */
-@keyframes shake-and-flash-dark {
-  0% { 
-    transform: translateX(0);
-    background-color: rgba(239, 68, 68, 0);
-  }
-  25% { 
-    transform: translateX(-5px);
-    background-color: rgba(239, 68, 68, 0.1);
-  }
-  75% { 
-    transform: translateX(5px);
-    background-color: rgba(239, 68, 68, 0.1);
-  }
-  100% { 
-    transform: translateX(0);
-    background-color: rgba(239, 68, 68, 0);
-  }
+.animate-shake {
+  animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
 }
 
-.dark .animate-shake-and-flash {
-  animation: shake-and-flash-dark 0.3s cubic-bezier(.36,.07,.19,.97) both;
+.animate-flash {
+  animation: flash 0.5s ease-out both;
+}
+
+@keyframes flash-light {
+  0%, 100% { background-color: transparent; }
+  50% { background-color: rgba(239, 68, 68, 0.2); } /* Light theme red flash */
+}
+
+@keyframes flash-dark {
+  0%, 100% { background-color: transparent; }
+  50% { background-color: rgba(239, 68, 68, 0.3); } /* Dark theme red flash */
+}
+
+.animate-flash-light {
+  animation: flash-light 0.5s ease-out both;
+}
+
+.animate-flash-dark {
+  animation: flash-dark 0.5s ease-out both;
 }
 
 @keyframes bounce {

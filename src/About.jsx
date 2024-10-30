@@ -26,13 +26,13 @@ const About = () => {
 
         <div className="text-center mb-6">
           <h1 className="text-2xl font-bold text-purple-800 mb-4">
-            About Pop It!
+            About Reflexa
           </h1>
         </div>
 
         <div className="space-y-4 text-purple-900">
           <p>
-            Pop It! is a fun reaction game where players need to click on 
+            Reflexa is a fun reaction game where players need to click on 
             highlighted buttons as quickly as possible.
           </p>
           
@@ -41,7 +41,7 @@ const About = () => {
             <ul className="list-disc list-inside space-y-1 text-left">
               <li>Click the Start Game button to begin</li>
               <li>Wait for the countdown to finish</li>
-              <li>Click the highlighted (red) buttons as they appear</li>
+              <li>Click the highlighted buttons as they appear</li>
               <li>Each correct click earns you a point</li>
               <li>Missing a button or clicking wrong loses a life</li>
               <li>The game speeds up as your score increases</li>

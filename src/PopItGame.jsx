@@ -258,7 +258,8 @@ const PopItGame = () => {
         } shadow-lg`}>
           <div className="container mx-auto px-4">
             <div className="flex justify-between items-center h-16">
-              <div className="flex items-center space-x-4">
+              {/* Left side - Username */}
+              <div className="flex items-center">
                 <Link 
                   to="/profile" 
                   className={`text-lg font-semibold ${
@@ -267,28 +268,30 @@ const PopItGame = () => {
                 >
                   {username || 'Player'}
                 </Link>
-                <div className="hidden md:flex space-x-4">
-                  <Link
-                    to="/settings"
-                    className={`px-3 py-2 rounded-md text-sm font-medium ${
-                      settings.theme === 'dark' 
-                        ? 'text-gray-300 hover:text-white hover:bg-gray-700' 
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                    }`}
-                  >
-                    Settings
-                  </Link>
-                  <Link
-                    to="/about"
-                    className={`px-3 py-2 rounded-md text-sm font-medium ${
-                      settings.theme === 'dark' 
-                        ? 'text-gray-300 hover:text-white hover:bg-gray-700' 
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                    }`}
-                  >
-                    About
-                  </Link>
-                </div>
+              </div>
+
+              {/* Right side - Settings and About */}
+              <div className="flex items-center space-x-4">
+                <Link
+                  to="/settings"
+                  className={`px-3 py-2 rounded-md text-sm font-medium ${
+                    settings.theme === 'dark' 
+                      ? 'text-gray-300 hover:text-white hover:bg-gray-700' 
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  }`}
+                >
+                  Settings
+                </Link>
+                <Link
+                  to="/about"
+                  className={`px-3 py-2 rounded-md text-sm font-medium ${
+                    settings.theme === 'dark' 
+                      ? 'text-gray-300 hover:text-white hover:bg-gray-700' 
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  }`}
+                >
+                  About
+                </Link>
               </div>
             </div>
           </div>
