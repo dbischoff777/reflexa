@@ -14,6 +14,7 @@ const PopItGame = () => {
   const [gameState, setGameState] = useState('idle');
   const [gameStarted, setGameStarted] = useState(false);
   const [gameOver, setGameOver] = useState(false);
+  const [showGameOver, setShowGameOver] = useState(false);
   const [countdown, setCountdown] = useState(3);
   
   // Game mechanics
@@ -156,6 +157,7 @@ const PopItGame = () => {
     
     setGameState('gameOver');
     setGameOver(true);
+    setShowGameOver(true); // Add this line
     playSound('gameOver');
   }, [score, calculateFinalStats, updateLeaderboard, playSound]);
 
@@ -288,32 +290,6 @@ const PopItGame = () => {
                   </Link>
                 </div>
               </div>
-              <div className="flex items-center gap-4">
-                {/* Game Stats Display */}
-                <div className="flex items-center gap-4">
-                  <div className="flex gap-1">
-                    {Array.from({ length: lives }).map((_, i) => (
-                      <Heart
-                        key={i}
-                        className={`w-6 h-6 ${
-                          settings.theme === 'dark' ? 'text-purple-400' : 'text-purple-600'
-                        }`}
-                        fill="currentColor"
-                      />
-                    ))}
-                  </div>
-                  <div className={`text-2xl font-bold ${
-                    settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
-                  }`}>
-                    {score}
-                  </div>
-                  {gameState === 'playing' && (
-                    <div className="text-lg">
-                      x{multiplier.toFixed(1)}
-                    </div>
-                  )}
-                </div>
-              </div>
             </div>
           </div>
         </nav>
@@ -322,6 +298,38 @@ const PopItGame = () => {
         <div className="pt-20">
           {/* Game Grid Container */}
           <div className="flex justify-center items-center min-h-[60vh] relative">
+            {/* Stats Overlay */}
+            <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-40 bg-opacity-80 rounded-lg px-4 py-2">
+              <div className="flex items-center gap-6">
+                {/* Lives */}
+                <div className="flex gap-1">
+                  {Array.from({ length: lives }).map((_, i) => (
+                    <Heart
+                      key={i}
+                      className={`w-6 h-6 ${
+                        settings.theme === 'dark' ? 'text-purple-400' : 'text-purple-600'
+                      }`}
+                      fill="currentColor"
+                    />
+                  ))}
+                </div>
+                {/* Score */}
+                <div className={`text-2xl font-bold ${
+                  settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
+                }`}>
+                  Score: {score}
+                </div>
+                {/* Multiplier */}
+                {gameState === 'playing' && (
+                  <div className={`text-lg ${
+                    settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
+                  }`}>
+                    Multiplier: x{multiplier.toFixed(1)}
+                  </div>
+                )}
+              </div>
+            </div>
+  
             {/* Countdown Overlay */}
             {gameState === 'countdown' && (
               <div className="absolute inset-0 flex items-center justify-center z-50">
@@ -333,42 +341,43 @@ const PopItGame = () => {
                 </div>
               </div>
             )}
-    
-        {/* Game Grid */}
-        <div 
-          className={`grid gap-2 w-full max-w-2xl mx-auto ${gridShake ? 'animate-shake' : ''}`}
-          style={{
-            gridTemplateColumns: `repeat(${settings.gridSize}, minmax(0, 1fr))`,
-            aspectRatio: '1/1'
-          }}
-        >
-          {Array.from({ length: settings.gridSize * settings.gridSize }).map((_, index) => (
-            <button
-              key={index}
-              className={`aspect-square rounded-lg transition-all duration-200 ${
-                targetButton === index
-                  ? settings.theme === 'dark'
-                    ? 'bg-purple-500 hover:bg-purple-400'
-                    : 'bg-purple-600 hover:bg-purple-500'
-                  : settings.theme === 'dark'
-                  ? 'bg-gray-700 hover:bg-gray-600'
-                  : 'bg-white hover:bg-gray-50'
-              } ${gameState !== 'playing' ? 'cursor-not-allowed' : 'cursor-pointer'}`}
-              onClick={() => {
-                if (gameState === 'playing') {
-                  if (index === targetButton) {
-                    handleSuccess();
-                    setTargetButton(getRandomButton());
-                  } else {
-                    handleMiss();
-                  }
-                }
+            
+            {/* Game Grid */}
+            <div 
+              className={`grid gap-2 w-full max-w-2xl mx-auto ${gridShake ? 'animate-shake' : ''}`}
+              style={{
+                gridTemplateColumns: `repeat(${settings.gridSize}, minmax(0, 1fr))`,
+                aspectRatio: '1/1'
               }}
-              disabled={gameState !== 'playing'}
-            />
-          ))}
-        </div>
-      </div>
+            >
+              {Array.from({ length: settings.gridSize * settings.gridSize }).map((_, index) => (
+                <button
+                  key={index}
+                  className={`aspect-square rounded-lg transition-all duration-200 ${
+                    targetButton === index
+                      ? settings.theme === 'dark'
+                        ? 'bg-purple-500 hover:bg-purple-400'
+                        : 'bg-purple-600 hover:bg-purple-500'
+                      : settings.theme === 'dark'
+                      ? 'bg-gray-700 hover:bg-gray-600'
+                      : 'bg-white hover:bg-gray-50'
+                  } ${gameState !== 'playing' ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                  onClick={() => {
+                    if (gameState === 'playing') {
+                      if (index === targetButton) {
+                        handleSuccess();
+                        setTargetButton(getRandomButton());
+                      } else {
+                        handleMiss();
+                      }
+                    }
+                  }}
+                  disabled={gameState !== 'playing'}
+                />
+              ))}
+            </div>
+          </div>
+  
           {/* Game State UI */}
           {gameState === 'idle' && (
             <div className="text-center mt-8">
@@ -384,9 +393,8 @@ const PopItGame = () => {
               </button>
             </div>
           )}
-  
           {/* Game Over Overlay */}
-          {gameState === 'gameOver' && (
+          {showGameOver && (
             <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
               <div className={`p-8 rounded-lg ${
                 settings.theme === 'dark' ? 'bg-gray-800' : 'bg-white'
@@ -414,9 +422,12 @@ const PopItGame = () => {
                     
                   </div>
                 </div>
-                <div className="mt-6 flex gap-4 justify-center">
+                <div className="mt-6 flex flex-wrap gap-3 justify-center">
                   <button
-                    onClick={startGame}
+                    onClick={() => {
+                      setShowGameOver(false);
+                      startGame();
+                    }}
                     className={`px-6 py-2 rounded-lg font-semibold ${
                       settings.theme === 'dark'
                         ? 'bg-purple-500 hover:bg-purple-400 text-white'
@@ -426,7 +437,10 @@ const PopItGame = () => {
                     Play Again
                   </button>
                   <button
-                    onClick={() => navigate('/leaderboard')}
+                    onClick={() => {
+                      setShowGameOver(false);
+                      navigate('/leaderboard');
+                    }}
                     className={`px-6 py-2 rounded-lg font-semibold ${
                       settings.theme === 'dark'
                         ? 'bg-gray-700 hover:bg-gray-600 text-white'
@@ -435,61 +449,75 @@ const PopItGame = () => {
                   >
                     Leaderboard
                   </button>
+                  <button
+                    onClick={() => {
+                      setShowGameOver(false);
+                      setGameState('idle');
+                      navigate('/');
+                    }}
+                    className={`px-6 py-2 rounded-lg font-semibold ${
+                      settings.theme === 'dark'
+                        ? 'bg-gray-700 hover:bg-gray-600 text-white'
+                        : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
+                    }`}
+                  >
+                    Return Home
+                  </button>
                 </div>
               </div>
             </div>
           )}
-  
-          {/* Username Input Modal */}
-          {showUsernameInput && (
-            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-              <div className={`p-6 rounded-lg ${
-                settings.theme === 'dark' ? 'bg-gray-800' : 'bg-white'
-              } shadow-xl max-w-md w-full mx-4`}>
-                <h3 className="text-xl font-semibold mb-4">Enter Your Username</h3>
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className={`w-full px-4 py-2 rounded-lg mb-4 ${
-                    settings.theme === 'dark'
-                      ? 'bg-gray-700 text-white'
-                      : 'bg-gray-100 text-gray-900'
-                  }`}
-                  placeholder="Username"
-                  maxLength={15}
-                />
-                <button
-                  onClick={() => {
-                    if (username.trim()) {
-                      localStorage.setItem('username', username);
-                      setShowUsernameInput(false);
-                      startGame();
-                    }
-                  }}
-                  className={`w-full py-2 rounded-lg font-semibold ${
-                    settings.theme === 'dark'
-                      ? 'bg-purple-500 hover:bg-purple-400 text-white'
-                      : 'bg-purple-600 hover:bg-purple-500 text-white'
-                  }`}
-                >
-                  Start Playing
-                </button>
-              </div>
+
+        {/* Username Input Modal */}
+        {showUsernameInput && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div className={`p-6 rounded-lg ${
+              settings.theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+            } shadow-xl max-w-md w-full mx-4`}>
+              <h3 className="text-xl font-semibold mb-4">Enter Your Username</h3>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className={`w-full px-4 py-2 rounded-lg mb-4 ${
+                  settings.theme === 'dark'
+                    ? 'bg-gray-700 text-white'
+                    : 'bg-gray-100 text-gray-900'
+                }`}
+                placeholder="Username"
+                maxLength={15}
+              />
+              <button
+                onClick={() => {
+                  if (username.trim()) {
+                    localStorage.setItem('username', username);
+                    setShowUsernameInput(false);
+                    startGame();
+                  }
+                }}
+                className={`w-full py-2 rounded-lg font-semibold ${
+                  settings.theme === 'dark'
+                    ? 'bg-purple-500 hover:bg-purple-400 text-white'
+                    : 'bg-purple-600 hover:bg-purple-500 text-white'
+                }`}
+              >
+                Start Playing
+              </button>
             </div>
-          )}
-  
-          {/* Achievement Notification */}
-          {newAchievement && (
-            <AchievementNotification
-              achievement={newAchievement}
-              onClose={() => setNewAchievement(null)}
-            />
-          )}
-        </div>
+          </div>
+        )}
+
+        {/* Achievement Notification */}
+        {newAchievement && (
+          <AchievementNotification
+            achievement={newAchievement}
+            onClose={() => setNewAchievement(null)}
+          />
+        )}
       </div>
     </div>
-  );
+  </div>
+);
 };
 
 export default PopItGame;
