@@ -426,33 +426,31 @@ const PopItGame = () => {
     //Update the renderButton function
     const renderButton = (index) => {
       const isTarget = targetButton === index;
+      const buttonSize = Math.min(100 / settings.gridSize, 8);
       
       return (
         <div 
           key={index}
-          className="relative w-full h-full"
+          className="relative"
+          style={{
+            width: `${buttonSize}vw`,
+            height: `${buttonSize}vw`,
+            padding: `${buttonSize * 0.1}vw`,
+            margin: `${buttonSize * 0.05}vw`,
+          }}
         >
-          <button
-            className={`
-              bowl-button 
-              w-full 
-              h-full 
-              rounded-full 
-              transition-all 
-              duration-200 
-              ${isTarget ? 'target glow-effect' : ''}
-            `}
-            onClick={() => handleButtonClick(index)}
-            disabled={!gameStarted || gameOver}
-            style={{
-              backgroundColor: isTarget ? '#9333ea' : 'transparent',
-              aspectRatio: '1 / 1',
-              transform: 'scale(0.85)',
-              transformOrigin: 'center',
-              boxShadow: isTarget ? '0 0 15px #9333ea, 0 0 30px #9333ea, 0 0 45px #9333ea' : 'none',
-              transition: 'all 0.3s ease-in-out'
-            }}
-          />
+          <div className="relative w-full h-full">
+            <button
+              className={`bowl-button w-full h-full ${isTarget ? 'target' : ''}`}
+              onClick={() => handleButtonClick(index)}
+              disabled={!gameStarted || gameOver}
+              style={{
+                backgroundColor: 'purple',
+                background: isTarget ? 'radial-gradient(circle, #0000FF 20%, #9333ea 60%)' : 'transparent'
+              }}
+            >
+            </button>
+          </div>
         </div>
       );
     };
