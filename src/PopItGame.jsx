@@ -306,7 +306,7 @@ const PopItGame = () => {
     setShowGameOver(false);
     setGameState('menu');
     setScore(0);
-    setLives(3);
+    setLives(5);
     setMultiplier(1);
     setGameSpeed(1);
     setParticleEffects([]);
