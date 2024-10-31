@@ -87,9 +87,9 @@ export const checkAchievementsUnlocked = (progress) => {
 
 export const ACHIEVEMENTS = {
     GAMES_PLAYED: [
-      { id: 'games_10', requirement: 10, title: 'Dedicated Player', description: 'Play 10 games', icon: '🎯' },
-      { id: 'games_50', requirement: 50, title: 'Gaming Enthusiast', description: 'Play 50 games', icon: '🏆' },
-      { id: 'games_100', requirement: 100, title: 'Gaming Veteran', description: 'Play 100 games', icon: '👑' }
+      { id: 'games_10', type: 'GAMES_PLAYED', requirement: 10, title: 'Dedicated Player', description: 'Play 10 games', icon: '🎯' },
+      { id: 'games_50', type: 'GAMES_PLAYED', requirement: 50, title: 'Gaming Enthusiast', description: 'Play 50 games', icon: '🏆' },
+      { id: 'games_100', type: 'GAMES_PLAYED', requirement: 100, title: 'Gaming Veteran', description: 'Play 100 games', icon: '👑' }
     ],
     SCORE_SINGLE: [
       { id: 'score_500', target: 500, title: 'Rising Star', description: 'Score 500 points in a single game', icon: '⭐' },

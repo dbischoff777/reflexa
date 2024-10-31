@@ -280,6 +280,14 @@ const PopItGame = () => {
       return;
     }
     
+    // Increment games played in achievement progress
+    const currentProgress = JSON.parse(localStorage.getItem('achievementProgress') || '{}');
+    const updatedProgress = {
+      ...currentProgress,
+      gamesPlayed: (currentProgress.gamesPlayed || 0) + 1
+    };
+
+    localStorage.setItem('achievementProgress', JSON.stringify(updatedProgress));
     setGameState('countdown');
     setGameStarted(true);
     setGameOver(false);
@@ -306,7 +314,7 @@ const PopItGame = () => {
       lives: 5,
       maxLives: 5,
       startTime: Date.now(),
-      lastClickTime: null
+      lastClickTime: null,
     });
   
     playSound('countdown');
@@ -344,11 +352,10 @@ const PopItGame = () => {
       const currentProgress = JSON.parse(localStorage.getItem('achievementProgress') || '{}');
       // Update progress with new stats including games played
       const updatedProgress = {
-      ...currentProgress,
-      gamesPlayed: (currentProgress.gamesPlayed || 0) + 1,
-      totalScore: (currentProgress.totalScore || 0),
-      highestScore: Math.max(finalStats.score, currentProgress.highestScore || 0),
-      highestMultiplier: Math.max(maxMultiplier, currentProgress.highestMultiplier || 0),
+        ...currentProgress,
+        totalScore: (currentProgress.totalScore || 0),
+        highestScore: Math.max(finalStats.score, currentProgress.highestScore || 0),
+        highestMultiplier: Math.max(maxMultiplier, currentProgress.highestMultiplier || 0),
       };
       localStorage.setItem('achievementProgress', JSON.stringify(updatedProgress));
       

@@ -30,6 +30,33 @@ const PlayerProfile = () => {
   const [recentGames, setRecentGames] = useState([]);
   const [playerAvatar] = useState(() => localStorage.getItem('playerAvatar') || 'ninja');
 
+  // Add storage event listener
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'achievementProgress') {
+        const newProgress = JSON.parse(e.newValue || '{}');
+        setAchievementProgress(newProgress);
+      }
+    };
+
+    // Listen for storage changes
+    window.addEventListener('storage', handleStorageChange);
+
+    // Also check for direct localStorage changes
+    const checkProgress = () => {
+      const savedProgress = JSON.parse(localStorage.getItem('achievementProgress') || '{}');
+      setAchievementProgress(savedProgress);
+    };
+
+    // Set up periodic check
+    const intervalId = setInterval(checkProgress, 1000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(intervalId);
+    };
+  }, []);
+
   // Load data on mount
   useEffect(() => {
     // Load recent games
@@ -69,7 +96,8 @@ const PlayerProfile = () => {
     switch (achievement.type) {
       case 'GAMES_PLAYED':
         const gamesPlayed = progress.gamesPlayed || 0;
-        return Math.min(100, (gamesPlayed / achievement.requirement) * 100);
+        const requirement = achievement.requirement || 1; // Prevent division by zero
+        return Math.min(100, Math.max(0, (gamesPlayed / requirement) * 100));
       case 'HIGH_SCORE':
         return Math.min(100, ((progress.highestScore || 0) / achievement.requirement) * 100);
       case 'TOTAL_SCORE':
