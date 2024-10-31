@@ -191,7 +191,6 @@
   .bowl-button.target {
     position: relative;
     background: linear-gradient(145deg, #9333ea, #7e22ce);
-    z-index: 1;
   }
   
   /* Update grid container for larger spacing */

@@ -260,47 +260,59 @@ const PopItGame = () => {
     return "Good job! 😊";
   }, []); // No dependencies needed since it's a pure function
 
-    // Start game
-    const startGame = useCallback(() => {
-      if (!username) {
-        setShowUsernameInput(true);
-        return;
-      }
-      
-      setGameState('countdown');
-      setGameStarted(true);
-      setGameOver(false);
-      setShowGameOver(false);
-      setScore(0);
-      setLives(5);
-      setMultiplier(1);
-      setGameSpeed(1); // Reset game speed
-      setCountdown(3);
-      
-      // Reset game stats
-      setGameStats({
-        score: 0,
-        duration: 0,
-        successfulClicks: 0,
-        missedClicks: 0,
-        totalClicks: 0,
-        longestStreak: 0,
-        currentStreak: 0,
-        highestCombo: 0,
-        combos: [],
-        reactionTimes: [],
-        maxMultiplier: 1,
-        lives: 5,
-        maxLives: 5,
-        startTime: Date.now(),
-        lastClickTime: null
-      });
+  // Start game
+  const startGame = useCallback(() => {
+    if (!username) {
+      setShowUsernameInput(true);
+      return;
+    }
     
-      playSound('countdown');
-    }, [username, playSound]);
+    setGameState('countdown');
+    setGameStarted(true);
+    setGameOver(false);
+    setShowGameOver(false);
+    setScore(0);
+    setLives(5);
+    setMultiplier(1);
+    setGameSpeed(1); // Reset game speed
+    setCountdown(3);
+    
+    // Reset game stats
+    setGameStats({
+      score: 0,
+      duration: 0,
+      successfulClicks: 0,
+      missedClicks: 0,
+      totalClicks: 0,
+      longestStreak: 0,
+      currentStreak: 0,
+      highestCombo: 0,
+      combos: [],
+      reactionTimes: [],
+      maxMultiplier: 1,
+      lives: 5,
+      maxLives: 5,
+      startTime: Date.now(),
+      lastClickTime: null
+    });
   
-    // Handle game over
-    const handleGameOver = useCallback(() => {
+    playSound('countdown');
+  }, [username, playSound]);
+  
+  const handleExit = useCallback(() => {
+    // Reset all game states
+    setGameOver(false);
+    setShowGameOver(false);
+    setGameState('menu');
+    setScore(0);
+    setLives(3);
+    setMultiplier(1);
+    setGameSpeed(1);
+    setParticleEffects([]);
+  }, []);
+
+  // Handle game over
+  const handleGameOver = useCallback(() => {
       const endTime = Date.now();
       const finalStats = calculateFinalStats(endTime);
       
@@ -347,415 +359,424 @@ const PopItGame = () => {
       setGameOver(true);
       setShowGameOver(true);
       setGameState('over');
-  }, [calculateFinalStats, updateLeaderboard, updateRecentGames, playSound]);
+    }, [calculateFinalStats, updateLeaderboard, updateRecentGames, playSound]);
   
+  // Handle button click
+  const handleButtonClick = useCallback((index) => {
+    if (gameState !== 'playing') return;
   
-    // Handle button click
-    const handleButtonClick = useCallback((index) => {
-      if (gameState !== 'playing') return;
-    
-      const now = Date.now();
+    const now = Date.now();
+    setGameStats(prev => ({
+      ...prev,
+      totalClicks: prev.totalClicks + 1,
+      lastClickTime: now
+    }));
+  
+    if (index === targetButton) {
+      // Calculate grid position based on index
+      const gridSize = settings.gridSize;
+      const row = Math.floor(index / gridSize);
+      const col = index % gridSize;
+      
+      if (particleEffects.length < maxParticleEffects) {
+        setParticleEffects(prev => [...prev, {
+          id: Date.now(),
+          row: row,
+          col: col
+        }]);
+      }
+  
+      const newMultiplier = Math.min(multiplier + 1, 10);
+      const newScore = score + Math.round(10 * multiplier);
+  
+      // Increase game speed with successful clicks
+      const newGameSpeed = Math.min(gameSpeed + 0.15, 3.0);
+      setGameSpeed(newGameSpeed);
+  
       setGameStats(prev => ({
         ...prev,
-        totalClicks: prev.totalClicks + 1,
-        lastClickTime: now
+        successfulClicks: prev.successfulClicks + 1,
+        highestCombo: Math.max(prev.highestCombo, newMultiplier),
+        reactionTimes: [...prev.reactionTimes, now - prev.lastClickTime]
       }));
-    
-      if (index === targetButton) {
-        // Calculate grid position based on index
-        const gridSize = settings.gridSize;
-        const row = Math.floor(index / gridSize);
-        const col = index % gridSize;
-        
-        if (particleEffects.length < maxParticleEffects) {
-          setParticleEffects(prev => [...prev, {
-            id: Date.now(),
-            row: row,
-            col: col
-          }]);
-        }
-    
-        const newMultiplier = Math.min(multiplier + 1, 10);
-        const newScore = score + Math.round(10 * multiplier);
-    
-        // Increase game speed with successful clicks
-        const newGameSpeed = Math.min(gameSpeed + 0.15, 3.0);
-        setGameSpeed(newGameSpeed);
-    
-        setGameStats(prev => ({
-          ...prev,
-          successfulClicks: prev.successfulClicks + 1,
-          highestCombo: Math.max(prev.highestCombo, newMultiplier),
-          reactionTimes: [...prev.reactionTimes, now - prev.lastClickTime]
-        }));
-    
-        setScore(newScore);
-        setMultiplier(newMultiplier);
-        setMascotMessage(getMascotMessage(newMultiplier));
-        setTargetButton(getRandomButton());
-    
-      } else {
-        // Handle incorrect click
-        setGridShake(true);
-        setTimeout(() => setGridShake(false), 300);
-        
-        // Reset speed and multiplier on miss
-        setGameSpeed(1);
-        setLives(prev => prev - 1);
-        setMultiplier(1);
-        setMascotMessage('Oops! Try again!');
-    
-        if (lives <= 1) {
-          handleGameOver();
-        }
-      }
-    }, [
-      gameState,
-      targetButton,
-      multiplier,
-      score,
-      lives,
-      handleGameOver,
-      getRandomButton,
-      getMascotMessage,
-      particleEffects.length,
-      settings.gridSize,
-      gameSpeed
-    ]);
-    
-    //Update the renderButton function
-    const renderButton = (index) => {
-      const isTarget = targetButton === index;
-      const buttonSize = Math.min(100 / settings.gridSize, 8);
-      
-      return (
-        <div 
-          key={index}
-          className="relative"
-          style={{
-            width: `${buttonSize}vw`,
-            height: `${buttonSize}vw`,
-            padding: `${buttonSize * 0.1}vw`,
-            margin: `${buttonSize * 0.05}vw`,
-          }}
-        >
-          <div className="relative w-full h-full">
-            <button
-              className={`bowl-button w-full h-full ${isTarget ? 'target' : ''}`}
-              onClick={() => handleButtonClick(index)}
-              disabled={!gameStarted || gameOver}
-              style={{
-                backgroundColor: 'purple',
-                background: isTarget ? 'radial-gradient(circle, #0000FF 20%, #9333ea 60%)' : 'transparent'
-              }}
-            >
-            </button>
-          </div>
-        </div>
-      );
-    };
-     
-    // Game loop effects
-    useEffect(() => {
-      if (gameState === 'countdown' && countdown > 0) {
-        const timer = setTimeout(() => {
-          setCountdown(prev => prev - 1);
-          playSound('countdown');
-        }, 1000);
-        return () => clearTimeout(timer);
-      }
-      
-      if (gameState === 'countdown' && countdown === 0) {
-        setGameState('playing');
-        setTargetButton(getRandomButton());
-        setStartTime(Date.now());
-      }
-    }, [gameState, countdown, playSound, getRandomButton]);
   
-    useEffect(() => {
-      if (gameState !== 'playing') return;
-    
-      const interval = setInterval(() => {
-        // Move target to new position if not clicked in time
-        setTargetButton(getRandomButton());
-        
-        // Reduce lives and reset multiplier on timeout
-        setLives(prev => {
-          if (prev <= 1) {
-            handleGameOver();
-            return prev;
-          }
-          return prev - 1;
-        });
-        
-        setMultiplier(1);
-        setGameSpeed(1); // Reset speed on timeout
-      }, BASE_INTERVAL / gameSpeed); // Adjust interval based on game speed
-    
-      return () => clearInterval(interval);
-    }, [gameState, gameSpeed, handleGameOver, getRandomButton]);
+      setScore(newScore);
+      setMultiplier(newMultiplier);
+      setMascotMessage(getMascotMessage(newMultiplier));
+      setTargetButton(getRandomButton());
   
-    useEffect(() => {
-      if (lives <= 0 && !gameOver) {
+    } else {
+      // Handle incorrect click
+      setGridShake(true);
+      setTimeout(() => setGridShake(false), 300);
+      
+      // Reset speed and multiplier on miss
+      setGameSpeed(1);
+      setLives(prev => prev - 1);
+      setMultiplier(1);
+      setMascotMessage('Oops! Try again!');
+  
+      if (lives <= 1) {
         handleGameOver();
       }
-    }, [lives, gameOver, handleGameOver]);
-  
-    // Username input handling
-    const handleUsernameSubmit = (e) => {
-      e.preventDefault();
-      if (username.trim()) {
-        localStorage.setItem('username', username.trim());
-        setShowUsernameInput(false);
-        startGame();
-      }
-    };
-  
+    }
+  }, [
+    gameState,
+    targetButton,
+    multiplier,
+    score,
+    lives,
+    handleGameOver,
+    getRandomButton,
+    getMascotMessage,
+    particleEffects.length,
+    settings.gridSize,
+    gameSpeed
+  ]);
+    
+  //Update the renderButton function
+  const renderButton = (index) => {
+    const isTarget = targetButton === index;
+    const buttonSize = Math.min(100 / settings.gridSize, 8);
+      
     return (
-      <div className={`min-h-screen ${
-        settings.theme === 'dark' ? 'bg-gray-800 text-white' : '',
-        gridShake ? 'flash-red' : 'bg-gray-100 text-gray-900'
-      }`}>
-        <div className="container mx-auto px-4 py-8 max-w-7xl">
-          {/* Game Header */}
-          <div className="flex justify-between items-center mb-8">
+      <div 
+        key={index}
+        className="relative"
+        style={{
+          width: `${buttonSize}vw`,
+          height: `${buttonSize}vw`,
+          padding: `${buttonSize * 0.1}vw`,
+          margin: `${buttonSize * 0.05}vw`,
+        }}
+      >
+        <div className="relative w-full h-full">
+          <button
+            className={`bowl-button w-full h-full ${isTarget ? 'target' : ''}`}
+            onClick={() => handleButtonClick(index)}
+            disabled={!gameStarted || gameOver}
+            style={{
+              backgroundColor: 'purple',
+              background: isTarget ? 'radial-gradient(circle, #0000FF 20%, #9333ea 60%)' : 'transparent'
+            }}
+          >
+          </button>
+        </div>
+      </div>
+    );
+  };
+     
+  // Game loop effects
+  useEffect(() => {
+    if (gameState === 'countdown' && countdown > 0) {
+      const timer = setTimeout(() => {
+        setCountdown(prev => prev - 1);
+        playSound('countdown');
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+    
+    if (gameState === 'countdown' && countdown === 0) {
+      setGameState('playing');
+      setTargetButton(getRandomButton());
+      setStartTime(Date.now());
+    }
+  }, [gameState, countdown, playSound, getRandomButton]);
+
+  useEffect(() => {
+    if (gameState !== 'playing') return;
+  
+    const interval = setInterval(() => {
+      // Move target to new position if not clicked in time
+      setTargetButton(getRandomButton());
+      
+      // Reduce lives and reset multiplier on timeout
+      setLives(prev => {
+        if (prev <= 1) {
+          handleGameOver();
+          return prev;
+        }
+        return prev - 1;
+      });
+      
+      setMultiplier(1);
+      setGameSpeed(1); // Reset speed on timeout
+    }, BASE_INTERVAL / gameSpeed); // Adjust interval based on game speed
+  
+    return () => clearInterval(interval);
+  }, [gameState, gameSpeed, handleGameOver, getRandomButton]);
+
+  useEffect(() => {
+    if (lives <= 0 && !gameOver) {
+      handleGameOver();
+    }
+  }, [lives, gameOver, handleGameOver]);
+
+  // Username input handling
+  const handleUsernameSubmit = (e) => {
+    e.preventDefault();
+    if (username.trim()) {
+      localStorage.setItem('username', username.trim());
+      setShowUsernameInput(false);
+      startGame();
+    }
+  };
+
+  return (
+    <div className={`min-h-screen ${
+      settings.theme === 'dark' ? 'bg-gray-800 text-white' : '',
+      gridShake ? 'flash-red' : 'bg-gray-100 text-gray-900'
+    }`}>
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        {/* Game Header */}
+        <div className="flex justify-between items-center mb-8">
+          <Link 
+            to="/profile" 
+            className={`text-lg font-bold ${
+              settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
+            }`}
+          >
+            {username || 'Player'}
+          </Link>
+          <div className="flex items-center gap-4">
             <Link 
-              to="/profile" 
-              className={`text-lg font-bold ${
+              to="/leaderboard"
+              className={`${
                 settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
               }`}
             >
-              {username || 'Player'}
+              Leaderboard
             </Link>
-            <div className="flex items-center gap-4">
-              <Link 
-                to="/leaderboard"
-                className={`${
-                  settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
-                }`}
-              >
-                Leaderboard
-              </Link>
-              <Link 
-                to="/settings"
-                className={`${
-                  settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
-                }`}
-              >
-                Settings
-              </Link>
-              <Link 
-                to="/about"
-                className={`${
-                  settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
-                }`}
-              >
-                About
-              </Link>
+            <Link 
+              to="/settings"
+              className={`${
+                settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
+              }`}
+            >
+              Settings
+            </Link>
+            <Link 
+              to="/about"
+              className={`${
+                settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
+              }`}
+            >
+              About
+            </Link>
+          </div>
+        </div>
+  
+        {/* Game Area with Grid and Mascot */}
+        <div className="relative flex justify-center mt-32">
+          {/* Mascot Container - Centered above game grid */}
+          <div className="absolute left-1/2 -top-32 transform -translate-x-1/2">
+            <div className={`mascot-container relative ${
+              settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
+            }`}>
+              <img 
+                src={mascotImage}
+                alt="Game Mascot"
+                className="w-32 h-32 object-contain animate-bounce"
+              />
+              {showSpeechBubble && mascotMessage && (
+                <div className={`speech-bubble ${
+                  settings.theme === 'dark' ? 'bg-gray-700' : 'bg-white'
+                } p-3 rounded-lg shadow-lg`}>
+                  {mascotMessage}
+                </div>
+              )}
             </div>
           </div>
-    
-          {/* Game Area with Grid and Mascot */}
-          <div className="relative flex justify-center mt-32">
-            {/* Mascot Container - Centered above game grid */}
-            <div className="absolute left-1/2 -top-32 transform -translate-x-1/2">
-              <div className={`mascot-container relative ${
+  
+          {/* Start Button Container */}
+          {gameState === 'menu' && (
+            <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 z-10">
+              <button
+                onClick={startGame}
+                className={`px-8 py-4 rounded-lg font-bold text-xl shadow-lg transition-all duration-200 ${
+                  settings.theme === 'dark' 
+                    ? 'bg-purple-600 hover:bg-purple-500 text-white' 
+                    : 'bg-purple-600 hover:bg-purple-700 text-white'
+                }`}
+              >
+                Start Game
+              </button>
+            </div>
+          )}
+  
+          {/* Game Grid Container */}
+          <div className="w-full max-w-[800px] px-4">
+            {/* Stats Display */}
+            <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
+              <div className="flex gap-1">
+                {Array.from({ length: lives }).map((_, i) => (
+                  <Heart
+                    key={i}
+                    className={`w-6 h-6 ${
+                      settings.theme === 'dark' ? 'text-purple-400' : 'text-purple-600'
+                    }`}
+                    fill="currentColor"
+                  />
+                ))}
+              </div>
+              <div className={`text-2xl font-bold ${
                 settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
               }`}>
-                <img 
-                  src={mascotImage}
-                  alt="Game Mascot"
-                  className="w-32 h-32 object-contain animate-bounce"
-                />
-                {showSpeechBubble && mascotMessage && (
-                  <div className={`speech-bubble ${
-                    settings.theme === 'dark' ? 'bg-gray-700' : 'bg-white'
-                  } p-3 rounded-lg shadow-lg`}>
-                    {mascotMessage}
-                  </div>
-                )}
+                Score: {score}
               </div>
+              {gameState === 'playing' && (
+                <div className={`text-lg ${
+                  settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
+                }`}>
+                  Multiplier: x {multiplier.toFixed(1)}
+                </div>
+              )}
             </div>
-    
-            {/* Start Button Container */}
-            {gameState === 'menu' && (
-              <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 z-10">
+
+            {/* Game Grid */}
+            <div 
+              className={`aspect-square grid relative ${
+                gridShake ? 'animate-shake' : ''
+              }`} 
+              style={{
+                gridTemplateColumns: `repeat(${settings.gridSize}, 1fr)`,
+                width: '90vw',
+                maxWidth: '800px',
+                maxHeight: '400px',
+                margin: '0 auto',
+                padding: '20px',
+                borderRadius: '12px', // Added for better flash effect visibility
+                transition: 'background-color 0.3s ease', // Smooth transition for flash effect
+              }}
+            >
+              {Array.from({ length: settings.gridSize * settings.gridSize }).map((_, index) =>
+                renderButton(index)
+              )}
+
+              {/* Particle Effects */}
+              {particleEffects.map(effect => (
+                <PopEffect
+                  key={effect.id}
+                  row={effect.row}
+                  col={effect.col}
+                  onComplete={() => {
+                    setParticleEffects(prev => 
+                      prev.filter(e => e.id !== effect.id)
+                    );
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+  
+        {/* Countdown Overlay */}
+        {gameState === 'countdown' && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="text-6xl font-bold text-purple-600 animate-pulse">
+              {countdown}
+            </div>
+          </div>
+        )}
+  
+        {/* Game Over Overlay */}
+        {showGameOver && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+            <div className={`p-8 rounded-lg ${
+              settings.theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+            } shadow-xl max-w-md w-full mx-4`}>
+              <h2 className="text-2xl font-bold mb-4">Game Over!</h2>
+              <div className="space-y-2 mb-6">
+                <p>Final Score: {score}</p>
+                <p>Highest Combo: {gameStats.highestCombo}x</p>
+                <p>Accuracy: {((gameStats.successfulClicks / gameStats.totalClicks) * 100 || 0).toFixed(1)}%</p>
+              </div>
+              <div className="flex gap-4">
                 <button
                   onClick={startGame}
-                  className={`px-8 py-4 rounded-lg font-bold text-xl shadow-lg transition-all duration-200 ${
-                    settings.theme === 'dark' 
-                      ? 'bg-purple-600 hover:bg-purple-500 text-white' 
+                  className={`flex-1 px-4 py-2 rounded-lg font-bold ${
+                    settings.theme === 'dark'
+                      ? 'bg-purple-600 hover:bg-purple-500'
+                      : 'bg-purple-600 hover:bg-purple-700 text-white'
+                  }`}
+                >
+                  Play Again
+                </button>
+                <Link
+                  to="/profile"
+                  className={`flex-1 px-4 py-2 rounded-lg font-bold text-center ${
+                    settings.theme === 'dark'
+                      ? 'bg-gray-700 hover:bg-gray-600'
+                      : 'bg-gray-200 hover:bg-gray-300'
+                  }`}
+                >
+                  View Profile
+                </Link>
+                <button
+                  onClick={handleExit}
+                  className={`flex-1 px-4 py-2 rounded-lg font-bold ${
+                    settings.theme === 'dark'
+                      ? 'bg-gray-700 hover:bg-gray-600'
+                      : 'bg-gray-200 hover:bg-gray-300'
+                  }`}
+                >
+                  Exit
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+  
+        {/* Username Input Modal */}
+        {showUsernameInput && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-12">
+            <div className={`p-8 rounded-lg ${
+              settings.theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+            } shadow-xl max-w-md w-full mx-4`}>
+              <h2 className="text-2xl font-bold mb-4">Enter Your Username</h2>
+              <form onSubmit={handleUsernameSubmit}>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className={`w-full px-4 py-2 rounded-lg mb-4 ${
+                    settings.theme === 'dark'
+                      ? 'bg-gray-700 text-white'
+                      : 'bg-gray-100'
+                  }`}
+                  placeholder="Username"
+                  maxLength={20}
+                  required
+                />
+                <button
+                  type="submit"
+                  className={`w-full px-4 py-2 rounded-lg font-bold ${
+                    settings.theme === 'dark'
+                      ? 'bg-purple-600 hover:bg-purple-500'
                       : 'bg-purple-600 hover:bg-purple-700 text-white'
                   }`}
                 >
                   Start Game
                 </button>
-              </div>
-            )}
-    
-            {/* Game Grid Container */}
-            <div className="w-full max-w-[800px] px-4">
-              {/* Stats Display */}
-              <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
-                <div className="flex gap-1">
-                  {Array.from({ length: lives }).map((_, i) => (
-                    <Heart
-                      key={i}
-                      className={`w-6 h-6 ${
-                        settings.theme === 'dark' ? 'text-purple-400' : 'text-purple-600'
-                      }`}
-                      fill="currentColor"
-                    />
-                  ))}
-                </div>
-                <div className={`text-2xl font-bold ${
-                  settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
-                }`}>
-                  Score: {score}
-                </div>
-                {gameState === 'playing' && (
-                  <div className={`text-lg ${
-                    settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
-                  }`}>
-                    Multiplier: x {multiplier.toFixed(1)}
-                  </div>
-                )}
-              </div>
-
-              {/* Game Grid */}
-              <div 
-                className={`aspect-square grid relative ${
-                  gridShake ? 'animate-shake' : ''
-                }`} 
-                style={{
-                  gridTemplateColumns: `repeat(${settings.gridSize}, 1fr)`,
-                  width: '90vw',
-                  maxWidth: '800px',
-                  maxHeight: '400px',
-                  margin: '0 auto',
-                  padding: '20px',
-                  borderRadius: '12px', // Added for better flash effect visibility
-                  transition: 'background-color 0.3s ease', // Smooth transition for flash effect
-                }}
-              >
-                {Array.from({ length: settings.gridSize * settings.gridSize }).map((_, index) =>
-                  renderButton(index)
-                )}
-
-                {/* Particle Effects */}
-                {particleEffects.map(effect => (
-                  <PopEffect
-                    key={effect.id}
-                    row={effect.row}
-                    col={effect.col}
-                    onComplete={() => {
-                      setParticleEffects(prev => 
-                        prev.filter(e => e.id !== effect.id)
-                      );
-                    }}
-                  />
-                ))}
-              </div>
+              </form>
             </div>
           </div>
-    
-          {/* Countdown Overlay */}
-          {gameState === 'countdown' && (
-            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-              <div className="text-6xl font-bold text-purple-600 animate-pulse">
-                {countdown}
-              </div>
+        )}
+  
+        {/* Achievement Notification */}
+        {newAchievement && (
+          <div className="fixed bottom-4 right-4 animate-slide-up">
+            <div className={`p-4 rounded-lg shadow-lg ${
+              settings.theme === 'dark' ? 'bg-gray-700' : 'bg-white'
+            }`}>
+              <div className="font-bold mb-1">Achievement Unlocked!</div>
+              <div>{newAchievement.title}</div>
             </div>
-          )}
-    
-          {/* Game Over Overlay */}
-          {showGameOver && (
-            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-              <div className={`p-8 rounded-lg ${
-                settings.theme === 'dark' ? 'bg-gray-800' : 'bg-white'
-              } shadow-xl max-w-md w-full mx-4`}>
-                <h2 className="text-2xl font-bold mb-4">Game Over!</h2>
-                <div className="space-y-2 mb-6">
-                  <p>Final Score: {score}</p>
-                  <p>Highest Combo: {gameStats.highestCombo}x</p>
-                  <p>Accuracy: {((gameStats.successfulClicks / gameStats.totalClicks) * 100 || 0).toFixed(1)}%</p>
-                </div>
-                <div className="flex gap-4">
-                  <button
-                    onClick={startGame}
-                    className={`flex-1 px-4 py-2 rounded-lg font-bold ${
-                      settings.theme === 'dark'
-                        ? 'bg-purple-600 hover:bg-purple-500'
-                        : 'bg-purple-600 hover:bg-purple-700 text-white'
-                    }`}
-                  >
-                    Play Again
-                  </button>
-                  <Link
-                    to="/profile"
-                    className={`flex-1 px-4 py-2 rounded-lg font-bold text-center ${
-                      settings.theme === 'dark'
-                        ? 'bg-gray-700 hover:bg-gray-600'
-                        : 'bg-gray-200 hover:bg-gray-300'
-                    }`}
-                  >
-                    View Profile
-                  </Link>
-                </div>
-              </div>
-            </div>
-          )}
-    
-          {/* Username Input Modal */}
-          {showUsernameInput && (
-            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-12">
-              <div className={`p-8 rounded-lg ${
-                settings.theme === 'dark' ? 'bg-gray-800' : 'bg-white'
-              } shadow-xl max-w-md w-full mx-4`}>
-                <h2 className="text-2xl font-bold mb-4">Enter Your Username</h2>
-                <form onSubmit={handleUsernameSubmit}>
-                  <input
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className={`w-full px-4 py-2 rounded-lg mb-4 ${
-                      settings.theme === 'dark'
-                        ? 'bg-gray-700 text-white'
-                        : 'bg-gray-100'
-                    }`}
-                    placeholder="Username"
-                    maxLength={20}
-                    required
-                  />
-                  <button
-                    type="submit"
-                    className={`w-full px-4 py-2 rounded-lg font-bold ${
-                      settings.theme === 'dark'
-                        ? 'bg-purple-600 hover:bg-purple-500'
-                        : 'bg-purple-600 hover:bg-purple-700 text-white'
-                    }`}
-                  >
-                    Start Game
-                  </button>
-                </form>
-              </div>
-            </div>
-          )}
-    
-          {/* Achievement Notification */}
-          {newAchievement && (
-            <div className="fixed bottom-4 right-4 animate-slide-up">
-              <div className={`p-4 rounded-lg shadow-lg ${
-                settings.theme === 'dark' ? 'bg-gray-700' : 'bg-white'
-              }`}>
-                <div className="font-bold mb-1">Achievement Unlocked!</div>
-                <div>{newAchievement.title}</div>
-              </div>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
-    );
+    </div>
+  );
     
   };
   
