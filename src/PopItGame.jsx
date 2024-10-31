@@ -7,11 +7,14 @@ import Particles from "react-tsparticles";
 import { loadFull } from "tsparticles";
 import './PopItGame.css';
 import mascotImage from './images/cute-mascot.png';
-
+import { useAvatar } from './hooks/useAvatar';
 
 const PopItGame = () => {
   const { settings } = useSettings();
   
+  //avatars
+  const { playerAvatar, setPlayerAvatar } = useAvatar();
+
   // Game state
   const [gameState, setGameState] = useState('menu'); // menu, countdown, playing, over
   const [gameStarted, setGameStarted] = useState(false);
@@ -224,6 +227,7 @@ const PopItGame = () => {
     const leaderboard = JSON.parse(localStorage.getItem('leaderboard') || '[]');
     const newEntry = {
       username: localStorage.getItem('username'),
+      avatar: playerAvatar,
       score: newScore,
       multiplier,
       timestamp: Date.now()
@@ -231,10 +235,10 @@ const PopItGame = () => {
     
     leaderboard.push(newEntry);
     leaderboard.sort((a, b) => b.score - a.score);
-    leaderboard.splice(100); // Keep only top 100 scores
+    leaderboard.splice(100);
     
     localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
-  }, [multiplier]);
+  }, [multiplier, playerAvatar]);
 
   // Update recent games
   const updateRecentGames = useCallback((gameStats) => {
@@ -506,20 +510,16 @@ const PopItGame = () => {
     }
   }, [lives, gameOver, handleGameOver]);
 
-  // Username input handling
-  const handleUsernameSubmit = (e) => {
-    e.preventDefault();
-    if (username.trim()) {
-      localStorage.setItem('username', username.trim());
-      setShowUsernameInput(false);
-      startGame();
-    }
-  };
-
   return (
     <PopItGameUI
       settings={settings}
       username={username}
+      setShowUsernameInput={setShowUsernameInput}
+      setUsername={setUsername}
+      showUsernameInput={showUsernameInput}
+      startTime={startTime}
+      setGameTime={setGameTime}
+      newAchievement={newAchievement}
       score={score}
       lives={lives}
       multiplier={multiplier}
@@ -537,6 +537,8 @@ const PopItGame = () => {
       renderButton={renderButton}
       PopEffect={PopEffect}
       setParticleEffects={setParticleEffects}
+      playerAvatar={playerAvatar}
+      setPlayerAvatar={setPlayerAvatar}
     />
   );
 };

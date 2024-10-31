@@ -6,6 +6,7 @@ import { Trophy, Star, Clock, Target, Award, ArrowLeft, Zap,
 import { useSettings } from './Settings';
 import { getPlayerStats } from './utils/playerStats';
 import { ACHIEVEMENTS } from './achievements';
+import { getAvatarImage } from './constants/avatars';
 
 const StatCard = ({ icon, label, value, theme }) => (
   <div className={`p-4 rounded-lg ${
@@ -27,6 +28,7 @@ const PlayerProfile = () => {
   const [achievementProgress, setAchievementProgress] = useState({});
   const [unlockedAchievements, setUnlockedAchievements] = useState([]);
   const [recentGames, setRecentGames] = useState([]);
+  const [playerAvatar] = useState(() => localStorage.getItem('playerAvatar') || 'ninja');
 
   // Load data on mount
   useEffect(() => {
@@ -106,23 +108,26 @@ const PlayerProfile = () => {
           <span>Back to Game</span>
         </Link>
 
-        {/* Profile Header */}
+       {/* Profile Header */}
         <div className={`rounded-lg shadow-lg p-6 mb-6 ${
           settings.theme === 'dark' ? 'bg-gray-700' : 'bg-white'
         }`}>
           <div className="flex items-center gap-4 mb-4">
-            <div className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold ${
-              settings.theme === 'dark' ? 'bg-purple-600' : 'bg-purple-100'
-            }`}>
-              {localStorage.getItem('username')?.charAt(0).toUpperCase()}
+            <div className="relative">
+              <img
+                src={getAvatarImage(playerAvatar)}
+                alt={`${localStorage.getItem('username')}'s avatar`}
+                className="w-16 h-16 rounded-full object-cover border-2 border-purple-500"
+              />
             </div>
             <div>
               <h1 className="text-2xl font-bold">{localStorage.getItem('username')}</h1>
               <div className="flex items-center gap-2">
                 <span className={`text-sm ${
                   settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
-                }`}>
-                  Level {stats.progress.level}</span>
+                }`}></span>
+                  Level {stats.progress.level}
+                
                 
                 <div className="flex-1 h-2 bg-gray-200 rounded-full w-32">
                   <div
@@ -135,7 +140,7 @@ const PlayerProfile = () => {
               </div>
             </div>
           </div>
-
+          
           {/* Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <StatCard
