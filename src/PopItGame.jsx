@@ -71,40 +71,60 @@ const PopItGame = () => {
 
   // Update the PopEffect component
   const PopEffect = ({ row, col, onComplete }) => {
+    // Array of vibrant colors for particles
+    const particleColors = [
+      // Purples
+      "#9333EA", "#A855F7", "#C084FC",
+      // Blues
+      "#3B82F6", "#60A5FA", "#93C5FD",
+      // Pinks
+      "#EC4899", "#F472B6", "#F9A8D4",
+      // Greens
+      "#10B981", "#34D399", "#6EE7B7",
+      // Oranges
+      "#F59E0B", "#FBBF24", "#FCD34D",
+      // Reds
+      "#EF4444", "#F87171", "#FCA5A5"
+    ];
+  
+    // Get random colors from the array
+    const getRandomColors = (count = 3) => {
+      const shuffled = [...particleColors].sort(() => 0.5 - Math.random());
+      return shuffled.slice(0, count);
+    };
+  
     const options = {
       fullScreen: { enable: false },
       fpsLimit: 60,
       particles: {
         number: { value: 24 },
         color: { 
-          value: settings.theme === 'dark' 
-            ? ["#9333EA", "#A855F7"] 
-            : ["#7C3AED", "#8B5CF6"]
+          value: getRandomColors() // Use random colors
         },
         shape: { type: "circle" },
         opacity: {
           value: 1,
           animation: {
             enable: true,
-            speed: 2, // Increased speed for faster fade
+            speed: 1,
             minimumValue: 0,
             sync: false
           }
         },
         size: {
-          value: 4,
+          value: 6,
           random: {
             enable: true,
-            minimumValue: 2
+            minimumValue: 3
           }
         },
         move: {
           enable: true,
           gravity: { 
             enable: true, 
-            acceleration: 20  // Increased acceleration
+            acceleration: 25
           },
-          speed: 15,  // Increased speed
+          speed: 20,
           direction: "top",
           random: true,
           straight: false,
@@ -116,17 +136,17 @@ const PopItGame = () => {
         direction: "top",
         life: { 
           count: 1, 
-          duration: 0.05  // Reduced duration
+          duration: 0.05
         },
         rate: { 
           delay: 0, 
-          quantity: 8
+          quantity: 15
         }
       }
     };
   
     useEffect(() => {
-      const timer = setTimeout(onComplete, 300); // Reduced from 800ms to 300ms
+      const timer = setTimeout(onComplete, 300);
       return () => clearTimeout(timer);
     }, [onComplete]);
   
@@ -151,7 +171,6 @@ const PopItGame = () => {
     );
   };
   
-
   //mascot speechbubble
   useEffect(() => {
     if (mascotMessage) {
@@ -576,7 +595,7 @@ const PopItGame = () => {
                   alt="Game Mascot"
                   className="w-32 h-32 object-contain animate-bounce"
                 />
-                {mascotMessage && (
+                {showSpeechBubble && mascotMessage && (
                   <div className={`speech-bubble ${
                     settings.theme === 'dark' ? 'bg-gray-700' : 'bg-white'
                   } p-3 rounded-lg shadow-lg`}>
