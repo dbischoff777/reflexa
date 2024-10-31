@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { Heart } from 'lucide-react';
 import { useSettings } from './Settings';
 import { updatePlayerStats } from './utils/playerStats';
-  
 import { checkAchievementsUnlocked, updateAchievementProgress, ACHIEVEMENTS} from './achievements';
 
 const PopItGame = () => {
@@ -142,9 +141,36 @@ const PopItGame = () => {
 
     setScore(newScore);
     setMultiplier(newMultiplier);
+
+    // Update achievement progress in localStorage
+    const currentProgress = JSON.parse(localStorage.getItem('achievementProgress') || '{}');
+    const updatedProgress = {
+      ...currentProgress,
+      highestMultiplier: Math.max(newMultiplier, currentProgress.highestMultiplier || 0)
+    };
+    localStorage.setItem('achievementProgress', JSON.stringify(updatedProgress));
+
+    // Check for multiplier achievements
+    if (newMultiplier >= 2) {
+      // Get previously unlocked achievements
+      const previouslyUnlocked = new Set(JSON.parse(localStorage.getItem('unlockedAchievements') || '[]'));
+      const multiplierAchievements = ACHIEVEMENTS.MULTIPLIER;
+      
+      multiplierAchievements.forEach(achievement => {
+        if (newMultiplier >= achievement.requirement && !previouslyUnlocked.has(achievement.id)) {
+          const newUnlocked = Array.from(new Set([...previouslyUnlocked, achievement.id]));
+          localStorage.setItem('unlockedAchievements', JSON.stringify(newUnlocked));
+          setNewAchievement(achievement);
+        }
+      });
+    }
+
     playSound('pop');
     setTargetButton(getRandomButton());
   }, [multiplier, score, gameStats.lastClickTime, playSound, getRandomButton]);
+
+
+
 
   const handleMiss = useCallback(() => {
     setLives(prev => prev - 1);

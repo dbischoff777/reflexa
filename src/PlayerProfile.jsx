@@ -62,7 +62,7 @@ const PlayerProfile = () => {
 
   // Calculate achievement progress percentage
   const getProgressPercentage = (achievement) => {
-    const progress = achievementProgress;
+    const progress = achievementProgress || {};
     
     switch (achievement.type) {
       case 'GAMES_PLAYED':
@@ -80,10 +80,16 @@ const PlayerProfile = () => {
         return Math.min(100, ((progress.longestStreak || 0) / achievement.requirement) * 100);
       case 'PERFECT_GAMES':
         return Math.min(100, ((progress.perfectGames || 0) / achievement.requirement) * 100);
+      case 'MULTIPLIER':
+        //Add null check and default value
+        const highestMultiplier = progress.highestMultiplier || 0;
+        const percentage = (highestMultiplier / achievement.requirement) * 100;
+        return Math.min(100, percentage || 0);
       default:
         return unlockedAchievements.includes(achievement.id) ? 100 : 0;
     }
   };
+  
 
   return (
     <div className={`min-h-screen ${

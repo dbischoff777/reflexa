@@ -105,8 +105,8 @@ export const ACHIEVEMENTS = {
       { id: 'playtime_3h', target: 180, title: 'Dedicated Gamer', description: 'Play for 3 hours', icon: '⌛' }
     ],
     MULTIPLIER: [
-      { id: 'multiplier_2x', target: 2, title: 'Double Trouble', description: 'Reach a 2x multiplier', icon: '✨' },
-      { id: 'multiplier_3x', target: 3, title: 'Triple Threat', description: 'Reach a 3x multiplier', icon: '🔥' }
+      { id: 'multiplier_2x', type: 'MULTIPLIER', requirement: 2, title: 'Double Trouble', description: 'Reach a 2x multiplier', icon: '✨' },
+      { id: 'multiplier_3x', type: 'MULTIPLIER', requirement: 3, title: 'Triple Threat', description: 'Reach a 3x multiplier', icon: '🔥' }
     ],
     SPECIAL: [
       { id: 'perfect_game', target: 1, title: 'Flawless Victory', description: 'Score 500+ points without losing lives', icon: '💎' },
