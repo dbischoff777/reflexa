@@ -115,16 +115,17 @@
     border: none;
     cursor: pointer;
     position: relative;
-    transition: all 0.2s ease;
     background: transparent;
     box-shadow: 
       inset 0 -8px 12px rgba(0,0,0,0.2),
       inset 0 8px 12px rgba(255,255,255,0.7),
       0 4px 8px rgba(0,0,0,0.15);
-    overflow: hidden;
+    overflow: visible;
     min-width: 80px;
     min-height: 80px;
     margin: 10px;
+    transition: all 0.3s ease-in-out;
+    will-change: transform, box-shadow;
   }
   
   .bowl-button::before {
@@ -147,7 +148,7 @@
     width: 50%;
     height: 50%;
     border-radius: 50%;
-    background: #8B4513; /* Changed to brown */
+    background: #9333ea;
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
   }
   
@@ -159,16 +160,17 @@
       0 6px 12px rgba(0,0,0,0.2);
   }
   
+  /* Optional: Add hover effect */
+  .bowl-button.target:hover {
+    box-shadow: 0 0 25px #9333ea, 0 0 50px #9333ea, 0 0 75px #9333ea;
+  }
+
   .bowl-button:active {
     transform: translateY(1px);
     box-shadow: 
       inset 0 -4px 8px rgba(0,0,0,0.2),
       inset 0 4px 8px rgba(255,255,255,0.7),
       0 2px 4px rgba(0,0,0,0.1);
-  }
-  
-  .bowl-button.target {
-    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
   }
   
   .bowl-button.target::before {
@@ -189,25 +191,7 @@
   .bowl-button.target {
     position: relative;
     background: linear-gradient(145deg, #9333ea, #7e22ce);
-  }
-
-  .heart-container {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(1);
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     z-index: 1;
-  }
-
-  .heart-container svg {
-    width: 100%;
-    height: 100%;
-    fill: #FF0000;
   }
   
   /* Update grid container for larger spacing */
@@ -258,14 +242,6 @@
       margin: 5px;
     }
   }
-  
-  /* Add smooth transitions */
-  .bowl-button {
-    /* Add to existing bowl-button class */
-    transition: all 0.3s ease;
-    will-change: transform, box-shadow;
-  }
-  
     /* Optional: Add larger glow effect for bigger buttons */
     .bowl-button.target::after {
         box-shadow: 
@@ -279,30 +255,6 @@
     justify-content: center;
     margin-bottom: 2rem;
     width: 100%;
-  }
-  
-  .start-button {
-    padding: 1rem 2rem;
-    font-size: 1.25rem;
-    font-weight: bold;
-    color: white;
-    background: linear-gradient(145deg, #4f46e5, #4338ca);
-    border: none;
-    border-radius: 0.75rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
-  
-  .start-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
-    background: linear-gradient(145deg, #5753e6, #4c42cb);
-  }
-  
-  .start-button:active {
-    transform: translateY(1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
   
   /* Update game container to use flex column */
@@ -324,13 +276,10 @@
     font-weight: bold;
   }
   
-  .countdown {
-    font-size: 4rem;
-    font-weight: bold;
-    color: #4f46e5;
-    animation: pulse 1s infinite;
+  .glow-effect {
+    animation: pulse 2s infinite;
   }
-  
+
   @keyframes pulse {
     0% {
       transform: scale(1);

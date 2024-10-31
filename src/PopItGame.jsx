@@ -423,43 +423,36 @@ const PopItGame = () => {
       gameSpeed
     ]);
     
-    // Update the renderButton function
+    //Update the renderButton function
     const renderButton = (index) => {
       const isTarget = targetButton === index;
-      const buttonSize = Math.min(100 / settings.gridSize, 8);
       
       return (
         <div 
           key={index}
-          className="relative"
-          style={{
-            width: `${buttonSize}vw`,
-            height: `${buttonSize}vw`,
-            padding: `${buttonSize * 0.1}vw`,
-            margin: `${buttonSize * 0.05}vw`,
-          }}
+          className="relative w-full h-full"
         >
-          <div className="relative w-full h-full">
-            <button
-              className={`bowl-button w-full h-full ${isTarget ? 'target' : ''}`}
-              onClick={() => handleButtonClick(index)}
-              disabled={!gameStarted || gameOver}
-              style={{
-                backgroundColor: 'purple',
-                background: isTarget ? 'radial-gradient(circle, #0000FF 20%, #9333ea 60%)' : 'transparent'
-              }}
-            >
-              {isTarget && (
-                <svg 
-                  viewBox="0 0 24 24" 
-                  className="absolute inset-0 w-full h-full pointer-events-none"
-                  fill="#0000FF"
-                >
-                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                </svg>
-              )}
-            </button>
-          </div>
+          <button
+            className={`
+              bowl-button 
+              w-full 
+              h-full 
+              rounded-full 
+              transition-all 
+              duration-200 
+              ${isTarget ? 'target glow-effect' : ''}
+            `}
+            onClick={() => handleButtonClick(index)}
+            disabled={!gameStarted || gameOver}
+            style={{
+              backgroundColor: isTarget ? '#9333ea' : 'transparent',
+              aspectRatio: '1 / 1',
+              transform: 'scale(0.85)',
+              transformOrigin: 'center',
+              boxShadow: isTarget ? '0 0 15px #9333ea, 0 0 30px #9333ea, 0 0 45px #9333ea' : 'none',
+              transition: 'all 0.3s ease-in-out'
+            }}
+          />
         </div>
       );
     };
@@ -717,7 +710,7 @@ const PopItGame = () => {
     
           {/* Username Input Modal */}
           {showUsernameInput && (
-            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-12">
               <div className={`p-8 rounded-lg ${
                 settings.theme === 'dark' ? 'bg-gray-800' : 'bg-white'
               } shadow-xl max-w-md w-full mx-4`}>
