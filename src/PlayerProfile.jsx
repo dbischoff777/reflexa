@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Trophy, Star, Clock, Target, Award, ArrowLeft, Zap, 
-         Heart, Crosshair, Flame, Crown } from 'lucide-react';
+         Crosshair, Flame, Crown } from 'lucide-react';
 import { useSettings } from './Settings';
 import { getPlayerStats } from './utils/playerStats';
 import { ACHIEVEMENTS } from './achievements';
@@ -68,7 +68,8 @@ const PlayerProfile = () => {
     
     switch (achievement.type) {
       case 'GAMES_PLAYED':
-        return Math.min(100, ((progress.gamesPlayed || 0) / achievement.requirement) * 100);
+        const gamesPlayed = progress.gamesPlayed || 0;
+        return Math.min(100, (gamesPlayed / achievement.requirement) * 100);
       case 'HIGH_SCORE':
         return Math.min(100, ((progress.highestScore || 0) / achievement.requirement) * 100);
       case 'TOTAL_SCORE':
@@ -214,7 +215,7 @@ const PlayerProfile = () => {
                       <div className={`text-sm ${
                         settings.theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
                       }`}>
-                        Multiplier: x{game.multiplier.toFixed(1)}
+                        Multiplier: x {game.multiplier.toFixed(1)}
                       </div>
                     </div>
                     <div className={`text-sm ${

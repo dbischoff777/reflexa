@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import PopItGameUI from './PopItGameUI';
 import { useSettings } from './Settings';
 import { updatePlayerStats } from './utils/playerStats';
-import { checkAchievementsUnlocked, updateAchievementProgress, ACHIEVEMENTS} from './achievements';
+import { checkAchievementsUnlocked, ACHIEVEMENTS} from './achievements';
 import Particles from "react-tsparticles";
 import { loadFull } from "tsparticles";
 import './PopItGame.css';
@@ -52,7 +52,7 @@ const PopItGame = () => {
     highestCombo: 0,
     combos: [],
     reactionTimes: [],
-    maxMultiplier: 1,
+    multiplier: 1,
     lives: 5,
     maxLives: 5,
     startTime: null,
@@ -184,7 +184,6 @@ const PopItGame = () => {
     }
   }, [mascotMessage]);
   
-
   // Audio Management
   const audioEffects = useMemo(() => ({
     countdown: new Audio('/sounds/countdown.mp3'),
@@ -205,12 +204,23 @@ const PopItGame = () => {
     return Math.floor(Math.random() * (settings.gridSize * settings.gridSize));
   }, [settings.gridSize]);
 
+  const [maxMultiplier, setMaxMultiplier] = useState(1);
+
+  // Update maxMultiplier whenever multiplier changes
+  useEffect(() => {
+      if (multiplier > maxMultiplier) {
+          setMaxMultiplier(multiplier);
+      }
+  }, [multiplier, maxMultiplier]);
+
   // Calculate final stats
   const calculateFinalStats = useCallback((endTime) => {
     const duration = Math.floor((endTime - gameStats.startTime) / 1000);
     return {
       ...gameStats,
       score,
+      multiplier: maxMultiplier,
+      maxMultiplier,
       duration,
       gameTime,
       averageCombo: gameStats.combos.reduce((a, b) => a + b, 0) / gameStats.combos.length || 0,
@@ -220,7 +230,7 @@ const PopItGame = () => {
       lives,
       maxLives: 5
     };
-  }, [gameStats, score, gameTime, lives]);
+  }, [gameStats, score, gameTime, lives, maxMultiplier]);
 
   // Update leaderboard
   const updateLeaderboard = useCallback((newScore) => {
@@ -329,14 +339,21 @@ const PopItGame = () => {
       
       // Update recent games
       updateRecentGames(finalStats);
-      
+
       // Update achievement progress
       const currentProgress = JSON.parse(localStorage.getItem('achievementProgress') || '{}');
-      const newProgress = updateAchievementProgress(finalStats, currentProgress);
-      localStorage.setItem('achievementProgress', JSON.stringify(newProgress));
+      // Update progress with new stats including games played
+      const updatedProgress = {
+      ...currentProgress,
+      gamesPlayed: (currentProgress.gamesPlayed || 0) + 1,
+      totalScore: (currentProgress.totalScore || 0),
+      highestScore: Math.max(finalStats.score, currentProgress.highestScore || 0),
+      highestMultiplier: Math.max(maxMultiplier, currentProgress.highestMultiplier || 0),
+      };
+      localStorage.setItem('achievementProgress', JSON.stringify(updatedProgress));
       
       // Check for newly unlocked achievements
-      const unlockedAchievements = checkAchievementsUnlocked(newProgress);
+      const unlockedAchievements = checkAchievementsUnlocked(updatedProgress);
       if (unlockedAchievements.length > 0) {
         // Get previously unlocked achievements
         const previouslyUnlocked = new Set(JSON.parse(localStorage.getItem('unlockedAchievements') || '[]'));
@@ -364,8 +381,78 @@ const PopItGame = () => {
       setGameOver(true);
       setShowGameOver(true);
       setGameState('over');
-    }, [calculateFinalStats, updateLeaderboard, updateRecentGames, playSound]);
+    }, [
+      calculateFinalStats,
+      updatePlayerStats,
+      updateLeaderboard,
+      updateRecentGames,
+      playSound,
+      score,
+      maxMultiplier,
+      gameStats,
+      setGameOver,
+      setShowGameOver,
+      setGameState,
+      setNewAchievement
+    ]);
   
+  // Add useEffect to handle achievement notification display
+  useEffect(() => {
+    if (newAchievement) {
+        // Clear achievement notification after delay
+        const timer = setTimeout(() => {
+            setNewAchievement(null);
+        }, 3000); // Show for 3 seconds
+        
+        return () => clearTimeout(timer);
+    }
+  }, [newAchievement]);
+
+  const checkAndUpdateAchievements = useCallback(() => {
+    const endTime = Date.now();
+    const finalStats = calculateFinalStats(endTime);
+    const currentProgress = JSON.parse(localStorage.getItem('achievementProgress') || '{}');
+    const updatedProgress = {
+        ...currentProgress,
+        totalScore: (currentProgress.totalScore || 0),
+        highestScore: Math.max(finalStats.score, currentProgress.highestScore || 0),
+        highestMultiplier: Math.max(maxMultiplier, currentProgress.highestMultiplier || 0),
+        combos: gameStats.combos,
+        reactionTimes: gameStats.reactionTimes,
+        avgReactionTime: finalStats.avgReactionTime,
+        bestReactionTime: finalStats.bestReactionTime
+    };
+
+    localStorage.setItem('achievementProgress', JSON.stringify(updatedProgress));
+
+    // Check for newly unlocked achievements
+    const previouslyUnlocked = new Set(JSON.parse(localStorage.getItem('unlockedAchievements') || '[]'));
+    const unlockedAchievements = checkAchievementsUnlocked(updatedProgress);
+    
+    const newlyUnlocked = unlockedAchievements.filter(id => !previouslyUnlocked.has(id));
+
+    if (newlyUnlocked.length > 0) {
+        // Save all unlocked achievements
+        localStorage.setItem('unlockedAchievements', 
+            JSON.stringify([...Array.from(previouslyUnlocked), ...newlyUnlocked])
+        );
+
+        // Find achievement details for notification
+        const achievementDetails = Object.values(ACHIEVEMENTS)
+            .flat()
+            .find(achievement => achievement.id === newlyUnlocked[0]);
+
+        setNewAchievement(achievementDetails);
+    }
+}, [score, multiplier]);
+
+  // Call checkAndUpdateAchievements when relevant game events occur
+  useEffect(() => {
+    if (gameState === 'playing') {
+        checkAndUpdateAchievements();
+    }
+  }, [score, multiplier, gameState, checkAndUpdateAchievements]);
+
   // Handle button click
   const handleButtonClick = useCallback((index) => {
     if (gameState !== 'playing') return;

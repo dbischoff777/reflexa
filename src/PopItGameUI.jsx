@@ -29,6 +29,7 @@ const PopItGameUI = ({
   PopEffect,
   playerAvatar,
   setPlayerAvatar,
+  newAchievement,
 }) => {
   const handleUsernameSubmit = (e) => {
     e.preventDefault();
@@ -102,7 +103,33 @@ const PopItGameUI = ({
             </Link>
           </div>
         </div>
-  
+        
+        {/* Achievement Notification */}
+          {newAchievement && (
+            <div className="fixed top-4 right-4 z-50 animate-slide-in-achievement">
+              <div className={`flex items-center gap-3 p-4 rounded-lg shadow-lg ${
+                settings.theme === 'dark' 
+                  ? 'bg-gray-800 text-white border border-purple-500' 
+                  : 'bg-white text-gray-900 border border-purple-300'
+              }`}>
+                <div className="text-2xl">🏆</div>
+                <div className="flex flex-col">
+                  <h3 className={`font-bold ${
+                    settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
+                  }`}>
+                    Achievement Unlocked!
+                  </h3>
+                  <p className="font-medium">{newAchievement.title}</p>
+                  <p className={`text-sm ${
+                    settings.theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                  }`}>
+                    {newAchievement.description}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
         {/* Game Area Container */}
         {gameState !== 'menu' ? (
           <div className="w-full flex flex-col items-center justify-center">
@@ -288,7 +315,9 @@ const PopItGameUI = ({
             </div>
           </div>
         )}
-  
+
+      
+
       {/* Game Over Overlay */}
       {showGameOver && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
@@ -350,8 +379,7 @@ const PopItGameUI = ({
       )}
     </div>
   );
-  
-  
+
 };
 
 export default PopItGameUI;
