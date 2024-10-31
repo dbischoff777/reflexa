@@ -151,7 +151,7 @@ const PopItGameUI = ({
                     <div className={`text-lg ${
                       settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
                     }`}>
-                      Multiplier: x{multiplier.toFixed(1)}
+                      Multiplier: x {multiplier.toFixed(1)}
                     </div>
                   )}
                 </div>
