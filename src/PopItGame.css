@@ -23,15 +23,23 @@
     }
   }
 
-.game-container {
-    background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96c93d);
-    background-size: 400% 400%;
-    animation: gradientBG 15s ease infinite;
-    padding: 20px;
-    border-radius: 15px;
+  .game-container {
     position: relative;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 1rem;
     overflow: hidden;
   }
+  
+  .particle {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    transition: transform 0.2s ease;
+  }
+  
+  .particle:hover {
+    transform: translate(-50%, -50%) scale(1.1);
+  }  
   
   @keyframes gradientBG {
     0% { background-position: 0% 50% }
@@ -217,6 +225,100 @@
       min-width: 120px;
       min-height: 120px;
     }
+  }
+  
+  .game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  
+  .game-grid {
+    position: relative;
+    display: grid;
+    gap: 8px;
+    padding: 8px;
+    width: min(90vw, 90vh);
+    aspect-ratio: 1/1;
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+  }
+  
+  /* Explicit grid sizing based on grid size */
+  .game-grid[style*="grid-template-columns"] {
+    display: grid;
+    width: min(90vw, 90vh);
+    height: min(90vw, 90vh);
+  }
+  
+  .game-button {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    overflow: hidden;
+    z-index: 1;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  /* Portrait mode specific */
+  @media screen and (orientation: portrait) {
+    .game-grid {
+      width: min(85vw, 85vh);
+      height: min(85vw, 85vh);
+    }
+    
+    .game-container {
+      padding: 10px;
+    }
+  }
+  
+  /* Large screens in portrait */
+  @media screen and (min-width: 1080px) and (orientation: portrait) {
+    .game-grid {
+      width: min(80vw, 80vh);
+      height: min(80vw, 80vh);
+    }
+  }
+  
+  /* Extra large screens */
+  @media screen and (min-width: 1920px) {
+    .game-grid {
+      width: min(75vw, 75vh);
+      height: min(75vw, 75vh);
+    }
+  }
+  
+  /* Ensure grid items maintain aspect ratio */
+  .game-grid > * {
+    min-width: 0;
+    min-height: 0;
+  }
+  
+  /* Remove any conflicting styles */
+  .game-button::before {
+    display: none;
+  }
+  
+  /* Ensure content stays within buttons */
+  .game-button > * {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
   }
   
   /* Add responsive container sizing */

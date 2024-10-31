@@ -437,30 +437,23 @@ const PopItGame = () => {
   //Update the renderButton function
   const renderButton = (index) => {
     const isTarget = targetButton === index;
-    const buttonSize = Math.min(100 / settings.gridSize, 8);
-      
     return (
       <div 
         key={index}
-        className="relative"
-        style={{
-          width: `${buttonSize}vw`,
-          height: `${buttonSize}vw`,
-          padding: `${buttonSize * 0.1}vw`,
-          margin: `${buttonSize * 0.05}vw`,
-        }}
+        className="relative w-full h-full p-[3%]" // Use percentage padding for consistent spacing
       >
         <div className="relative w-full h-full">
           <button
-            className={`bowl-button w-full h-full ${isTarget ? 'target' : ''}`}
+            className={`bowl-button absolute inset-0 rounded-full transition-colors duration-200 ${isTarget ? 'target' : ''}`}
             onClick={() => handleButtonClick(index)}
             disabled={!gameStarted || gameOver}
             style={{
-              backgroundColor: 'purple',
-              background: isTarget ? 'radial-gradient(circle, #0000FF 20%, #9333ea 60%)' : 'transparent'
+              backgroundColor: isTarget ? '#9333ea' : 'transparent',
+              background: isTarget ? 'radial-gradient(circle, #0000FF 20%, #9333ea 60%)' : 'transparent',
+              border: '2px solid #9333ea',
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
             }}
-          >
-          </button>
+          />
         </div>
       </div>
     );
@@ -566,34 +559,36 @@ const PopItGame = () => {
           </div>
         </div>
   
-        {/* Game Area with Grid and Mascot */}
-        <div className="relative flex justify-center mt-32">
+        {/* Game Area Container */}
+        <div className="flex flex-col items-center justify-center w-full">
           {/* Mascot Container - Centered above game grid */}
-          <div className="absolute left-1/2 -top-32 transform -translate-x-1/2">
-            <div className={`mascot-container relative ${
-              settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
-            }`}>
-              <img 
-                src={mascotImage}
-                alt="Game Mascot"
-                className="w-32 h-32 object-contain animate-bounce"
-              />
-              {showSpeechBubble && mascotMessage && (
-                <div className={`speech-bubble ${
-                  settings.theme === 'dark' ? 'bg-gray-700' : 'bg-white'
-                } p-3 rounded-lg shadow-lg`}>
-                  {mascotMessage}
-                </div>
-              )}
+          <div className="relative w-full flex justify-center mb-4">
+            <div className="absolute -top-10">
+              <div className={`mascot-container relative ${
+                settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
+              }`}>
+                <img 
+                  src={mascotImage}
+                  alt="Game Mascot"
+                  className="w-32 h-32 object-contain animate-bounce"
+                />
+                {showSpeechBubble && mascotMessage && (
+                  <div className={`speech-bubble ${
+                    settings.theme === 'dark' ? 'bg-gray-700' : 'bg-white'
+                  } p-3 rounded-lg shadow-lg`}>
+                    {mascotMessage}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
   
           {/* Start Button Container */}
           {gameState === 'menu' && (
-            <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 z-10">
+            <div className="fixed inset-0 flex items-center justify-center z-20">
               <button
                 onClick={startGame}
-                className={`px-8 py-4 rounded-lg font-bold text-xl shadow-lg transition-all duration-200 ${
+                className={`px-12 py-6 rounded-xl font-bold text-2xl shadow-xl transition-all duration-200 transform hover:scale-105 ${
                   settings.theme === 'dark' 
                     ? 'bg-purple-600 hover:bg-purple-500 text-white' 
                     : 'bg-purple-600 hover:bg-purple-700 text-white'
@@ -603,69 +598,71 @@ const PopItGame = () => {
               </button>
             </div>
           )}
+
   
-          {/* Game Grid Container */}
-          <div className="w-full max-w-[800px] px-4">
-            {/* Stats Display */}
-            <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
-              <div className="flex gap-1">
-                {Array.from({ length: lives }).map((_, i) => (
-                  <Heart
-                    key={i}
-                    className={`w-6 h-6 ${
-                      settings.theme === 'dark' ? 'text-purple-400' : 'text-purple-600'
-                    }`}
-                    fill="currentColor"
-                  />
-                ))}
-              </div>
-              <div className={`text-2xl font-bold ${
-                settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
-              }`}>
-                Score: {score}
-              </div>
-              {gameState === 'playing' && (
-                <div className={`text-lg ${
+          {/* Responsive Grid Container */}
+          <div className="w-full flex justify-center px-4">
+            <div className="w-full" style={{ maxWidth: 'min(95vh, 95vw, 800px)' }}>
+              {/* Stats Display */}
+              <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
+                <div className="flex gap-1">
+                  {Array.from({ length: lives }).map((_, i) => (
+                    <Heart
+                      key={i}
+                      className={`w-6 h-6 ${
+                        settings.theme === 'dark' ? 'text-purple-400' : 'text-purple-600'
+                      }`}
+                      fill="currentColor"
+                    />
+                  ))}
+                </div>
+                <div className={`text-2xl font-bold ${
                   settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
                 }`}>
-                  Multiplier: x {multiplier.toFixed(1)}
+                  Score: {score}
                 </div>
-              )}
-            </div>
+                {gameState === 'playing' && (
+                  <div className={`text-lg ${
+                    settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
+                  }`}>
+                    Multiplier: x{multiplier.toFixed(1)}
+                  </div>
+                )}
+              </div>
 
-            {/* Game Grid */}
-            <div 
-              className={`aspect-square grid relative ${
-                gridShake ? 'animate-shake' : ''
-              }`} 
-              style={{
-                gridTemplateColumns: `repeat(${settings.gridSize}, 1fr)`,
-                width: '90vw',
-                maxWidth: '800px',
-                maxHeight: '400px',
-                margin: '0 auto',
-                padding: '20px',
-                borderRadius: '12px', // Added for better flash effect visibility
-                transition: 'background-color 0.3s ease', // Smooth transition for flash effect
-              }}
-            >
-              {Array.from({ length: settings.gridSize * settings.gridSize }).map((_, index) =>
-                renderButton(index)
-              )}
-
-              {/* Particle Effects */}
-              {particleEffects.map(effect => (
-                <PopEffect
-                  key={effect.id}
-                  row={effect.row}
-                  col={effect.col}
-                  onComplete={() => {
-                    setParticleEffects(prev => 
-                      prev.filter(e => e.id !== effect.id)
-                    );
+                  {/* Square Aspect Ratio Container */}
+              <div className="relative w-full pb-[100%]">
+                {/* Absolute Position Grid */}
+                <div 
+                  className={`absolute inset-0 ${gridShake ? 'animate-shake' : ''}`}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: `repeat(${settings.gridSize}, 1fr)`,
+                    gap: '2%',
+                    padding: '2%',
+                    borderRadius: '12px',
+                    transition: 'background-color 0.3s ease',
                   }}
-                />
-              ))}
+                >
+                  {Array.from({ length: settings.gridSize * settings.gridSize }).map((_, index) =>
+                    renderButton(index)
+                  )}
+
+                  {/* Particle Effects */}
+                  {particleEffects.map(effect => (
+                    <PopEffect
+                      key={effect.id}
+                      row={effect.row}
+                      col={effect.col}
+                      onComplete={() => {
+                        setParticleEffects(prev => 
+                          prev.filter(e => e.id !== effect.id)
+                        );
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
