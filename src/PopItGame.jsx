@@ -561,28 +561,26 @@ const PopItGame = () => {
   
         {/* Game Area Container */}
         <div className="flex flex-col items-center justify-center w-full">
-          {/* Mascot Container - Centered above game grid */}
-          <div className="relative w-full flex justify-center mb-4">
-            <div className="absolute -top-10">
-              <div className={`mascot-container relative ${
-                settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
-              }`}>
-                <img 
-                  src={mascotImage}
-                  alt="Game Mascot"
-                  className="w-32 h-32 object-contain animate-bounce"
-                />
-                {showSpeechBubble && mascotMessage && (
-                  <div className={`speech-bubble ${
-                    settings.theme === 'dark' ? 'bg-gray-700' : 'bg-white'
-                  } p-3 rounded-lg shadow-lg`}>
-                    {mascotMessage}
-                  </div>
-                )}
-              </div>
+          {/* Mascot Container - Centered above game stats */}
+          <div className="w-full flex justify-center mb-8 mt-4">
+            <div className={`mascot-container relative px-8 ${
+              settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
+            }`}>
+              {showSpeechBubble && mascotMessage && (
+                <div className={`speech-bubble absolute left-1/2 -translate-x-1/2 -top-20 ${
+                  settings.theme === 'dark' ? 'bg-gray-700' : 'bg-white'
+                } p-3 rounded-lg shadow-lg max-w-[200px] text-sm z-10 whitespace-normal`}>
+                  {mascotMessage}
+                </div>
+              )}
+              <img 
+                src={mascotImage}
+                alt="Game Mascot"
+                className="w-32 h-32 object-contain animate-bounce relative z-0"
+              />
             </div>
           </div>
-  
+
           {/* Start Button Container */}
           {gameState === 'menu' && (
             <div className="fixed inset-0 flex items-center justify-center z-20">
@@ -599,7 +597,6 @@ const PopItGame = () => {
             </div>
           )}
 
-  
           {/* Responsive Grid Container */}
           <div className="w-full flex justify-center px-4">
             <div className="w-full" style={{ maxWidth: 'min(95vh, 95vw, 800px)' }}>
