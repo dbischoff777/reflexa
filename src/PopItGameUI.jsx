@@ -103,7 +103,7 @@ const PopItGameUI = ({
             </Link>
           </div>
         </div>
-        
+
         {/* Achievement Notification */}
           {newAchievement && (
             <div className="fixed top-4 right-4 z-50 animate-slide-in-achievement">
@@ -222,10 +222,13 @@ const PopItGameUI = ({
         ) : (
           // Menu State Content
           <div className="flex flex-col items-center justify-center gap-6 my-8">
-            <AvatarSelector 
-              currentAvatar={playerAvatar}
-              onSelect={setPlayerAvatar}
-            />
+            <div className="w-256 h-256"> 
+              <AvatarSelector 
+                currentAvatar={playerAvatar}
+                onSelect={setPlayerAvatar}
+                className="w-full h-full [image-rendering:-webkit-optimize-contrast] [image-rendering:crisp-edges] [image-rendering:pixelated]"
+              />
+            </div>
             {localStorage.getItem('username') ? (
               <button
                 onClick={handleUsernameSubmit}
@@ -315,8 +318,6 @@ const PopItGameUI = ({
             </div>
           </div>
         )}
-
-      
 
       {/* Game Over Overlay */}
       {showGameOver && (
