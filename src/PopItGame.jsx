@@ -4,6 +4,7 @@ import { Heart } from 'lucide-react';
 import { useSettings } from './Settings';
 import { updatePlayerStats } from './utils/playerStats';
 import { checkAchievementsUnlocked, updateAchievementProgress, ACHIEVEMENTS} from './achievements';
+import { Engine } from "tsparticles-engine";
 import Particles from "react-tsparticles";
 import { loadFull } from "tsparticles";
 import './PopItGame.css';
@@ -59,6 +60,7 @@ const PopItGame = () => {
 
   //new particle and mascot variables
   const [particleEffects, setParticleEffects] = useState([]);
+  const maxParticleEffects = 2; // Limit concurrent effects
   const [showSpeechBubble, setShowSpeechBubble] = useState(false);
   const [mascotMessage, setMascotMessage] = useState('');
 
@@ -67,94 +69,89 @@ const PopItGame = () => {
     await loadFull(engine);
   }, []);
 
-  //Particle Effects
-  const PopEffect = ({ x, y, onComplete }) => {
+  // Update the PopEffect component
+  const PopEffect = ({ row, col, onComplete }) => {
     const options = {
-      fullScreen: false,
+      fullScreen: { enable: false },
+      fpsLimit: 60,
       particles: {
-        number: {
-          value: 15
+        number: { value: 24 },
+        color: { 
+          value: settings.theme === 'dark' 
+            ? ["#9333EA", "#A855F7"] 
+            : ["#7C3AED", "#8B5CF6"]
         },
-        color: {
-          value: ["#FFD700", "#FF69B4", "#00FF00", "#4ECDC4", "#9B59B6"]
-        },
-        shape: {
-          type: "circle"
-        },
+        shape: { type: "circle" },
         opacity: {
           value: 1,
           animation: {
             enable: true,
-            speed: 1,
+            speed: 2, // Increased speed for faster fade
             minimumValue: 0,
             sync: false
           }
         },
         size: {
-          value: 8,
+          value: 4,
           random: {
             enable: true,
-            minimumValue: 4
+            minimumValue: 2
           }
         },
         move: {
           enable: true,
-          gravity: {
-            enable: true,
-            acceleration: 9.81
+          gravity: { 
+            enable: true, 
+            acceleration: 20  // Increased acceleration
           },
-          speed: 10,
-          direction: "random",
-          random: false,
+          speed: 15,  // Increased speed
+          direction: "top",
+          random: true,
           straight: false,
-          outModes: {
-            default: "destroy"
-          }
+          outModes: { default: "destroy" }
         }
       },
       detectRetina: true,
       emitters: {
-        direction: "none",
-        life: {
-          count: 1,
-          duration: 0.1,
-          delay: 0
+        direction: "top",
+        life: { 
+          count: 1, 
+          duration: 0.05  // Reduced duration
         },
-        rate: {
-          delay: 0,
-          quantity: 15
-        },
-        size: {
-          width: 0,
-          height: 0
+        rate: { 
+          delay: 0, 
+          quantity: 8
         }
       }
     };
   
     useEffect(() => {
-      const timer = setTimeout(onComplete, 1000);
+      const timer = setTimeout(onComplete, 300); // Reduced from 800ms to 300ms
       return () => clearTimeout(timer);
     }, [onComplete]);
   
     return (
-      <Particles
-        id={`pop-effect-${Date.now()}`}
-        init={particlesInit}
+      <div
         style={{
           position: 'absolute',
-          left: x,
-          top: y,
-          width: '100px',
-          height: '100px',
+          left: `${(col * (100 / settings.gridSize))}%`,
+          top: `${(row * (100 / settings.gridSize))}%`,
+          width: `${100 / settings.gridSize}%`,
+          height: `${100 / settings.gridSize}%`,
           pointerEvents: 'none',
           zIndex: 1000
         }}
-        options={options}
-      />
+      >
+        <Particles
+          id={`pop-effect-${Date.now()}`}
+          init={particlesInit}
+          options={options}
+        />
+      </div>
     );
   };
   
-  
+
   //mascot speechbubble
   useEffect(() => {
     if (mascotMessage) {
@@ -243,14 +240,14 @@ const PopItGame = () => {
     const newMultiplier = Math.min(multiplier + 1, 10);
     const newScore = score + Math.round(10 * multiplier);
   
-    // Add particle effect
+    // Add particle effect with correct positioning
     const button = document.querySelector(`[data-index="${targetButton}"]`);
     if (button) {
       const rect = button.getBoundingClientRect();
       setParticleEffects(prev => [...prev, {
         id: Date.now(),
-        x: rect.left,
-        y: rect.top
+        x: rect.left + (rect.width / 2) - 20,  // Center horizontally (40px/2 = 20)
+        y: rect.top + (rect.height / 2) - 20    // Center vertically (40px/2 = 20)
       }]);
     }
   
@@ -323,26 +320,6 @@ const PopItGame = () => {
     if (multiplier >= 3) return "Keep it up! 👍";
     return "Good job! 😊";
   };
-
-
-  const handleMiss = useCallback(() => {
-    setLives(prev => prev - 1);
-    setMultiplier(1);
-    setGridShake(true);
-    
-    setGameStats(prev => ({
-      ...prev,
-      missedClicks: prev.missedClicks + 1,
-      totalClicks: prev.totalClicks + 1,
-      currentStreak: 0,
-      combos: [...prev.combos, prev.currentStreak]
-    }));
-
-    playSound('miss');
-    setTimeout(() => {
-      setGridShake(false);
-    }, 500);
-  }, [playSound]);
 
     // Start game
     const startGame = useCallback(() => {
@@ -434,16 +411,73 @@ const PopItGame = () => {
   
   
     // Handle button click
-    const handleButtonClick = useCallback((buttonIndex) => {
-      if (!gameStarted || gameOver) return;
-      
-      if (buttonIndex === targetButton) {
-        handleSuccess();
+    const handleButtonClick = useCallback((index) => {
+      if (gameState !== 'playing') return;
+    
+      const now = Date.now();
+      setGameStats(prev => ({
+        ...prev,
+        totalClicks: prev.totalClicks + 1,
+        lastClickTime: now
+      }));
+    
+      if (index === targetButton) {
+        // Calculate grid position based on index
+        const gridSize = settings.gridSize;
+        const row = Math.floor(index / gridSize);
+        const col = index % gridSize;
+        
+        if (particleEffects.length < maxParticleEffects) {
+          setParticleEffects(prev => [...prev, {
+            id: Date.now(),
+            row: row,
+            col: col
+          }]);
+        }
+    
+        const newMultiplier = Math.min(multiplier + 1, 10);
+        const newScore = score + Math.round(10 * multiplier);
+    
+        // Update game stats with the successful click
+        setGameStats(prev => ({
+          ...prev,
+          successfulClicks: prev.successfulClicks + 1,
+          highestCombo: Math.max(prev.highestCombo, newMultiplier),
+          reactionTimes: [...prev.reactionTimes, now - prev.lastClickTime] // Store reaction time if needed
+        }));
+    
+        setScore(newScore);
+        setMultiplier(newMultiplier);
+        setMascotMessage(getMascotMessage(newMultiplier));
+        setTargetButton(getRandomButton());
+    
       } else {
-        handleMiss();
+        // Handle incorrect click...
+        setGridShake(true);
+        setTimeout(() => setGridShake(false), 300);
+        
+        setLives(prev => prev - 1);
+        setMultiplier(1);
+        setMascotMessage('Oops! Try again!');
+    
+        if (lives <= 1) {
+          handleGameOver();
+        }
       }
-    }, [gameStarted, gameOver, targetButton, handleSuccess, handleMiss]);
-  
+    }, [
+      gameState,
+      targetButton,
+      multiplier,
+      score,
+      lives,
+      gameStats,
+      handleGameOver,
+      getRandomButton,
+      getMascotMessage,
+      particleEffects.length,
+      settings.gridSize
+    ]);
+    
     // Game loop effects
     useEffect(() => {
       if (gameState === 'countdown' && countdown > 0) {
@@ -582,37 +616,51 @@ const PopItGame = () => {
               </div>
 
               {/* Game Grid */}
-<div 
-  className={`aspect-square grid ${
-    gridShake ? 'animate-shake' : ''
-  }`} 
-  style={{
-    gridTemplateColumns: `repeat(${settings.gridSize}, 1fr)`
-  }}
->
-  {Array.from({ length: settings.gridSize * settings.gridSize }).map((_, index) => (
-    <button
-      key={index}
-      data-index={index}
-      onClick={() => handleButtonClick(index)}
-      disabled={gameState !== 'playing'}
-      className={`
-        aspect-square rounded-full transform scale-90 transition-all duration-100
-        ${index === targetButton && gameState === 'playing'
-          ? settings.theme === 'dark'
-            ? 'bg-purple-500 hover:bg-purple-400 hover:scale-95'
-            : 'bg-purple-600 hover:bg-purple-500 hover:scale-95'
-          : settings.theme === 'dark'
-          ? 'bg-gray-700 hover:bg-gray-600 hover:scale-95'
-          : 'bg-gray-200 hover:bg-gray-300 hover:scale-95'
-        }
-        ${gameState !== 'playing' ? 'cursor-not-allowed opacity-50' : ''}
-      `}
-    />
-  ))}
-</div>
+              <div 
+                className={`aspect-square grid relative ${
+                  gridShake ? 'animate-shake' : ''
+                }`} 
+                style={{
+                  gridTemplateColumns: `repeat(${settings.gridSize}, 1fr)`
+                }}
+              >
+                {/* Grid buttons */}
+                {Array.from({ length: settings.gridSize * settings.gridSize }).map((_, index) => (
+                  <button
+                    key={index}
+                    data-index={index}
+                    onClick={() => handleButtonClick(index)}
+                    disabled={gameState !== 'playing'}
+                    className={`
+                      aspect-square rounded-full transform scale-90 transition-all duration-100
+                      ${index === targetButton && gameState === 'playing'
+                        ? settings.theme === 'dark'
+                          ? 'bg-purple-500 hover:bg-purple-400 hover:scale-95'
+                          : 'bg-purple-600 hover:bg-purple-500 hover:scale-95'
+                        : settings.theme === 'dark'
+                        ? 'bg-gray-700 hover:bg-gray-600 hover:scale-95'
+                        : 'bg-gray-200 hover:bg-gray-300 hover:scale-95'
+                      }
+                      ${gameState !== 'playing' ? 'cursor-not-allowed opacity-50' : ''}
+                    `}
+                  />
+                ))}
 
-    
+                {/* Particle Effects */}
+                {particleEffects.map(effect => (
+                  <PopEffect
+                    key={effect.id}
+                    row={effect.row}
+                    col={effect.col}
+                    onComplete={() => {
+                      setParticleEffects(prev => 
+                        prev.filter(e => e.id !== effect.id)
+                      );
+                    }}
+                  />
+                ))}
+              </div>
+
               {/* Game State Overlays */}
               {gameState === 'menu' && (
                 <div className="absolute inset-0 flex items-center justify-center">
