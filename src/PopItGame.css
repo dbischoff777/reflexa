@@ -1,3 +1,28 @@
+@media (max-width: 640px) {
+    .game-container {
+      padding: 10px;
+    }
+  
+    .target-button {
+      font-size: 14px;
+    }
+  
+    .speech-bubble {
+      font-size: 14px;
+      padding: 0.5rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .mascot-container {
+      transform: scale(0.8);
+    }
+  
+    .mt-32 {
+      margin-top: 4rem;
+    }
+  }
+
 .game-container {
     background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96c93d);
     background-size: 400% 400%;
@@ -44,16 +69,20 @@
   }
   
   .speech-bubble {
-    position: relative;
+    position: absolute;
     opacity: 0;
-    transform: translateY(-10px);
-    animation: fadeIn 0.3s ease forwards;
+    animation: fadeIn 3s ease forwards;
+    left: 100%;  /* Position to the right of the mascot */
+    top: 50%;    /* Align vertically with the mascot */
+    transform: translateY(-50%);  /* Center vertically */
+    margin-left: 1rem;  /* Add some space between mascot and bubble */
+    white-space: nowrap;  /* Prevent text wrapping */
+    z-index: 10;
   }
   
   @keyframes fadeIn {
     to {
       opacity: 1;
-      transform: translateY(0);
     }
   }
   

@@ -59,6 +59,7 @@ const PopItGame = () => {
 
   //new particle and mascot variables
   const [particleEffects, setParticleEffects] = useState([]);
+  const [showSpeechBubble, setShowSpeechBubble] = useState(false);
   const [mascotMessage, setMascotMessage] = useState('');
 
   // Add this initialization for tsParticles
@@ -154,24 +155,17 @@ const PopItGame = () => {
   };
   
   
-  //component for the mascot
-  const GameMascot = ({ message }) => {
-    return (
-      <div className="mascot-container">
-        <img 
-          src={mascotImage}
-          alt="Game Mascot"
-          className="mascot-image"
-          style={{ width: '100px', height: '100px' }} // Add inline styles for testing
-        />
-        {message && (
-          <div className={`speech-bubble ${message ? 'show' : ''}`}>
-            {message}
-          </div>
-        )}
-      </div>
-    );
-  };
+  //mascot speechbubble
+  useEffect(() => {
+    if (mascotMessage) {
+      setShowSpeechBubble(true);
+      const timer = setTimeout(() => {
+        setShowSpeechBubble(false);
+      }, 8000); // Increased to 8 seconds (from 4 seconds)
+  
+      return () => clearTimeout(timer);
+    }
+  }, [mascotMessage]);
   
 
   // Audio Management
@@ -497,7 +491,7 @@ const PopItGame = () => {
       <div className={`min-h-screen ${
         settings.theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'
       }`}>
-        <div className="container mx-auto px-4 py-8">
+         <div className="container mx-auto px-4 py-8 max-w-7xl">
           {/* Game Header */}
           <div className="flex justify-between items-center mb-8">
             <Link 
@@ -537,90 +531,105 @@ const PopItGame = () => {
           </div>
     
           {/* Game Area with Grid and Mascot */}
-<div className="relative flex justify-center">
-  {/* Game Grid Container */}
-  <div className={`w-[800px] ${gridShake ? 'flash-red' : ''}`}>
-    {/* Stats Display */}
-    <div className="flex justify-between items-center mb-4">
-      <div className="flex gap-1">
-        {Array.from({ length: lives }).map((_, i) => (
-          <Heart
-            key={i}
-            className={`w-6 h-6 ${
-              settings.theme === 'dark' ? 'text-purple-400' : 'text-purple-600'
-            }`}
-            fill="currentColor"
-          />
-        ))}
-      </div>
-      <div className={`text-2xl font-bold ${
-        settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
-      }`}>
-        Score: {score}
-      </div>
-      {gameState === 'playing' && (
-        <div className={`text-lg ${
-          settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
-        }`}>
-          Multiplier: x {multiplier.toFixed(1)}
-        </div>
-      )}
-    </div>
+          <div className="relative flex justify-center mt-32">
+            {/* Mascot Container - Centered above game grid */}
+            <div className="absolute left-1/2 -top-32 transform -translate-x-1/2">
+              <div className={`mascot-container relative ${
+                settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
+              }`}>
+                <img 
+                  src={mascotImage}
+                  alt="Game Mascot"
+                  className="w-32 h-32 object-contain animate-bounce"
+                />
+                {mascotMessage && (
+                  <div className={`speech-bubble ${
+                    settings.theme === 'dark' ? 'bg-gray-700' : 'bg-white'
+                  } p-3 rounded-lg shadow-lg`}>
+                    {mascotMessage}
+                  </div>
+                )}
+              </div>
+            </div>
 
-    {/* Game Grid */}
-    <div 
-      className={`aspect-square grid gap-2 ${
-        gridShake ? 'animate-shake' : ''
-      }`} 
-      style={{
-        gridTemplateColumns: `repeat(${settings.gridSize}, 1fr)`
-      }}
-    >
-      {Array.from({ length: settings.gridSize * settings.gridSize }).map((_, index) => (
-        <button
-          key={index}
-          data-index={index}
-          onClick={() => handleButtonClick(index)}
-          disabled={gameState !== 'playing'}
-          className={`
-            aspect-square rounded-lg transition-all duration-100
-            ${index === targetButton && gameState === 'playing'
-              ? settings.theme === 'dark'
-                ? 'bg-purple-500 hover:bg-purple-400'
-                : 'bg-purple-600 hover:bg-purple-500'
-              : settings.theme === 'dark'
-              ? 'bg-gray-700 hover:bg-gray-600'
-              : 'bg-gray-200 hover:bg-gray-300'
-            }
-            ${gameState !== 'playing' ? 'cursor-not-allowed opacity-50' : ''}
-          `}
-        />
-      ))}
-    </div>
-  </div>
+            {/* Game Grid Container */}
+            <div className={`w-full max-w-[800px] px-4 ${gridShake ? 'flash-red' : ''}`}>
+              {/* Stats Display */}
+              <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
+                <div className="flex gap-1">
+                  {Array.from({ length: lives }).map((_, i) => (
+                    <Heart
+                      key={i}
+                      className={`w-6 h-6 ${
+                        settings.theme === 'dark' ? 'text-purple-400' : 'text-purple-600'
+                      }`}
+                      fill="currentColor"
+                    />
+                  ))}
+                </div>
+                <div className={`text-2xl font-bold ${
+                  settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
+                }`}>
+                  Score: {score}
+                </div>
+                {gameState === 'playing' && (
+                  <div className={`text-lg ${
+                    settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
+                  }`}>
+                    Multiplier: x {multiplier.toFixed(1)}
+                  </div>
+                )}
+              </div>
 
-  {/* Mascot Container - Fixed on the right side */}
-  <div className="fixed right-8 top-1/4 w-48">
-    <div className={`mascot-container ${
-      settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
-    }`}>
-      <img 
-        src={mascotImage}
-        alt="Game Mascot"
-        className="w-32 h-32 object-contain animate-bounce"
-      />
-      {mascotMessage && (
-        <div className={`speech-bubble ${
-          settings.theme === 'dark' ? 'bg-gray-700' : 'bg-white'
-        } p-3 rounded-lg shadow-lg mt-2 text-center`}>
-          {mascotMessage}
-        </div>
-      )}
-    </div>
-  </div>
+              {/* Game Grid */}
+<div 
+  className={`aspect-square grid ${
+    gridShake ? 'animate-shake' : ''
+  }`} 
+  style={{
+    gridTemplateColumns: `repeat(${settings.gridSize}, 1fr)`
+  }}
+>
+  {Array.from({ length: settings.gridSize * settings.gridSize }).map((_, index) => (
+    <button
+      key={index}
+      data-index={index}
+      onClick={() => handleButtonClick(index)}
+      disabled={gameState !== 'playing'}
+      className={`
+        aspect-square rounded-full transform scale-90 transition-all duration-100
+        ${index === targetButton && gameState === 'playing'
+          ? settings.theme === 'dark'
+            ? 'bg-purple-500 hover:bg-purple-400 hover:scale-95'
+            : 'bg-purple-600 hover:bg-purple-500 hover:scale-95'
+          : settings.theme === 'dark'
+          ? 'bg-gray-700 hover:bg-gray-600 hover:scale-95'
+          : 'bg-gray-200 hover:bg-gray-300 hover:scale-95'
+        }
+        ${gameState !== 'playing' ? 'cursor-not-allowed opacity-50' : ''}
+      `}
+    />
+  ))}
 </div>
 
-
+    
+              {/* Game State Overlays */}
+              {gameState === 'menu' && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <button
+                    onClick={startGame}
+                    className={`px-8 py-4 rounded-lg text-xl font-bold ${
+                      settings.theme === 'dark'
+                        ? 'bg-purple-600 hover:bg-purple-500 text-white'
+                        : 'bg-purple-600 hover:bg-purple-700 text-white'
+                    }`}
+                  >
+                    Start Game
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
     
           {/* Countdown Overlay */}
           {gameState === 'countdown' && (
@@ -633,22 +642,7 @@ const PopItGame = () => {
             </div>
           )}
     
-          {/* Game State Overlays */}
-          {gameState === 'menu' && (
-            <div className="text-center mt-8">
-              <button
-                onClick={startGame}
-                className={`px-8 py-4 rounded-lg text-xl font-bold ${
-                  settings.theme === 'dark'
-                    ? 'bg-purple-600 hover:bg-purple-500'
-                    : 'bg-purple-600 hover:bg-purple-700 text-white'
-                }`}
-              >
-                Start Game
-              </button>
-            </div>
-          )}
-    
+          {/* Game Over Overlay */}
           {showGameOver && (
             <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
               <div className={`p-8 rounded-lg ${
@@ -736,6 +730,7 @@ const PopItGame = () => {
         </div>
       </div>
     );
+    
   };
   
 export default PopItGame;  
