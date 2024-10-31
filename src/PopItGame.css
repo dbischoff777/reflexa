@@ -107,3 +107,247 @@
   .speech-bubble.show {
     opacity: 1;
   }  
+
+  /* buttons as food bowls */
+  .bowl-button {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+    background: linear-gradient(145deg, #e6e6e6, #ffffff);
+    box-shadow: 
+      inset 0 -8px 12px rgba(0,0,0,0.2),
+      inset 0 8px 12px rgba(255,255,255,0.7),
+      0 4px 8px rgba(0,0,0,0.15);
+    overflow: hidden;
+    /* Increase minimum size */
+    min-width: 80px;
+    min-height: 80px;
+    margin: 10px;
+  }
+  
+  .bowl-button::before {
+    content: '';
+    position: absolute;
+    top: 15%;
+    left: 15%;
+    width: 70%;
+    height: 70%;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #f0f0f0, #d4d4d4);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+  }
+  
+  .bowl-button::after {
+    content: '';
+    position: absolute;
+    top: 25%;
+    left: 25%;
+    width: 50%;
+    height: 50%;
+    border-radius: 50%;
+    background: #c4c4c4;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+  }
+  
+  .bowl-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+      inset 0 -8px 12px rgba(0,0,0,0.2),
+      inset 0 8px 12px rgba(255,255,255,0.7),
+      0 6px 12px rgba(0,0,0,0.2);
+  }
+  
+  .bowl-button:active {
+    transform: translateY(1px);
+    box-shadow: 
+      inset 0 -4px 8px rgba(0,0,0,0.2),
+      inset 0 4px 8px rgba(255,255,255,0.7),
+      0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .bowl-button.target {
+    background: linear-gradient(145deg, #9333ea, #7e22ce);
+  }
+  
+  .bowl-button.target::before {
+    background: linear-gradient(145deg, #a855f7, #9333ea);
+  }
+  
+  .bowl-button.target::after {
+    background: #8b5cf6;
+    animation: glow 1s ease-in-out infinite alternate;
+  }
+  
+  @keyframes glow {
+    from {
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+    }
+    to {
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.3),
+                  0 0 10px #8b5cf6;
+    }
+  }
+  
+  /* Update grid container for larger spacing */
+.grid-container {
+    display: grid;
+    gap: 20px; /* Increased gap */
+    padding: 20px; /* Increased padding */
+    background: linear-gradient(145deg, #f0f0f0, #ffffff);
+    border-radius: 20px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    max-width: 1000px; /* Add maximum width */
+    margin: 0 auto; /* Center the grid */
+  }
+
+@media (min-width: 768px) {
+    .bowl-button {
+      min-width: 100px;
+      min-height: 100px;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .bowl-button {
+      min-width: 120px;
+      min-height: 120px;
+    }
+  }
+  
+  /* Add responsive container sizing */
+  .game-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 20px;
+  }
+  
+  /* Make sure buttons scale well on different devices */
+  @media (max-width: 480px) {
+    .grid-container {
+      gap: 10px;
+      padding: 10px;
+    }
+    
+    .bowl-button {
+      min-width: 60px;
+      min-height: 60px;
+      margin: 5px;
+    }
+  }
+  
+  /* Add smooth transitions */
+  .bowl-button {
+    /* Add to existing bowl-button class */
+    transition: all 0.3s ease;
+    will-change: transform, box-shadow;
+  }
+  
+    /* Optional: Add larger glow effect for bigger buttons */
+    .bowl-button.target::after {
+        box-shadow: 
+        inset 0 2px 4px rgba(0,0,0,0.3),
+        0 0 20px #9333ea,
+        0 0 40px rgba(147, 51, 234, 0.5);
+    }   
+
+  .start-button-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+    width: 100%;
+  }
+  
+  .start-button {
+    padding: 1rem 2rem;
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: white;
+    background: linear-gradient(145deg, #4f46e5, #4338ca);
+    border: none;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .start-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+    background: linear-gradient(145deg, #5753e6, #4c42cb);
+  }
+  
+  .start-button:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Update game container to use flex column */
+  .game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 20px;
+  }
+
+  .stats-container {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    width: 100%;
+    font-size: 1.25rem;
+    font-weight: bold;
+  }
+  
+  .countdown {
+    font-size: 4rem;
+    font-weight: bold;
+    color: #4f46e5;
+    animation: pulse 1s infinite;
+  }
+  
+  @keyframes pulse {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.2);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+  
+  /* Dark theme support */
+  .dark .start-button {
+    background: linear-gradient(145deg, #6366f1, #4f46e5);
+    color: white;
+  }
+  
+  .dark .countdown {
+    color: #818cf8;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .stats-container {
+      font-size: 1rem;
+      gap: 1rem;
+    }
+  
+    .countdown {
+      font-size: 3rem;
+    }
+  
+    .start-button {
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+    }
+  }

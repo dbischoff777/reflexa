@@ -63,36 +63,36 @@ code {
   transform: scale(0.95);
 }
 
-@keyframes flashRed {
-  0% { 
-    background-color: transparent; 
+@keyframes flash-red {
+  0%, 100% {
+    background-color: transparent;
   }
-  50% { 
-    background-color: rgba(239, 68, 68, 0.8); /* Bright red with high opacity */
-  }
-  75% {
-    background-color: rgba(239, 68, 68, 0.8);
-  }
-  100% { 
-    background-color: transparent; 
+  50% {
+    background-color: rgba(255, 0, 0, 0.3);
   }
 }
 
 .flash-red {
-  animation: flashRed 0.4s ease-out;
-  position: relative;
-  z-index: 1;
-}
-
-@keyframes shake {
-  0%, 100% { transform: translate(0, 0); }
-  25% { transform: translate(-8px, 8px); }
-  50% { transform: translate(-8px, -8px); }
-  75% { transform: translate(8px, -8px); }
+  animation: flash-red 0.3s ease-in-out;
 }
 
 .animate-shake {
-  animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+  animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+@keyframes shake {
+  10%, 90% {
+    transform: translate3d(-1px, 0, 0);
+  }
+  20%, 80% {
+    transform: translate3d(2px, 0, 0);
+  }
+  30%, 50%, 70% {
+    transform: translate3d(-4px, 0, 0);
+  }
+  40%, 60% {
+    transform: translate3d(4px, 0, 0);
+  }
 }
 
 @keyframes flash-light {

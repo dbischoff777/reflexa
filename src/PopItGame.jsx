@@ -4,7 +4,6 @@ import { Heart } from 'lucide-react';
 import { useSettings } from './Settings';
 import { updatePlayerStats } from './utils/playerStats';
 import { checkAchievementsUnlocked, updateAchievementProgress, ACHIEVEMENTS} from './achievements';
-import { Engine } from "tsparticles-engine";
 import Particles from "react-tsparticles";
 import { loadFull } from "tsparticles";
 import './PopItGame.css';
@@ -31,8 +30,8 @@ const PopItGame = () => {
   // Timing and stats
   const [startTime, setStartTime] = useState(null);
   const [gameTime, setGameTime] = useState(0);
-  const [gameTimer, setGameTimer] = useState(null);
-  const [gameSpeed, setGameSpeed] = useState(1000);
+  const [gameSpeed, setGameSpeed] = useState(1);
+  const BASE_INTERVAL = 1500; // Base interval in milliseconds
   
   // UI states
   const [showUsernameInput, setShowUsernameInput] = useState(false);
@@ -97,7 +96,7 @@ const PopItGame = () => {
       fullScreen: { enable: false },
       fpsLimit: 60,
       particles: {
-        number: { value: 24 },
+        number: { value: 21 },
         color: { 
           value: getRandomColors() // Use random colors
         },
@@ -112,10 +111,10 @@ const PopItGame = () => {
           }
         },
         size: {
-          value: 6,
+          value: 3,
           random: {
             enable: true,
-            minimumValue: 3
+            minimumValue: 2
           }
         },
         move: {
@@ -252,93 +251,14 @@ const PopItGame = () => {
     recentGames.splice(10); // Keep only last 10 games
     localStorage.setItem('recentGames', JSON.stringify(recentGames));
   }, []);
-
-  const handleSuccess = useCallback(() => {
-    const now = Date.now();
-    const timeToClick = gameStats.lastClickTime ? now - gameStats.lastClickTime : 0;
-    const newMultiplier = Math.min(multiplier + 1, 10);
-    const newScore = score + Math.round(10 * multiplier);
   
-    // Add particle effect with correct positioning
-    const button = document.querySelector(`[data-index="${targetButton}"]`);
-    if (button) {
-      const rect = button.getBoundingClientRect();
-      setParticleEffects(prev => [...prev, {
-        id: Date.now(),
-        x: rect.left + (rect.width / 2) - 20,  // Center horizontally (40px/2 = 20)
-        y: rect.top + (rect.height / 2) - 20    // Center vertically (40px/2 = 20)
-      }]);
-    }
-  
-    // Add pop animation class
-    button?.classList.add('pop');
-    setTimeout(() => button?.classList.remove('pop'), 300);
-  
-    // Update mascot message
-    setMascotMessage(getMascotMessage(multiplier));
-    setTimeout(() => setMascotMessage(''), 2000);
-  
-    setGameStats(prev => ({
-      ...prev,
-      successfulClicks: prev.successfulClicks + 1,
-      totalClicks: prev.totalClicks + 1,
-      currentStreak: prev.currentStreak + 1,
-      longestStreak: Math.max(prev.currentStreak + 1, prev.longestStreak),
-      reactionTimes: [...prev.reactionTimes, timeToClick],
-      maxMultiplier: Math.max(prev.maxMultiplier, newMultiplier),
-      lastClickTime: now,
-      highestCombo: Math.max(prev.highestCombo, prev.currentStreak + 1)
-    }));
-  
-    setScore(newScore);
-    setMultiplier(newMultiplier);
-  
-    // Update achievement progress in localStorage
-    const currentProgress = JSON.parse(localStorage.getItem('achievementProgress') || '{}');
-    const updatedProgress = {
-      ...currentProgress,
-      highestMultiplier: Math.max(newMultiplier, currentProgress.highestMultiplier || 0)
-    };
-    localStorage.setItem('achievementProgress', JSON.stringify(updatedProgress));
-  
-    // Check for multiplier achievements
-    if (newMultiplier >= 2) {
-      // Get previously unlocked achievements
-      const previouslyUnlocked = new Set(JSON.parse(localStorage.getItem('unlockedAchievements') || '[]'));
-      const multiplierAchievements = ACHIEVEMENTS.MULTIPLIER;
-      
-      multiplierAchievements.forEach(achievement => {
-        if (newMultiplier >= achievement.requirement && !previouslyUnlocked.has(achievement.id)) {
-          const newUnlocked = Array.from(new Set([...previouslyUnlocked, achievement.id]));
-          localStorage.setItem('unlockedAchievements', JSON.stringify(newUnlocked));
-          setNewAchievement(achievement);
-        }
-      });
-    }
-  
-    playSound('pop');
-    setTargetButton(getRandomButton());
-  }, [
-    multiplier, 
-    score, 
-    gameStats, 
-    targetButton, 
-    playSound, 
-    getRandomButton, 
-    setScore,
-    setMultiplier,
-    setGameStats,
-    setTargetButton,
-    setNewAchievement
-  ]);
-  
-  // Add this helper function
-  const getMascotMessage = (multiplier) => {
+  // Define getMascotMessage with useCallback
+  const getMascotMessage = useCallback((multiplier) => {
     if (multiplier >= 8) return "AMAZING! 🌟";
     if (multiplier >= 5) return "Great combo! 🎯";
     if (multiplier >= 3) return "Keep it up! 👍";
     return "Good job! 😊";
-  };
+  }, []); // No dependencies needed since it's a pure function
 
     // Start game
     const startGame = useCallback(() => {
@@ -354,6 +274,7 @@ const PopItGame = () => {
       setScore(0);
       setLives(5);
       setMultiplier(1);
+      setGameSpeed(1); // Reset game speed
       setCountdown(3);
       
       // Reset game stats
@@ -374,7 +295,7 @@ const PopItGame = () => {
         startTime: Date.now(),
         lastClickTime: null
       });
-  
+    
       playSound('countdown');
     }, [username, playSound]);
   
@@ -457,12 +378,15 @@ const PopItGame = () => {
         const newMultiplier = Math.min(multiplier + 1, 10);
         const newScore = score + Math.round(10 * multiplier);
     
-        // Update game stats with the successful click
+        // Increase game speed with successful clicks
+        const newGameSpeed = Math.min(gameSpeed + 0.15, 3.0);
+        setGameSpeed(newGameSpeed);
+    
         setGameStats(prev => ({
           ...prev,
           successfulClicks: prev.successfulClicks + 1,
           highestCombo: Math.max(prev.highestCombo, newMultiplier),
-          reactionTimes: [...prev.reactionTimes, now - prev.lastClickTime] // Store reaction time if needed
+          reactionTimes: [...prev.reactionTimes, now - prev.lastClickTime]
         }));
     
         setScore(newScore);
@@ -471,10 +395,12 @@ const PopItGame = () => {
         setTargetButton(getRandomButton());
     
       } else {
-        // Handle incorrect click...
+        // Handle incorrect click
         setGridShake(true);
         setTimeout(() => setGridShake(false), 300);
         
+        // Reset speed and multiplier on miss
+        setGameSpeed(1);
         setLives(prev => prev - 1);
         setMultiplier(1);
         setMascotMessage('Oops! Try again!');
@@ -489,14 +415,34 @@ const PopItGame = () => {
       multiplier,
       score,
       lives,
-      gameStats,
       handleGameOver,
       getRandomButton,
       getMascotMessage,
       particleEffects.length,
-      settings.gridSize
+      settings.gridSize,
+      gameSpeed
     ]);
     
+    // Update the renderButton function
+    const renderButton = (index) => {
+      const isTarget = index === targetButton;
+      const buttonSize = Math.min(100 / settings.gridSize, 8); // Limit maximum size
+    
+      return (
+        <button
+          key={index}
+          className={`bowl-button ${isTarget ? 'target' : ''}`}
+          onClick={() => handleButtonClick(index)}
+          style={{
+            width: `${buttonSize}vw`, // Use viewport width for responsive sizing
+            height: `${buttonSize}vw`,
+            padding: `${buttonSize * 0.1}vw`, // Proportional padding
+            margin: `${buttonSize * 0.05}vw`, // Proportional margin
+          }}
+        />
+      );
+    };
+
     // Game loop effects
     useEffect(() => {
       if (gameState === 'countdown' && countdown > 0) {
@@ -515,14 +461,27 @@ const PopItGame = () => {
     }, [gameState, countdown, playSound, getRandomButton]);
   
     useEffect(() => {
-      if (gameState === 'playing') {
-        const timer = setInterval(() => {
-          setGameTime(prev => prev + 1);
-        }, 1000);
-        setGameTimer(timer);
-        return () => clearInterval(timer);
-      }
-    }, [gameState]);
+      if (gameState !== 'playing') return;
+    
+      const interval = setInterval(() => {
+        // Move target to new position if not clicked in time
+        setTargetButton(getRandomButton());
+        
+        // Reduce lives and reset multiplier on timeout
+        setLives(prev => {
+          if (prev <= 1) {
+            handleGameOver();
+            return prev;
+          }
+          return prev - 1;
+        });
+        
+        setMultiplier(1);
+        setGameSpeed(1); // Reset speed on timeout
+      }, BASE_INTERVAL / gameSpeed); // Adjust interval based on game speed
+    
+      return () => clearInterval(interval);
+    }, [gameState, gameSpeed, handleGameOver, getRandomButton]);
   
     useEffect(() => {
       if (lives <= 0 && !gameOver) {
@@ -542,9 +501,10 @@ const PopItGame = () => {
   
     return (
       <div className={`min-h-screen ${
-        settings.theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'
+        settings.theme === 'dark' ? 'bg-gray-800 text-white' : '',
+        gridShake ? 'flash-red' : 'bg-gray-100 text-gray-900'
       }`}>
-         <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <div className="container mx-auto px-4 py-8 max-w-7xl">
           {/* Game Header */}
           <div className="flex justify-between items-center mb-8">
             <Link 
@@ -604,9 +564,25 @@ const PopItGame = () => {
                 )}
               </div>
             </div>
-
+    
+            {/* Start Button Container */}
+            {gameState === 'menu' && (
+              <div className="absolute left-1/2 top-0 transform -translate-x-1/2">
+                <button
+                  onClick={startGame}
+                  className={`px-8 py-4 rounded-lg font-bold text-xl shadow-lg transition-all duration-200 ${
+                    settings.theme === 'dark' 
+                      ? 'bg-purple-600 hover:bg-purple-500 text-white' 
+                      : 'bg-purple-600 hover:bg-purple-700 text-white'
+                  }`}
+                >
+                  Start Game
+                </button>
+              </div>
+            )}
+    
             {/* Game Grid Container */}
-            <div className={`w-full max-w-[800px] px-4 ${gridShake ? 'flash-red' : ''}`}>
+            <div className="w-full max-w-[800px] px-4">
               {/* Stats Display */}
               <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
                 <div className="flex gap-1">
@@ -640,30 +616,19 @@ const PopItGame = () => {
                   gridShake ? 'animate-shake' : ''
                 }`} 
                 style={{
-                  gridTemplateColumns: `repeat(${settings.gridSize}, 1fr)`
+                  gridTemplateColumns: `repeat(${settings.gridSize}, 1fr)`,
+                  width: '90vw',
+                  maxWidth: '800px',
+                  maxHeight: '400px',
+                  margin: '0 auto',
+                  padding: '20px',
+                  borderRadius: '12px', // Added for better flash effect visibility
+                  transition: 'background-color 0.3s ease', // Smooth transition for flash effect
                 }}
               >
-                {/* Grid buttons */}
-                {Array.from({ length: settings.gridSize * settings.gridSize }).map((_, index) => (
-                  <button
-                    key={index}
-                    data-index={index}
-                    onClick={() => handleButtonClick(index)}
-                    disabled={gameState !== 'playing'}
-                    className={`
-                      aspect-square rounded-full transform scale-90 transition-all duration-100
-                      ${index === targetButton && gameState === 'playing'
-                        ? settings.theme === 'dark'
-                          ? 'bg-purple-500 hover:bg-purple-400 hover:scale-95'
-                          : 'bg-purple-600 hover:bg-purple-500 hover:scale-95'
-                        : settings.theme === 'dark'
-                        ? 'bg-gray-700 hover:bg-gray-600 hover:scale-95'
-                        : 'bg-gray-200 hover:bg-gray-300 hover:scale-95'
-                      }
-                      ${gameState !== 'playing' ? 'cursor-not-allowed opacity-50' : ''}
-                    `}
-                  />
-                ))}
+                {Array.from({ length: settings.gridSize * settings.gridSize }).map((_, index) =>
+                  renderButton(index)
+                )}
 
                 {/* Particle Effects */}
                 {particleEffects.map(effect => (
@@ -679,31 +644,13 @@ const PopItGame = () => {
                   />
                 ))}
               </div>
-
-              {/* Game State Overlays */}
-              {gameState === 'menu' && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <button
-                    onClick={startGame}
-                    className={`px-8 py-4 rounded-lg text-xl font-bold ${
-                      settings.theme === 'dark'
-                        ? 'bg-purple-600 hover:bg-purple-500 text-white'
-                        : 'bg-purple-600 hover:bg-purple-700 text-white'
-                    }`}
-                  >
-                    Start Game
-                  </button>
-                </div>
-              )}
             </div>
           </div>
     
           {/* Countdown Overlay */}
           {gameState === 'countdown' && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-lg">
-              <div className={`text-8xl font-bold animate-pulse ${
-                settings.theme === 'dark' ? 'text-purple-400' : 'text-purple-600'
-              }`}>
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+              <div className="text-6xl font-bold text-purple-600 animate-pulse">
                 {countdown}
               </div>
             </div>
