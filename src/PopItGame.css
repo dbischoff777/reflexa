@@ -141,7 +141,7 @@
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
   }
   
-  .bowl-button::after {
+  .bowl-button.target::after {
     content: '';
     position: absolute;
     top: 25%;
@@ -149,7 +149,7 @@
     width: 50%;
     height: 50%;
     border-radius: 50%;
-    background: #c4c4c4;
+    background: #8B4513; /* Changed to brown */
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
   }
   
@@ -171,6 +171,7 @@
   
   .bowl-button.target {
     background: linear-gradient(145deg, #9333ea, #7e22ce);
+    position: relative;
   }
   
   .bowl-button.target::before {
@@ -178,20 +179,34 @@
   }
   
   .bowl-button.target::after {
-    background: #8b5cf6;
-    animation: glow 1s ease-in-out infinite alternate;
+    content: '';
+    position: absolute;
+    top: 25%;
+    left: 25%;
+    width: 50%;
+    height: 50%;
+    border-radius: 50%;
+    background: #8B4513; /* Brown color */
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+    animation: none; /* Remove the glow animation */
   }
   
-  @keyframes glow {
-    from {
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+  /* Add animation for the treat */
+  .animate-bounce {
+    animation: bounce 1s infinite;
+  }
+
+  @keyframes bounce {
+    0%, 100% {
+      transform: translateY(-5%);
+      animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
     }
-    to {
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.3),
-                  0 0 10px #8b5cf6;
+    50% {
+      transform: translateY(0);
+      animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
     }
   }
-  
+
   /* Update grid container for larger spacing */
 .grid-container {
     display: grid;

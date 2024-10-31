@@ -7,7 +7,7 @@ import { checkAchievementsUnlocked, updateAchievementProgress, ACHIEVEMENTS} fro
 import Particles from "react-tsparticles";
 import { loadFull } from "tsparticles";
 import './PopItGame.css';
-import mascotImage from './images/cute-mascot.png';  // Adjust the path if needed
+import mascotImage from './images/cute-mascot.png';
 
 
 const PopItGame = () => {
@@ -425,24 +425,39 @@ const PopItGame = () => {
     
     // Update the renderButton function
     const renderButton = (index) => {
-      const isTarget = index === targetButton;
-      const buttonSize = Math.min(100 / settings.gridSize, 8); // Limit maximum size
-    
+      const isTarget = targetButton === index;
+      const buttonSize = Math.min(100 / settings.gridSize, 8);
+      
       return (
-        <button
+        <div 
           key={index}
-          className={`bowl-button ${isTarget ? 'target' : ''}`}
-          onClick={() => handleButtonClick(index)}
+          className="relative"
           style={{
-            width: `${buttonSize}vw`, // Use viewport width for responsive sizing
+            width: `${buttonSize}vw`,
             height: `${buttonSize}vw`,
-            padding: `${buttonSize * 0.1}vw`, // Proportional padding
-            margin: `${buttonSize * 0.05}vw`, // Proportional margin
+            padding: `${buttonSize * 0.1}vw`,
+            margin: `${buttonSize * 0.05}vw`,
           }}
-        />
+        >
+          <button
+            className={`bowl-button w-full h-full relative ${isTarget ? 'target' : ''}`}
+            onClick={() => handleButtonClick(index)}
+            disabled={!gameStarted || gameOver}
+          />
+          {isTarget && (
+            <div 
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none rounded-full"
+              style={{ 
+                zIndex: 1,
+                width: '40%',
+                height: '40%',
+              }}
+            />
+          )}
+        </div>
       );
     };
-
+    
     // Game loop effects
     useEffect(() => {
       if (gameState === 'countdown' && countdown > 0) {
