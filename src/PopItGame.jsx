@@ -4,6 +4,11 @@ import { Heart } from 'lucide-react';
 import { useSettings } from './Settings';
 import { updatePlayerStats } from './utils/playerStats';
 import { checkAchievementsUnlocked, updateAchievementProgress, ACHIEVEMENTS} from './achievements';
+import Particles from "react-tsparticles";
+import { loadFull } from "tsparticles";
+import './PopItGame.css';
+import mascotImage from './images/cute-mascot.png';  // Adjust the path if needed
+
 
 const PopItGame = () => {
   const { settings } = useSettings();
@@ -51,6 +56,123 @@ const PopItGame = () => {
     startTime: null,
     lastClickTime: null
   });
+
+  //new particle and mascot variables
+  const [particleEffects, setParticleEffects] = useState([]);
+  const [mascotMessage, setMascotMessage] = useState('');
+
+  // Add this initialization for tsParticles
+  const particlesInit = useCallback(async (engine) => {
+    await loadFull(engine);
+  }, []);
+
+  //Particle Effects
+  const PopEffect = ({ x, y, onComplete }) => {
+    const options = {
+      fullScreen: false,
+      particles: {
+        number: {
+          value: 15
+        },
+        color: {
+          value: ["#FFD700", "#FF69B4", "#00FF00", "#4ECDC4", "#9B59B6"]
+        },
+        shape: {
+          type: "circle"
+        },
+        opacity: {
+          value: 1,
+          animation: {
+            enable: true,
+            speed: 1,
+            minimumValue: 0,
+            sync: false
+          }
+        },
+        size: {
+          value: 8,
+          random: {
+            enable: true,
+            minimumValue: 4
+          }
+        },
+        move: {
+          enable: true,
+          gravity: {
+            enable: true,
+            acceleration: 9.81
+          },
+          speed: 10,
+          direction: "random",
+          random: false,
+          straight: false,
+          outModes: {
+            default: "destroy"
+          }
+        }
+      },
+      detectRetina: true,
+      emitters: {
+        direction: "none",
+        life: {
+          count: 1,
+          duration: 0.1,
+          delay: 0
+        },
+        rate: {
+          delay: 0,
+          quantity: 15
+        },
+        size: {
+          width: 0,
+          height: 0
+        }
+      }
+    };
+  
+    useEffect(() => {
+      const timer = setTimeout(onComplete, 1000);
+      return () => clearTimeout(timer);
+    }, [onComplete]);
+  
+    return (
+      <Particles
+        id={`pop-effect-${Date.now()}`}
+        init={particlesInit}
+        style={{
+          position: 'absolute',
+          left: x,
+          top: y,
+          width: '100px',
+          height: '100px',
+          pointerEvents: 'none',
+          zIndex: 1000
+        }}
+        options={options}
+      />
+    );
+  };
+  
+  
+  //component for the mascot
+  const GameMascot = ({ message }) => {
+    return (
+      <div className="mascot-container">
+        <img 
+          src={mascotImage}
+          alt="Game Mascot"
+          className="mascot-image"
+          style={{ width: '100px', height: '100px' }} // Add inline styles for testing
+        />
+        {message && (
+          <div className={`speech-bubble ${message ? 'show' : ''}`}>
+            {message}
+          </div>
+        )}
+      </div>
+    );
+  };
+  
 
   // Audio Management
   const audioEffects = useMemo(() => ({
@@ -126,7 +248,26 @@ const PopItGame = () => {
     const timeToClick = gameStats.lastClickTime ? now - gameStats.lastClickTime : 0;
     const newMultiplier = Math.min(multiplier + 1, 10);
     const newScore = score + Math.round(10 * multiplier);
-
+  
+    // Add particle effect
+    const button = document.querySelector(`[data-index="${targetButton}"]`);
+    if (button) {
+      const rect = button.getBoundingClientRect();
+      setParticleEffects(prev => [...prev, {
+        id: Date.now(),
+        x: rect.left,
+        y: rect.top
+      }]);
+    }
+  
+    // Add pop animation class
+    button?.classList.add('pop');
+    setTimeout(() => button?.classList.remove('pop'), 300);
+  
+    // Update mascot message
+    setMascotMessage(getMascotMessage(multiplier));
+    setTimeout(() => setMascotMessage(''), 2000);
+  
     setGameStats(prev => ({
       ...prev,
       successfulClicks: prev.successfulClicks + 1,
@@ -138,10 +279,10 @@ const PopItGame = () => {
       lastClickTime: now,
       highestCombo: Math.max(prev.highestCombo, prev.currentStreak + 1)
     }));
-
+  
     setScore(newScore);
     setMultiplier(newMultiplier);
-
+  
     // Update achievement progress in localStorage
     const currentProgress = JSON.parse(localStorage.getItem('achievementProgress') || '{}');
     const updatedProgress = {
@@ -149,7 +290,7 @@ const PopItGame = () => {
       highestMultiplier: Math.max(newMultiplier, currentProgress.highestMultiplier || 0)
     };
     localStorage.setItem('achievementProgress', JSON.stringify(updatedProgress));
-
+  
     // Check for multiplier achievements
     if (newMultiplier >= 2) {
       // Get previously unlocked achievements
@@ -164,12 +305,30 @@ const PopItGame = () => {
         }
       });
     }
-
+  
     playSound('pop');
     setTargetButton(getRandomButton());
-  }, [multiplier, score, gameStats.lastClickTime, playSound, getRandomButton]);
-
-
+  }, [
+    multiplier, 
+    score, 
+    gameStats, 
+    targetButton, 
+    playSound, 
+    getRandomButton, 
+    setScore,
+    setMultiplier,
+    setGameStats,
+    setTargetButton,
+    setNewAchievement
+  ]);
+  
+  // Add this helper function
+  const getMascotMessage = (multiplier) => {
+    if (multiplier >= 8) return "AMAZING! 🌟";
+    if (multiplier >= 5) return "Great combo! 🎯";
+    if (multiplier >= 3) return "Keep it up! 👍";
+    return "Good job! 😊";
+  };
 
 
   const handleMiss = useCallback(() => {
@@ -376,177 +535,204 @@ const PopItGame = () => {
               </Link>
             </div>
           </div>
-  
-          {/* Game Area */}
-          <div className={`max-w-2xl mx-auto rounded-lg overflow-hidden ${
-            gridShake ? 'flash-red' : ''
-          }`}>
-            {/* Stats Display */}
-            <div className="flex justify-between items-center mb-4">
-              <div className="flex gap-1">
-                {Array.from({ length: lives }).map((_, i) => (
-                  <Heart
-                    key={i}
-                    className={`w-6 h-6 ${
-                      settings.theme === 'dark' ? 'text-purple-400' : 'text-purple-600'
-                    }`}
-                    fill="currentColor"
-                  />
-                ))}
-              </div>
-              <div className={`text-2xl font-bold ${
-                settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
+    
+          {/* Game Area with Grid and Mascot */}
+<div className="relative flex justify-center">
+  {/* Game Grid Container */}
+  <div className={`w-[800px] ${gridShake ? 'flash-red' : ''}`}>
+    {/* Stats Display */}
+    <div className="flex justify-between items-center mb-4">
+      <div className="flex gap-1">
+        {Array.from({ length: lives }).map((_, i) => (
+          <Heart
+            key={i}
+            className={`w-6 h-6 ${
+              settings.theme === 'dark' ? 'text-purple-400' : 'text-purple-600'
+            }`}
+            fill="currentColor"
+          />
+        ))}
+      </div>
+      <div className={`text-2xl font-bold ${
+        settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
+      }`}>
+        Score: {score}
+      </div>
+      {gameState === 'playing' && (
+        <div className={`text-lg ${
+          settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
+        }`}>
+          Multiplier: x {multiplier.toFixed(1)}
+        </div>
+      )}
+    </div>
+
+    {/* Game Grid */}
+    <div 
+      className={`aspect-square grid gap-2 ${
+        gridShake ? 'animate-shake' : ''
+      }`} 
+      style={{
+        gridTemplateColumns: `repeat(${settings.gridSize}, 1fr)`
+      }}
+    >
+      {Array.from({ length: settings.gridSize * settings.gridSize }).map((_, index) => (
+        <button
+          key={index}
+          data-index={index}
+          onClick={() => handleButtonClick(index)}
+          disabled={gameState !== 'playing'}
+          className={`
+            aspect-square rounded-lg transition-all duration-100
+            ${index === targetButton && gameState === 'playing'
+              ? settings.theme === 'dark'
+                ? 'bg-purple-500 hover:bg-purple-400'
+                : 'bg-purple-600 hover:bg-purple-500'
+              : settings.theme === 'dark'
+              ? 'bg-gray-700 hover:bg-gray-600'
+              : 'bg-gray-200 hover:bg-gray-300'
+            }
+            ${gameState !== 'playing' ? 'cursor-not-allowed opacity-50' : ''}
+          `}
+        />
+      ))}
+    </div>
+  </div>
+
+  {/* Mascot Container - Fixed on the right side */}
+  <div className="fixed right-8 top-1/4 w-48">
+    <div className={`mascot-container ${
+      settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
+    }`}>
+      <img 
+        src={mascotImage}
+        alt="Game Mascot"
+        className="w-32 h-32 object-contain animate-bounce"
+      />
+      {mascotMessage && (
+        <div className={`speech-bubble ${
+          settings.theme === 'dark' ? 'bg-gray-700' : 'bg-white'
+        } p-3 rounded-lg shadow-lg mt-2 text-center`}>
+          {mascotMessage}
+        </div>
+      )}
+    </div>
+  </div>
+</div>
+
+
+    
+          {/* Countdown Overlay */}
+          {gameState === 'countdown' && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-lg">
+              <div className={`text-8xl font-bold animate-pulse ${
+                settings.theme === 'dark' ? 'text-purple-400' : 'text-purple-600'
               }`}>
-                Score: {score}
+                {countdown}
               </div>
-              {gameState === 'playing' && (
-                <div className={`text-lg ${
-                  settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
-                }`}>
-                  Multiplier: x {multiplier.toFixed(1)}
-                </div>
-              )}
             </div>
-  
-            {/* Game Grid */}
-            <div className={`aspect-square grid gap-2 ${
-              gridShake ? 'animate-shake' : ''
-            }`} 
-            style={{
-              gridTemplateColumns: `repeat(${settings.gridSize}, 1fr)`
-            }}>
-              {Array.from({ length: settings.gridSize * settings.gridSize }).map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleButtonClick(index)}
-                  disabled={gameState !== 'playing'}
-                  className={`
-                    aspect-square rounded-lg transition-all duration-100
-                    ${index === targetButton && gameState === 'playing'
-                      ? settings.theme === 'dark'
-                        ? 'bg-purple-500 hover:bg-purple-400'
-                        : 'bg-purple-600 hover:bg-purple-500'
-                      : settings.theme === 'dark'
-                      ? 'bg-gray-700 hover:bg-gray-600'
-                      : 'bg-gray-200 hover:bg-gray-300'
-                    }
-                    ${gameState !== 'playing' ? 'cursor-not-allowed opacity-50' : ''}
-                  `}
-                />
-              ))}
+          )}
+    
+          {/* Game State Overlays */}
+          {gameState === 'menu' && (
+            <div className="text-center mt-8">
+              <button
+                onClick={startGame}
+                className={`px-8 py-4 rounded-lg text-xl font-bold ${
+                  settings.theme === 'dark'
+                    ? 'bg-purple-600 hover:bg-purple-500'
+                    : 'bg-purple-600 hover:bg-purple-700 text-white'
+                }`}
+              >
+                Start Game
+              </button>
             </div>
-            {/* Countdown Overlay - Centered over grid */}
-            {gameState === 'countdown' && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-lg">
-                <div className={`text-8xl font-bold animate-pulse ${
-                  settings.theme === 'dark' 
-                    ? 'text-purple-400' 
-                    : 'text-purple-600'
-                }`}>
-                  {countdown}
+          )}
+    
+          {showGameOver && (
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+              <div className={`p-8 rounded-lg ${
+                settings.theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+              } shadow-xl max-w-md w-full mx-4`}>
+                <h2 className="text-2xl font-bold mb-4">Game Over!</h2>
+                <div className="space-y-2 mb-6">
+                  <p>Final Score: {score}</p>
+                  <p>Highest Combo: {gameStats.highestCombo}x</p>
+                  <p>Accuracy: {((gameStats.successfulClicks / gameStats.totalClicks) * 100 || 0).toFixed(1)}%</p>
+                </div>
+                <div className="flex gap-4">
+                  <button
+                    onClick={startGame}
+                    className={`flex-1 px-4 py-2 rounded-lg font-bold ${
+                      settings.theme === 'dark'
+                        ? 'bg-purple-600 hover:bg-purple-500'
+                        : 'bg-purple-600 hover:bg-purple-700 text-white'
+                    }`}
+                  >
+                    Play Again
+                  </button>
+                  <Link
+                    to="/profile"
+                    className={`flex-1 px-4 py-2 rounded-lg font-bold text-center ${
+                      settings.theme === 'dark'
+                        ? 'bg-gray-700 hover:bg-gray-600'
+                        : 'bg-gray-200 hover:bg-gray-300'
+                    }`}
+                  >
+                    View Profile
+                  </Link>
                 </div>
               </div>
-            )}
-            {/* Game State Overlays */}
-            {gameState === 'menu' && (
-              <div className="text-center mt-8">
-                <button
-                  onClick={startGame}
-                  className={`px-8 py-4 rounded-lg text-xl font-bold ${
-                    settings.theme === 'dark'
-                      ? 'bg-purple-600 hover:bg-purple-500'
-                      : 'bg-purple-600 hover:bg-purple-700 text-white'
-                  }`}
-                >
-                  Start Game
-                </button>
+            </div>
+          )}
+    
+          {/* Username Input Modal */}
+          {showUsernameInput && (
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+              <div className={`p-8 rounded-lg ${
+                settings.theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+              } shadow-xl max-w-md w-full mx-4`}>
+                <h2 className="text-2xl font-bold mb-4">Enter Your Username</h2>
+                <form onSubmit={handleUsernameSubmit}>
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className={`w-full px-4 py-2 rounded-lg mb-4 ${
+                      settings.theme === 'dark'
+                        ? 'bg-gray-700 text-white'
+                        : 'bg-gray-100'
+                    }`}
+                    placeholder="Username"
+                    maxLength={20}
+                    required
+                  />
+                  <button
+                    type="submit"
+                    className={`w-full px-4 py-2 rounded-lg font-bold ${
+                      settings.theme === 'dark'
+                        ? 'bg-purple-600 hover:bg-purple-500'
+                        : 'bg-purple-600 hover:bg-purple-700 text-white'
+                    }`}
+                  >
+                    Start Game
+                  </button>
+                </form>
               </div>
-            )}
-            {showGameOver && (
-              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                <div className={`p-8 rounded-lg ${
-                  settings.theme === 'dark' ? 'bg-gray-800' : 'bg-white'
-                } shadow-xl max-w-md w-full mx-4`}>
-                  <h2 className="text-2xl font-bold mb-4">Game Over!</h2>
-                  <div className="space-y-2 mb-6">
-                    <p>Final Score: {score}</p>
-                    <p>Highest Combo: {gameStats.highestCombo}x</p>
-                    <p>Accuracy: {((gameStats.successfulClicks / gameStats.totalClicks) * 100 || 0).toFixed(1)}%</p>
-                  </div>
-                  <div className="flex gap-4">
-                    <button
-                      onClick={startGame}
-                      className={`flex-1 px-4 py-2 rounded-lg font-bold ${
-                        settings.theme === 'dark'
-                          ? 'bg-purple-600 hover:bg-purple-500'
-                          : 'bg-purple-600 hover:bg-purple-700 text-white'
-                      }`}
-                    >
-                      Play Again
-                    </button>
-                    <Link
-                      to="/profile"
-                      className={`flex-1 px-4 py-2 rounded-lg font-bold text-center ${
-                        settings.theme === 'dark'
-                          ? 'bg-gray-700 hover:bg-gray-600'
-                          : 'bg-gray-200 hover:bg-gray-300'
-                      }`}
-                    >
-                      View Profile
-                    </Link>
-                  </div>
-                </div>
+            </div>
+          )}
+    
+          {/* Achievement Notification */}
+          {newAchievement && (
+            <div className="fixed bottom-4 right-4 animate-slide-up">
+              <div className={`p-4 rounded-lg shadow-lg ${
+                settings.theme === 'dark' ? 'bg-gray-700' : 'bg-white'
+              }`}>
+                <div className="font-bold mb-1">Achievement Unlocked!</div>
+                <div>{newAchievement.title}</div>
               </div>
-            )}
-  
-            {/* Username Input Modal */}
-            {showUsernameInput && (
-              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                <div className={`p-8 rounded-lg ${
-                  settings.theme === 'dark' ? 'bg-gray-800' : 'bg-white'
-                } shadow-xl max-w-md w-full mx-4`}>
-                  <h2 className="text-2xl font-bold mb-4">Enter Your Username</h2>
-                  <form onSubmit={handleUsernameSubmit}>
-                    <input
-                      type="text"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      className={`w-full px-4 py-2 rounded-lg mb-4 ${
-                        settings.theme === 'dark'
-                          ? 'bg-gray-700 text-white'
-                          : 'bg-gray-100'
-                      }`}
-                      placeholder="Username"
-                      maxLength={20}
-                      required
-                    />
-                    <button
-                      type="submit"
-                      className={`w-full px-4 py-2 rounded-lg font-bold ${
-                        settings.theme === 'dark'
-                          ? 'bg-purple-600 hover:bg-purple-500'
-                          : 'bg-purple-600 hover:bg-purple-700 text-white'
-                      }`}
-                    >
-                      Start Game
-                    </button>
-                  </form>
-                </div>
-              </div>
-            )}
-  
-            {/* Achievement Notification */}
-            {newAchievement && (
-              <div className="fixed bottom-4 right-4 animate-slide-up">
-                <div className={`p-4 rounded-lg shadow-lg ${
-                  settings.theme === 'dark' ? 'bg-gray-700' : 'bg-white'
-                }`}>
-                  <div className="font-bold mb-1">Achievement Unlocked!</div>
-                  <div>{newAchievement.title}</div>
-                </div>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     );
