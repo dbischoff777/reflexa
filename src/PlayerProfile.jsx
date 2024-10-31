@@ -152,21 +152,31 @@ const PlayerProfile = () => {
             <div>
               <h1 className="text-2xl font-bold">{localStorage.getItem('username')}</h1>
               <div className="flex items-center gap-2">
-                <span className={`text-sm ${
-                  settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
-                }`}></span>
-                  Level {stats.progress.level}
-                
-                
-                <div className="flex-1 h-2 bg-gray-200 rounded-full w-32">
-                  <div
-                    className="h-2 bg-purple-600 rounded-full"
-                    style={{
-                      width: `${((stats.progress.experience % 100) / 100) * 100}%`
-                    }}
-                  />
+              <span className={`text-sm ${
+                settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
+              }`}></span>
+                Level {stats.progress.level}
+              
+              
+              <div className="flex items-center gap-2">
+                <div className="w-32">
+                  <div className="h-2 bg-gray-200 rounded-full">
+                    <div
+                      className="h-2 bg-purple-600 rounded-full"
+                      style={{
+                        width: `${((stats.progress.experience % 100) / 100) * 100}%`
+                      }}
+                    />
+                  </div>
                 </div>
+                <span className={`text-xs ${
+                  settings.theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+                }`}></span>
+                  {formatNumber(stats.progress.experience)} of {formatNumber((stats.progress.level + 1) * 100)} XP
+                
               </div>
+            </div>
+
             </div>
           </div>
           
