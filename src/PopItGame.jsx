@@ -439,25 +439,30 @@ const PopItGame = () => {
             margin: `${buttonSize * 0.05}vw`,
           }}
         >
-          <button
-            className={`bowl-button w-full h-full relative ${isTarget ? 'target' : ''}`}
-            onClick={() => handleButtonClick(index)}
-            disabled={!gameStarted || gameOver}
-          />
-          {isTarget && (
-            <div 
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none rounded-full"
-              style={{ 
-                zIndex: 1,
-                width: '40%',
-                height: '40%',
+          <div className="relative w-full h-full">
+            <button
+              className={`bowl-button w-full h-full ${isTarget ? 'target' : ''}`}
+              onClick={() => handleButtonClick(index)}
+              disabled={!gameStarted || gameOver}
+              style={{
+                backgroundColor: isTarget ? '#FF0000' : 'transparent'
               }}
-            />
-          )}
+            >
+              {isTarget && (
+                <svg 
+                  viewBox="0 0 24 24" 
+                  className="absolute inset-0 w-full h-full pointer-events-none"
+                  fill="#FF0000"
+                >
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                </svg>
+              )}
+            </button>
+          </div>
         </div>
       );
     };
-    
+     
     // Game loop effects
     useEffect(() => {
       if (gameState === 'countdown' && countdown > 0) {
