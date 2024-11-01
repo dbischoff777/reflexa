@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import livesIcon from './images/lives.png';
+import frenchieIcon from './images/frenchie.png';
 import AvatarSelector from './components/avatar/AvatarSelector';
 import { FacebookIcon, TwitterIcon, WhatsAppIcon, LinkedInIcon } from './Icons';
 
@@ -54,6 +55,17 @@ const PopItGameUI = ({
       }`}>
       {/* Main Container */}
       <div className="container mx-auto px-4 py-8 max-w-7xl">
+         {/* Add Frenchie Image here, before the Game Header */}
+          <div className="flex justify-center mb-6">
+            <img
+              src={frenchieIcon}
+              alt="Frenchie"
+              className="w-32 h-32 object-contain"
+              style={{ 
+                filter: settings.theme === 'dark' ? 'brightness(100%)' : 'brightness(90%)'
+              }}
+            />
+          </div>
         {/* Game Header */}
         <div className="text-center mb-8">
           <h1 className={`text-4xl font-bold mb-2 ${
