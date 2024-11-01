@@ -79,19 +79,19 @@ const Settings = () => {
     <div className={`min-h-screen w-full fixed inset-0 ${
       settings.theme === 'dark' 
         ? 'bg-gray-800 text-white' 
-        : 'bg-gray-100 text-gray-900'
+        : 'bg-gray-50 text-gray-900'  // Changed from bg-gray-100
     }`}>
       <div className={`p-4 max-w-md mx-auto mt-16 rounded-lg shadow-lg overflow-y-auto ${
         settings.theme === 'dark'
           ? 'bg-gray-700 text-white'
-          : 'bg-gradient-to-b from-purple-100 to-white'
+          : 'bg-gray-100'  // Changed from bg-gradient-to-b from-purple-100 to-white
       }`}>
         <h2 className={`text-2xl font-bold mb-6 ${
           settings.theme === 'dark' ? 'text-white' : 'text-purple-800'
         }`}>
           Game Settings
         </h2>
-
+  
         {/* Sound Settings */}
         <div className="mb-6">
           <label className="flex items-center space-x-2">
@@ -102,15 +102,15 @@ const Settings = () => {
               className="form-checkbox h-5 w-5 text-purple-800 rounded focus:ring-purple-800"
             />
             <span className={`font-medium ${
-              settings.theme === 'dark' ? 'text-white' : 'text-purple-900'
+              settings.theme === 'dark' ? 'text-white' : 'text-gray-700'  // Changed from text-purple-900
             }`}>Sound Effects</span>
           </label>
         </div>
-
+  
         {/* Difficulty Settings */}
         <div className="mb-6">
           <label className={`block font-medium mb-2 ${
-            settings.theme === 'dark' ? 'text-white' : 'text-purple-900'
+            settings.theme === 'dark' ? 'text-white' : 'text-gray-700'  // Changed from text-purple-900
           }`}>
             Difficulty
           </label>
@@ -120,7 +120,7 @@ const Settings = () => {
             className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${
               settings.theme === 'dark'
                 ? 'bg-gray-600 border-gray-600 text-white'
-                : 'bg-white border-purple-300 text-purple-900'
+                : 'bg-white border-gray-300 text-gray-700'  // Changed from border-purple-300 text-purple-900
             }`}
           >
             <option value="easy">Easy</option>
@@ -128,11 +128,11 @@ const Settings = () => {
             <option value="hard">Hard</option>
           </select>
         </div>
-
+  
         {/* Grid Size Settings */}
         <div className="mb-6">
           <label className={`block font-medium mb-2 ${
-            settings.theme === 'dark' ? 'text-white' : 'text-purple-900'
+            settings.theme === 'dark' ? 'text-white' : 'text-gray-700'  // Changed from text-purple-900
           }`}>
             Grid Size
           </label>
@@ -142,7 +142,7 @@ const Settings = () => {
             className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${
               settings.theme === 'dark'
                 ? 'bg-gray-600 border-gray-600 text-white'
-                : 'bg-white border-purple-300 text-purple-900'
+                : 'bg-white border-gray-300 text-gray-700'  // Changed from border-purple-300 text-purple-900
             }`}
           >
             <option value="3">3x3</option>
@@ -150,7 +150,7 @@ const Settings = () => {
             <option value="5">5x5</option>
           </select>
         </div>
-
+  
         {/* Theme Toggle */}
         <div className="mb-6">
           <label className="flex items-center space-x-2">
@@ -161,11 +161,11 @@ const Settings = () => {
               className="form-checkbox h-5 w-5 text-purple-800 rounded focus:ring-purple-800"
             />
             <span className={`font-medium ${
-              settings.theme === 'dark' ? 'text-white' : 'text-purple-900'
+              settings.theme === 'dark' ? 'text-white' : 'text-gray-700'  // Changed from text-purple-900
             }`}>Dark Theme</span>
           </label>
         </div>
-
+  
         {/* Countdown Timer Toggle */}
         <div className="mb-6">
           <label className="flex items-center space-x-2">
@@ -176,11 +176,11 @@ const Settings = () => {
               className="form-checkbox h-5 w-5 text-purple-800 rounded focus:ring-purple-800"
             />
             <span className={`font-medium ${
-              settings.theme === 'dark' ? 'text-white' : 'text-purple-900'
+              settings.theme === 'dark' ? 'text-white' : 'text-gray-700'  // Changed from text-purple-900
             }`}>Show Countdown Timer</span>
           </label>
         </div>
-
+  
         {/* Vibration Toggle */}
         <div className="mb-6">
           <label className="flex items-center space-x-2">
@@ -191,11 +191,11 @@ const Settings = () => {
               className="form-checkbox h-5 w-5 text-purple-800 rounded focus:ring-purple-800"
             />
             <span className={`font-medium ${
-              settings.theme === 'dark' ? 'text-white' : 'text-purple-900'
+              settings.theme === 'dark' ? 'text-white' : 'text-gray-700'  // Changed from text-purple-900
             }`}>Vibration</span>
           </label>
         </div>
-
+  
         {/* Save Button */}
         <div className="mt-8">
           <button
@@ -203,7 +203,7 @@ const Settings = () => {
             className={`w-full py-3 px-4 rounded-md transition-colors duration-200 font-semibold shadow-md hover:shadow-lg ${
               settings.theme === 'dark'
                 ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                : 'bg-purple-800 hover:bg-purple-900 text-white'
+                : 'bg-purple-600 hover:bg-purple-700 text-white'  // Kept consistent for button
             }`}
           >
             Save & Return to Game
@@ -212,7 +212,7 @@ const Settings = () => {
       </div>
     </div>
   );
-
+  
 
 };
 

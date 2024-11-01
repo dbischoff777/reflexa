@@ -1,5 +1,4 @@
 import React from 'react';
-import { useSettings } from './Settings';
 import { Link } from 'react-router-dom';
 import { Heart } from 'lucide-react';
 import AvatarSelector from './components/avatar/AvatarSelector';

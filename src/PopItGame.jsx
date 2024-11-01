@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import PopItGameUI from './PopItGameUI';
+import soundManager from './sounds/sound';
 import { useSettings } from './Settings';
 import { updatePlayerStats } from './utils/playerStats';
 import { checkAchievementsUnlocked, ACHIEVEMENTS} from './achievements';
@@ -183,21 +184,19 @@ const PopItGame = () => {
       return () => clearTimeout(timer);
     }
   }, [mascotMessage]);
-  
-  // Audio Management
-  const audioEffects = useMemo(() => ({
-    countdown: new Audio('/sounds/countdown.mp3'),
-    pop: new Audio('/sounds/pop.mp3'),
-    miss: new Audio('/sounds/miss.mp3'),
-    gameOver: new Audio('/sounds/gameover.mp3')
-  }), []);
 
-  const playSound = useCallback((soundType) => {
-    if (settings.soundEnabled) {
-      audioEffects[soundType].currentTime = 0;
-      audioEffects[soundType].play().catch(error => console.log('Audio play failed:', error));
+  //playSound function
+  const playSound = useCallback((soundName) => {
+    if (!settings.soundEnabled) return;
+    soundManager.play(soundName);
+  }, [settings.soundEnabled]);
+
+  //sync settings with SoundManager
+  useEffect(() => {
+    if (settings.soundEnabled !== !soundManager.isMuted()) {
+      soundManager.toggleMute();
     }
-  }, [settings.soundEnabled, audioEffects]);
+  }, [settings.soundEnabled]);
 
   // Get random button for target
   const getRandomButton = useCallback(() => {
@@ -407,6 +406,7 @@ const PopItGame = () => {
   useEffect(() => {
     if (newAchievement) {
         // Clear achievement notification after delay
+        playSound('achievement')
         const timer = setTimeout(() => {
             setNewAchievement(null);
         }, 3000); // Show for 3 seconds
@@ -462,7 +462,7 @@ const PopItGame = () => {
 
   // Handle button click
   const handleButtonClick = useCallback((index) => {
-    if (gameState !== 'playing') return;
+    if (gameOver || !gameStarted || gameState !== 'playing') return;
   
     const now = Date.now();
     setGameStats(prev => ({
@@ -472,6 +472,8 @@ const PopItGame = () => {
     }));
   
     if (index === targetButton) {
+
+      playSound('success');
       // Calculate grid position based on index
       const gridSize = settings.gridSize;
       const row = Math.floor(index / gridSize);
@@ -498,14 +500,16 @@ const PopItGame = () => {
         highestCombo: Math.max(prev.highestCombo, newMultiplier),
         reactionTimes: [...prev.reactionTimes, now - prev.lastClickTime]
       }));
-  
+      
       setScore(newScore);
       setMultiplier(newMultiplier);
       setMascotMessage(getMascotMessage(newMultiplier));
       setTargetButton(getRandomButton());
   
     } else {
-      // Handle incorrect click
+
+      playSound('miss')
+      // Handle incorrect 
       setGridShake(true);
       setTimeout(() => setGridShake(false), 300);
       
@@ -528,9 +532,10 @@ const PopItGame = () => {
     handleGameOver,
     getRandomButton,
     getMascotMessage,
+    playSound,
     particleEffects.length,
     settings.gridSize,
-    gameSpeed
+    gameSpeed,
   ]);
     
   //Update the renderButton function
