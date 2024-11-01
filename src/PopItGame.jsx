@@ -8,6 +8,9 @@ import Particles from "react-tsparticles";
 import { loadFull } from "tsparticles";
 import './PopItGame.css';
 import mascotImage from './images/cute-mascot.png';
+import blueBowl from './images/blueBowl.jpeg';
+import foodBowl from './images/foodBowl.png';
+import successAnimation from './animations/successAnimation.mp4';
 import { useAvatar } from './hooks/useAvatar';
 
 const PopItGame = () => {
@@ -15,6 +18,10 @@ const PopItGame = () => {
   
   //avatars
   const { playerAvatar, setPlayerAvatar } = useAvatar();
+
+  //success animation
+  const [showAnimation, setShowAnimation] = useState(false);
+  const [animationPosition, setAnimationPosition] = useState({ x: 0, y: 0 });
 
   // Game state
   const [gameState, setGameState] = useState('menu'); // menu, countdown, playing, over
@@ -474,11 +481,21 @@ const PopItGame = () => {
     if (index === targetButton) {
 
       playSound('success');
+
       // Calculate grid position based on index
       const gridSize = settings.gridSize;
       const row = Math.floor(index / gridSize);
       const col = index % gridSize;
       
+      // Set animation position
+      setAnimationPosition({ row, col });
+      setShowAnimation(true);
+
+      // Hide animation after it completes
+      setTimeout(() => {
+        setShowAnimation(false);
+      }, 2000); // Adjust timing based on your animation length
+
       if (particleEffects.length < maxParticleEffects) {
         setParticleEffects(prev => [...prev, {
           id: Date.now(),
@@ -490,9 +507,9 @@ const PopItGame = () => {
       const newMultiplier = Math.min(multiplier + 1, 10);
       const newScore = score + Math.round(10 * multiplier);
   
-      // Increase game speed with successful clicks
+     /*  // Increase game speed with successful clicks
       const newGameSpeed = Math.min(gameSpeed + 0.15, 3.0);
-      setGameSpeed(newGameSpeed);
+      setGameSpeed(newGameSpeed); */
   
       setGameStats(prev => ({
         ...prev,
@@ -539,29 +556,42 @@ const PopItGame = () => {
   ]);
     
   //Update the renderButton function
-  const renderButton = (index) => {
-    const isTarget = targetButton === index;
+  const renderButton = useCallback((index) => {
+    const isTarget = index === targetButton;
+    
     return (
-      <div 
+      <div
         key={index}
-        className="relative w-full h-full p-[3%]" // Use percentage padding for consistent spacing
+        className="relative aspect-square w-full"
+        onClick={() => handleButtonClick(index)}
       >
-        <div className="relative w-full h-full">
-          <button
-            className={`bowl-button absolute inset-0 rounded-full transition-colors duration-200 ${isTarget ? 'target' : ''}`}
-            onClick={() => handleButtonClick(index)}
-            disabled={!gameStarted || gameOver}
-            style={{
-              backgroundColor: isTarget ? '#9333ea' : 'transparent',
-              background: isTarget ? 'radial-gradient(circle, #0000FF 20%, #9333ea 60%)' : 'transparent',
-              border: '2px solid #9333ea',
-              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-            }}
+        {/* Background Button */}
+        <button
+          className={`absolute inset-0 rounded-lg transition-all duration-200 
+            ${settings.theme === 'dark' 
+              ? 'bg-gray-700 hover:bg-gray-600' 
+              : 'bg-gray-200 hover:bg-gray-300'
+            }`}
+        />
+        
+        {/* Image Overlay */}
+        <div 
+          className={`absolute inset-0 flex items-center justify-center
+            ${isTarget ? 'filter drop-shadow-lg animate-pulse' : ''}`}
+        >
+          <img
+            src={isTarget ? foodBowl : blueBowl}
+            alt={isTarget ? "Food Bowl" : "Blue Bowl"}
+            className={`w-3/4 h-3/4 object-contain pointer-events-none
+              transition-transform duration-200
+              ${isTarget ? 'hover:scale-110' : ''}`}
           />
         </div>
       </div>
     );
-  };
+  }, [targetButton, settings.theme, handleButtonClick]);
+  
+
      
   // Game loop effects
   useEffect(() => {
@@ -638,6 +668,10 @@ const PopItGame = () => {
       setParticleEffects={setParticleEffects}
       playerAvatar={playerAvatar}
       setPlayerAvatar={setPlayerAvatar}
+      handleButtonClick={handleButtonClick}
+      showAnimation={showAnimation}
+      animationPosition={animationPosition}
+      successAnimation={successAnimation}
     />
   );
 };

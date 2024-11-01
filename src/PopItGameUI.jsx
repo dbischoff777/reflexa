@@ -29,6 +29,10 @@ const PopItGameUI = ({
   playerAvatar,
   setPlayerAvatar,
   newAchievement,
+  showAnimation,
+  animationPosition,
+  successAnimation,
+  setShowAnimation
 }) => {
   const handleUsernameSubmit = (e) => {
     e.preventDefault();
@@ -254,6 +258,31 @@ const PopItGameUI = ({
   
                 {/* Square Aspect Ratio Container */}
                 <div className="relative w-full pb-[100%]">
+                  {/* Animation Overlay */}
+                  {showAnimation && (
+                    <div 
+                      className="absolute pointer-events-none"
+                      style={{
+                        top: `${(animationPosition.row * 100) / settings.gridSize}%`,
+                        left: `${(animationPosition.col * 100) / settings.gridSize}%`,
+                        width: `${100 / settings.gridSize}%`,
+                        height: `${100 / settings.gridSize}%`,
+                        zIndex: 50
+                      }}
+                    >
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <video
+                          autoPlay
+                          muted
+                          playsInline  // Added for better mobile support
+                          className="w-3/4 h-3/4 object-contain"  // Matched to foodBowl size
+                          onEnded={() => setShowAnimation(false)}
+                        >
+                          <source src={successAnimation} type="video/mp4" />
+                        </video>
+                      </div>
+                    </div>
+                  )}
                   {/* Absolute Position Grid */}
                   <div 
                     className={`absolute inset-0 ${gridShake ? 'animate-shake' : ''} ${
@@ -264,29 +293,26 @@ const PopItGameUI = ({
                       gridTemplateColumns: `repeat(${settings.gridSize}, 1fr)`,
                       gap: '2%',
                       padding: '2%',
-                      borderRadius: '12px',
-                      transition: 'background-color 0.3s ease',
                     }}
                   >
-                    {Array.from({ length: settings.gridSize * settings.gridSize }).map((_, index) =>
+                    {Array.from({ length: settings.gridSize * settings.gridSize }).map((_, index) => 
                       renderButton(index)
                     )}
-  
-                    {/* Particle Effects */}
-                    {particleEffects.map(effect => (
-                      <PopEffect
-                        key={effect.id}
-                        row={effect.row}
-                        col={effect.col}
-                        theme={settings.theme}
-                        onComplete={() => {
-                          setParticleEffects(prev => 
-                            prev.filter(e => e.id !== effect.id)
-                          );
-                        }}
-                      />
-                    ))}
                   </div>
+                  {/* Particle Effects */}
+                  {particleEffects.map(effect => (
+                    <PopEffect
+                      key={effect.id}
+                      row={effect.row}
+                      col={effect.col}
+                      theme={settings.theme}
+                      onComplete={() => {
+                        setParticleEffects(prev => 
+                          prev.filter(e => e.id !== effect.id)
+                        );
+                      }}
+                    />
+                  ))}
                 </div>
               </div>
             </div>
