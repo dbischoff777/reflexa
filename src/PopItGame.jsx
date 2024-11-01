@@ -600,7 +600,7 @@ const PopItGame = () => {
       >
         {/* Background Button */}
         <button
-          className={`absolute inset-0 rounded-lg transition-all duration-200 
+          className={`absolute inset-0 rounded-full transition-all duration-200 
             ${settings.theme === 'dark' 
               ? 'bg-gray-700 hover:bg-gray-600' 
               : 'bg-gray-200 hover:bg-gray-300'
