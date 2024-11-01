@@ -42,7 +42,7 @@ const About = ({ settings }) => {
               ? 'text-purple-300'
               : 'text-purple-800'
           }`}>
-            About Reflexa
+            About Fetch & Feast
           </h1>
         </div>
 
