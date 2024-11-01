@@ -56,12 +56,12 @@ const PopItGameUI = ({
           <h1 className={`text-4xl font-bold mb-2 ${
             settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
           }`}>
-            Reflexa
+            Fetch & Feast
           </h1>
           <p className={`text-lg ${
             settings.theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
           }`}>
-            Test your reflexes!
+            Fetch as many treats as you can!
           </p>
           
           {/* Navigation Links */}

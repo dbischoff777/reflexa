@@ -52,8 +52,8 @@ const About = ({ settings }) => {
             : 'text-purple-900'
         }`}>
           <p>
-            Reflexa is a fun reaction game where players need to click on 
-            highlighted buttons as quickly as possible.
+            Fetch & Feast is a fun reaction game where dogs need to fetch the 
+            treats.
           </p>
           
           <div className="space-y-2">
@@ -61,10 +61,10 @@ const About = ({ settings }) => {
             <ul className="list-disc list-inside space-y-1 text-left">
               <li>Click the Start Game button to begin</li>
               <li>Wait for the countdown to finish</li>
-              <li>Click the highlighted buttons as they appear</li>
+              <li>Click the treats as they appear</li>
               <li>Each correct click earns you a point</li>
-              <li>Missing a button or clicking wrong loses a life</li>
-              <li>The game speeds up as your score increases</li>
+              <li>Missing a treat or clicking wrong loses a life</li>
+              {/* <li>The game speeds up as your score increases</li> */}
             </ul>
           </div>
           <p className={`text-sm mt-4 text-center ${
@@ -74,7 +74,7 @@ const About = ({ settings }) => {
           }`}>
             © {new Date().getFullYear()} Dennis Bischoff. All rights reserved.
           </p> 
-          <p className={`text-sm italic ${
+          <p className={`text-sm italic text-center ${
             settings?.theme === 'dark'
               ? 'text-gray-300'
               : 'text-purple-900'
