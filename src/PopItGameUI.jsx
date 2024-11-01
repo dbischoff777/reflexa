@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Heart } from 'lucide-react';
 import AvatarSelector from './components/avatar/AvatarSelector';
+import { FacebookIcon, TwitterIcon, WhatsAppIcon, LinkedInIcon } from './Icons';
 
 const PopItGameUI = ({
   settings,
@@ -186,8 +187,130 @@ const PopItGameUI = ({
                     settings.theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
                   }`}>
                     <p className="text-xl mb-2">Final Score: {gameStats.score}</p>
-                    <p className="text-lg">High Score: {gameStats.highScore}</p>
+                    <p className="text-lg">High Score: {gameStats.highscore}</p>
                   </div>
+
+                  {/* Share Score Section */}
+                  <div className="flex flex-col gap-3 mb-4">
+                    {/* Main Share Button */}
+                    <button
+                      onClick={async () => {
+                        const shareText = `🎮 I just scored ${score} points in Fetch & Feast! Can you beat my score? 🏆`;
+                        
+                        try {
+                          if (navigator.share) {
+                            await navigator.share({
+                              title: 'Fetch & Feast Game Score',
+                              text: shareText,
+                              url: window.location.href
+                            });
+                            //showToast('Score shared successfully!');
+                          } else {
+                            await navigator.clipboard.writeText(shareText + '\n' + window.location.href);
+                            //showToast('Score copied to clipboard!');
+                          }
+                        } catch (error) {
+                          try {
+                            await navigator.clipboard.writeText(shareText + '\n' + window.location.href);
+                            //showToast('Score copied to clipboard!');
+                          } catch (clipboardError) {
+                            //showToast('Failed to share score');
+                            console.error('Share failed:', error);
+                          }
+                        }
+                      }}
+                      className={`w-full px-4 py-2 rounded-lg font-bold ${
+                        settings.theme === 'dark'
+                          ? 'bg-blue-600 hover:bg-blue-500 text-white'
+                          : 'bg-blue-600 hover:bg-blue-700 text-white'
+                      }`}
+                    >
+                      Share Score
+                    </button>
+
+                    {/* Social Media Share Buttons */}
+                    <div className="flex justify-center gap-3">
+                      {/* Facebook */}
+                      <button
+                        onClick={() => {
+                          const shareText = `I just scored ${score} points in Fetch & Feast!`;
+                          const url = encodeURIComponent(window.location.href);
+                          window.open(
+                            `https://facebook.com/sharer/sharer.php?u=${url}`,
+                            'facebook-share',
+                            'width=580,height=296'
+                          );
+                        }}
+                        className={`p-2 rounded-lg transition-colors ${
+                          settings.theme === 'dark'
+                            ? 'bg-[#1877f2] hover:bg-[#0d6ce4] text-white'
+                            : 'bg-[#1877f2] hover:bg-[#0d6ce4] text-white'
+                        }`}
+                      >
+                        <FacebookIcon className="w-6 h-6" />
+                      </button>
+
+                      {/* Twitter/X */}
+                      <button
+                        onClick={() => {
+                          const shareText = encodeURIComponent(
+                            `🎮 I just scored ${score} points in Fetch & Feast! Can you beat my score? 🏆`
+                          );
+                          const url = encodeURIComponent(window.location.href);
+                          window.open(
+                            `https://twitter.com/intent/tweet?text=${shareText}&url=${url}`,
+                            'twitter-share',
+                            'width=550,height=235'
+                          );
+                        }}
+                        className={`p-2 rounded-lg transition-colors ${
+                          settings.theme === 'dark'
+                            ? 'bg-black hover:bg-gray-800 text-white'
+                            : 'bg-black hover:bg-gray-800 text-white'
+                        }`}
+                      >
+                        <TwitterIcon className="w-6 h-6" />
+                      </button>
+
+                      {/* WhatsApp */}
+                      <button
+                        onClick={() => {
+                          const shareText = encodeURIComponent(
+                            `🎮 I just scored ${score} points in Fetch & Feast! Can you beat my score? 🏆\n${window.location.href}`
+                          );
+                          window.open(`https://api.whatsapp.com/send?text=${shareText}`);
+                        }}
+                        className={`p-2 rounded-lg transition-colors ${
+                          settings.theme === 'dark'
+                            ? 'bg-[#25D366] hover:bg-[#20bd5a] text-white'
+                            : 'bg-[#25D366] hover:bg-[#20bd5a] text-white'
+                        }`}
+                      >
+                        <WhatsAppIcon className="w-6 h-6" />
+                      </button>
+
+                      {/* LinkedIn */}
+                      <button
+                        onClick={() => {
+                          const url = encodeURIComponent(window.location.href);
+                          window.open(
+                            `https://www.linkedin.com/sharing/share-offsite/?url=${url}`,
+                            'linkedin-share',
+                            'width=750,height=600'
+                          );
+                        }}
+                        className={`p-2 rounded-lg transition-colors ${
+                          settings.theme === 'dark'
+                            ? 'bg-[#0077b5] hover:bg-[#006399] text-white'
+                            : 'bg-[#0077b5] hover:bg-[#006399] text-white'
+                        }`}
+                      >
+                        <LinkedInIcon className="w-6 h-6" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Game Control Buttons */}
                   <div className="flex flex-col gap-3">
                     <button
                       onClick={startGame}
@@ -199,6 +322,7 @@ const PopItGameUI = ({
                     >
                       Play Again
                     </button>
+                    
                     <Link
                       to="/profile"
                       className={`w-full px-4 py-2 rounded-lg font-bold text-center ${
@@ -209,6 +333,7 @@ const PopItGameUI = ({
                     >
                       Profile
                     </Link>
+                    
                     <button
                       onClick={exitGame}
                       className={`w-full px-4 py-2 rounded-lg font-bold ${
@@ -223,7 +348,6 @@ const PopItGameUI = ({
                 </div>
               </div>
             )}
-
 
             {/* Responsive Grid Container */}
             <div className="w-full flex justify-center px-4">
