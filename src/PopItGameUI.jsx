@@ -148,7 +148,7 @@ const PopItGameUI = ({
               }`}>
                 {showSpeechBubble && mascotMessage && (
                   <div className={`speech-bubble absolute left-1/2 -translate-x-1/2 -top-20 ${
-                    settings.theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'
+                    settings.theme === 'dark' ? 'bg-gray-700' : 'bg-white'
                   } p-3 rounded-lg shadow-lg max-w-[200px] text-sm z-10 whitespace-normal`}>
                     {mascotMessage}
                   </div>

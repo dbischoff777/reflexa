@@ -8,8 +8,8 @@ import Particles from "react-tsparticles";
 import { loadFull } from "tsparticles";
 import './PopItGame.css';
 import mascotImage from './images/cute-mascot.png';
-import blueBowl from './images/blueBowl.jpeg';
-import foodBowl from './images/foodBowl.png';
+import blueBowl from './images/blueBowlT.png';
+import foodBowl from './images/foodBowlT.png';
 import successAnimation from './animations/successAnimation.mp4';
 import { useAvatar } from './hooks/useAvatar';
 
