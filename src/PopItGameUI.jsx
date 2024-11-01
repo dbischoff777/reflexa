@@ -7,7 +7,6 @@ const PopItGameUI = ({
   settings,
   username,
   showUsernameInput,
-  setShowUsernameInput,
   setUsername,
   score,
   lives,

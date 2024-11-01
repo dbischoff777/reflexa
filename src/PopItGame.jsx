@@ -30,6 +30,9 @@ const PopItGame = () => {
   const [showGameOver, setShowGameOver] = useState(false);
   const [countdown, setCountdown] = useState(3);
   const [score, setScore] = useState(0);
+  const [highScore, setHighScore] = useState(0);
+  const [longestStreak, setLongestStreak] = useState(0);
+
   
   // Game mechanics
   const [multiplier, setMultiplier] = useState(1);
@@ -342,32 +345,44 @@ const PopItGame = () => {
 
   // Handle game over
   const handleGameOver = useCallback(() => {
-      const endTime = Date.now();
-      const finalStats = calculateFinalStats(endTime);
-      
-      // Update player stats
-      updatePlayerStats(finalStats);
-      
-      // Update leaderboard
-      updateLeaderboard(finalStats.score);
-      
-      // Update recent games
-      updateRecentGames(finalStats);
+    const endTime = Date.now();
+    const finalStats = calculateFinalStats(endTime);
+    
+    // Create final stats for UI display
+    const gameUIStats = {
+        score: score,
+        highScore: Math.max(score, finalStats.highScore || 0), // Use finalStats.highScore
+        lives: lives,
+        multiplier: multiplier,
+        longestStreak: gameStats.longestStreak || 0 // Use gameStats.longestStreak
+    };
+    
+    // Update game stats for UI
+    setGameStats(gameUIStats);
+    
+    // Update player stats
+    updatePlayerStats(finalStats);
+    
+    // Update leaderboard
+    updateLeaderboard(finalStats.score);
+    
+    // Update recent games
+    updateRecentGames(finalStats);
 
-      // Update achievement progress
-      const currentProgress = JSON.parse(localStorage.getItem('achievementProgress') || '{}');
-      // Update progress with new stats including games played
-      const updatedProgress = {
+    // Update achievement progress
+    const currentProgress = JSON.parse(localStorage.getItem('achievementProgress') || '{}');
+    // Update progress with new stats including games played
+    const updatedProgress = {
         ...currentProgress,
         totalScore: (currentProgress.totalScore || 0),
         highestScore: Math.max(finalStats.score, currentProgress.highestScore || 0),
         highestMultiplier: Math.max(maxMultiplier, currentProgress.highestMultiplier || 0),
-      };
-      localStorage.setItem('achievementProgress', JSON.stringify(updatedProgress));
-      
-      // Check for newly unlocked achievements
-      const unlockedAchievements = checkAchievementsUnlocked(updatedProgress);
-      if (unlockedAchievements.length > 0) {
+    };
+    localStorage.setItem('achievementProgress', JSON.stringify(updatedProgress));
+    
+    // Check for newly unlocked achievements
+    const unlockedAchievements = checkAchievementsUnlocked(updatedProgress);
+    if (unlockedAchievements.length > 0) {
         // Get previously unlocked achievements
         const previouslyUnlocked = new Set(JSON.parse(localStorage.getItem('unlockedAchievements') || '[]'));
         
@@ -376,38 +391,41 @@ const PopItGame = () => {
         
         // Save all unlocked achievements
         localStorage.setItem('unlockedAchievements', 
-          JSON.stringify(Array.from(new Set([...previouslyUnlocked, ...unlockedAchievements])))
+            JSON.stringify(Array.from(new Set([...previouslyUnlocked, ...unlockedAchievements])))
         );
         
         // Show achievement notification if there are new ones
         if (newlyUnlocked.length > 0) {
-          // Find the achievement details for the notification
-          const achievementDetails = Object.values(ACHIEVEMENTS)
-            .flat()
-            .find(achievement => achievement.id === newlyUnlocked[0]);
-            
-          setNewAchievement(achievementDetails);
+            // Find the achievement details for the notification
+            const achievementDetails = Object.values(ACHIEVEMENTS)
+                .flat()
+                .find(achievement => achievement.id === newlyUnlocked[0]);
+                
+            setNewAchievement(achievementDetails);
         }
-      }
-      
-      playSound('gameOver');
-      setGameOver(true);
-      setShowGameOver(true);
-      setGameState('over');
-    }, [
-      calculateFinalStats,
-      updatePlayerStats,
-      updateLeaderboard,
-      updateRecentGames,
-      playSound,
-      score,
-      maxMultiplier,
-      gameStats,
-      setGameOver,
-      setShowGameOver,
-      setGameState,
-      setNewAchievement
-    ]);
+    }
+    
+    playSound('gameOver');
+    setGameOver(true);
+    setShowGameOver(true);
+    setGameState('over');
+}, [
+    calculateFinalStats,
+    updatePlayerStats,
+    updateLeaderboard,
+    updateRecentGames,
+    playSound,
+    score,
+    gameStats,
+    setGameOver,
+    setShowGameOver,
+    setGameState,
+    setNewAchievement,
+    lives,
+    multiplier,
+    maxMultiplier
+]);
+
   
   // Add useEffect to handle achievement notification display
   useEffect(() => {
