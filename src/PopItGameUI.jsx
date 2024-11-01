@@ -1,8 +1,8 @@
 import React from 'react';
+import { useSettings } from './Settings';
 import { Link } from 'react-router-dom';
-import { Heart } from 'lucide-react'; // Make sure to import your Heart icon
+import { Heart } from 'lucide-react';
 import AvatarSelector from './components/avatar/AvatarSelector';
-import PlayerAvatar from './components/avatar/PlayerAvatar';
 
 const PopItGameUI = ({
   settings,
@@ -40,10 +40,15 @@ const PopItGameUI = ({
   };
   
   return (
-    <div className={`min-h-screen ${
-      settings.theme === 'dark' ? 'bg-gray-800 text-white' : '',
-      gridShake ? 'flash-red' : 'bg-gray-100 text-gray-900'
-    }`}>
+      <div className={`min-h-screen w-full fixed inset-0 ${
+        settings.theme === 'dark'
+          ? gridShake 
+            ? 'flash-red bg-gray-800 text-white'
+            : 'bg-gray-800 text-white'
+          : gridShake
+            ? 'flash-red bg-gray-100 text-gray-900'
+            : 'bg-gray-100 text-gray-900'
+      }`}>
       {/* Main Container */}
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Game Header */}
@@ -65,8 +70,8 @@ const PopItGameUI = ({
               to="/profile"
               className={`px-4 py-2 rounded-lg transition-colors ${
                 settings.theme === 'dark'
-                  ? 'text-purple-300 hover:bg-purple-900'
-                  : 'text-purple-600 hover:bg-purple-100'
+                  ? 'text-purple-300 hover:bg-gray-700'
+                  : 'text-purple-600 hover:bg-gray-200'
               }`}
             >
               Profile
@@ -75,8 +80,8 @@ const PopItGameUI = ({
               to="/leaderboard"
               className={`px-4 py-2 rounded-lg transition-colors ${
                 settings.theme === 'dark'
-                  ? 'text-purple-300 hover:bg-purple-900'
-                  : 'text-purple-600 hover:bg-purple-100'
+                  ? 'text-purple-300 hover:bg-gray-700'
+                  : 'text-purple-600 hover:bg-gray-200'
               }`}
             >
               Leaderboard
@@ -85,8 +90,8 @@ const PopItGameUI = ({
               to="/settings"
               className={`px-4 py-2 rounded-lg transition-colors ${
                 settings.theme === 'dark'
-                  ? 'text-purple-300 hover:bg-purple-900'
-                  : 'text-purple-600 hover:bg-purple-100'
+                  ? 'text-purple-300 hover:bg-gray-700'
+                  : 'text-purple-600 hover:bg-gray-200'
               }`}
             >
               Settings
@@ -95,41 +100,41 @@ const PopItGameUI = ({
               to="/about"
               className={`px-4 py-2 rounded-lg transition-colors ${
                 settings.theme === 'dark'
-                  ? 'text-purple-300 hover:bg-purple-900'
-                  : 'text-purple-600 hover:bg-purple-100'
+                  ? 'text-purple-300 hover:bg-gray-700'
+                  : 'text-purple-600 hover:bg-gray-200'
               }`}
             >
               About
             </Link>
           </div>
         </div>
-
+  
         {/* Achievement Notification */}
-          {newAchievement && (
-            <div className="fixed top-4 right-4 z-50 animate-slide-in-achievement">
-              <div className={`flex items-center gap-3 p-4 rounded-lg shadow-lg ${
-                settings.theme === 'dark' 
-                  ? 'bg-gray-800 text-white border border-purple-500' 
-                  : 'bg-white text-gray-900 border border-purple-300'
-              }`}>
-                <div className="text-2xl">🏆</div>
-                <div className="flex flex-col">
-                  <h3 className={`font-bold ${
-                    settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
-                  }`}>
-                    Achievement Unlocked!
-                  </h3>
-                  <p className="font-medium">{newAchievement.title}</p>
-                  <p className={`text-sm ${
-                    settings.theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                  }`}>
-                    {newAchievement.description}
-                  </p>
-                </div>
+        {newAchievement && (
+          <div className="fixed top-4 right-4 z-50 animate-slide-in-achievement">
+            <div className={`flex items-center gap-3 p-4 rounded-lg shadow-lg ${
+              settings.theme === 'dark' 
+                ? 'bg-gray-700 text-white border border-purple-500' 
+                : 'bg-white text-gray-900 border border-purple-300'
+            }`}>
+              <div className="text-2xl">🏆</div>
+              <div className="flex flex-col">
+                <h3 className={`font-bold ${
+                  settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
+                }`}>
+                  Achievement Unlocked!
+                </h3>
+                <p className="font-medium">{newAchievement.title}</p>
+                <p className={`text-sm ${
+                  settings.theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+                }`}>
+                  {newAchievement.description}
+                </p>
               </div>
             </div>
-          )}
-
+          </div>
+        )}
+  
         {/* Game Area Container */}
         {gameState !== 'menu' ? (
           <div className="w-full flex flex-col items-center justify-center">
@@ -140,7 +145,7 @@ const PopItGameUI = ({
               }`}>
                 {showSpeechBubble && mascotMessage && (
                   <div className={`speech-bubble absolute left-1/2 -translate-x-1/2 -top-20 ${
-                    settings.theme === 'dark' ? 'bg-gray-700' : 'bg-white'
+                    settings.theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'
                   } p-3 rounded-lg shadow-lg max-w-[200px] text-sm z-10 whitespace-normal`}>
                     {mascotMessage}
                   </div>
@@ -152,7 +157,72 @@ const PopItGameUI = ({
                 />
               </div>
             </div>
-  
+
+            {/* Countdown Overlay */}
+            {gameState === 'countdown' && (
+              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[1000]">
+                <div className={`text-6xl font-bold ${
+                  settings.theme === 'dark' ? 'text-purple-400' : 'text-purple-600'
+                } animate-pulse`}>
+                  {countdown}
+                </div>
+              </div>
+            )}
+
+            {/* Game Over Overlay */}
+            {showGameOver && (
+              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[1000]">
+                <div className={`p-8 rounded-lg text-center ${
+                  settings.theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+                }`}>
+                  <h2 className={`text-4xl font-bold mb-4 ${
+                    settings.theme === 'dark' ? 'text-purple-400' : 'text-purple-600'
+                  }`}>
+                    Game Over!
+                  </h2>
+                  <div className={`mb-6 ${
+                    settings.theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                  }`}>
+                    <p className="text-xl mb-2">Final Score: {gameStats.score}</p>
+                    <p className="text-lg">High Score: {gameStats.highScore}</p>
+                  </div>
+                  <div className="flex flex-col gap-3">
+                    <button
+                      onClick={startGame}
+                      className={`w-full px-4 py-2 rounded-lg font-bold ${
+                        settings.theme === 'dark'
+                          ? 'bg-purple-600 hover:bg-purple-500 text-white'
+                          : 'bg-purple-600 hover:bg-purple-700 text-white'
+                      }`}
+                    >
+                      Play Again
+                    </button>
+                    <Link
+                      to="/profile"
+                      className={`w-full px-4 py-2 rounded-lg font-bold text-center ${
+                        settings.theme === 'dark'
+                          ? 'bg-gray-600 hover:bg-gray-500 text-white'
+                          : 'bg-gray-400 hover:bg-gray-500 text-white'
+                      }`}
+                    >
+                      Profile
+                    </Link>
+                    <button
+                      onClick={exitGame}
+                      className={`w-full px-4 py-2 rounded-lg font-bold ${
+                        settings.theme === 'dark'
+                          ? 'bg-gray-600 hover:bg-gray-500 text-white'
+                          : 'bg-gray-400 hover:bg-gray-500 text-white'
+                      }`}
+                    >
+                      Exit
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+
             {/* Responsive Grid Container */}
             <div className="w-full flex justify-center px-4">
               <div className="w-full" style={{ maxWidth: 'min(95vh, 95vw, 800px)' }}>
@@ -163,7 +233,7 @@ const PopItGameUI = ({
                       <Heart
                         key={i}
                         className={`w-6 h-6 ${
-                          settings.theme === 'dark' ? 'text-purple-400' : 'text-purple-600'
+                          settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
                         }`}
                         fill="currentColor"
                       />
@@ -187,7 +257,9 @@ const PopItGameUI = ({
                 <div className="relative w-full pb-[100%]">
                   {/* Absolute Position Grid */}
                   <div 
-                    className={`absolute inset-0 ${gridShake ? 'animate-shake' : ''}`}
+                    className={`absolute inset-0 ${gridShake ? 'animate-shake' : ''} ${
+                      settings.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'
+                    }`}
                     style={{
                       display: 'grid',
                       gridTemplateColumns: `repeat(${settings.gridSize}, 1fr)`,
@@ -207,6 +279,7 @@ const PopItGameUI = ({
                         key={effect.id}
                         row={effect.row}
                         col={effect.col}
+                        theme={settings.theme}
                         onComplete={() => {
                           setParticleEffects(prev => 
                             prev.filter(e => e.id !== effect.id)
@@ -221,166 +294,58 @@ const PopItGameUI = ({
           </div>
         ) : (
           // Menu State Content
-          <div className="flex flex-col items-center justify-center gap-6 my-8">
+          <div className={`flex flex-col items-center justify-center gap-6 my-8 p-6 rounded-lg ${
+            settings.theme === 'dark' ? 'bg-gray-700' : 'bg-white'
+          }`}>
             <div className="w-256 h-256"> 
               <AvatarSelector 
                 currentAvatar={playerAvatar}
                 onSelect={setPlayerAvatar}
-                className="w-full h-full [image-rendering:-webkit-optimize-contrast] [image-rendering:crisp-edges] [image-rendering:pixelated]"
+                className="w-full h-full [image-rendering:-webkit-optimize-contrast]"
               />
             </div>
-            {localStorage.getItem('username') ? (
+            {showUsernameInput ? (
+              <form onSubmit={handleUsernameSubmit} className="w-full max-w-xs">
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Enter your username"
+                  className={`w-full px-4 py-2 rounded-lg mb-4 ${
+                    settings.theme === 'dark'
+                      ? 'bg-gray-600 text-white border-gray-500'
+                      : 'bg-white text-gray-900 border-purple-300'
+                  }`}
+                  maxLength={15}
+                />
+                <button
+                  type="submit"
+                  className={`w-full py-2 px-4 rounded-lg font-semibold ${
+                    settings.theme === 'dark'
+                      ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                      : 'bg-purple-600 hover:bg-purple-700 text-white'
+                  }`}
+                >
+                  Start Game
+                </button>
+              </form>
+            ) : (
               <button
-                onClick={handleUsernameSubmit}
-                className={`px-12 py-6 rounded-xl font-bold text-2xl shadow-xl transition-all duration-200 transform hover:scale-105 ${
-                  settings.theme === 'dark' 
-                    ? 'bg-purple-600 hover:bg-purple-500 text-white' 
+                onClick={startGame}
+                className={`w-full max-w-xs py-2 px-4 rounded-lg font-semibold ${
+                  settings.theme === 'dark'
+                    ? 'bg-purple-600 hover:bg-purple-700 text-white'
                     : 'bg-purple-600 hover:bg-purple-700 text-white'
                 }`}
               >
                 Start Game
               </button>
-            ) : (
-              <>
-                {!showUsernameInput ? (
-                  <button
-                    onClick={() => setShowUsernameInput(true)}
-                    className={`px-12 py-6 rounded-xl font-bold text-2xl shadow-xl transition-all duration-200 transform hover:scale-105 ${
-                      settings.theme === 'dark' 
-                        ? 'bg-purple-600 hover:bg-purple-500 text-white' 
-                        : 'bg-purple-600 hover:bg-purple-700 text-white'
-                    }`}
-                  >
-                    Start Game
-                  </button>
-                ) : (
-                  <div className="w-full max-w-md mx-auto">
-                    <form onSubmit={(e) => {
-                      e.preventDefault();
-                      if (username.trim()) {
-                        localStorage.setItem('username', username.trim());
-                        handleUsernameSubmit(e);
-                      }
-                    }} className="flex flex-col gap-4">
-                      <input
-                        type="text"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        placeholder="Enter your username"
-                        className={`w-full px-4 py-2 rounded-lg border ${
-                          settings.theme === 'dark'
-                            ? 'bg-gray-700 border-gray-600 text-white'
-                            : 'bg-white border-gray-300 text-gray-900'
-                        }`}
-                        maxLength={20}
-                        required
-                        autoFocus
-                      />
-                      <div className="flex gap-4">
-                        <button
-                          type="submit"
-                          className={`flex-1 px-6 py-2 rounded-lg font-bold transition-all duration-200 ${
-                            settings.theme === 'dark'
-                              ? 'bg-purple-600 hover:bg-purple-500 text-white'
-                              : 'bg-purple-600 hover:bg-purple-700 text-white'
-                          }`}
-                        >
-                          Start
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setShowUsernameInput(false)}
-                          className={`px-6 py-2 rounded-lg font-bold transition-all duration-200 ${
-                            settings.theme === 'dark'
-                              ? 'bg-gray-600 hover:bg-gray-500 text-white'
-                              : 'bg-gray-400 hover:bg-gray-500 text-white'
-                          }`}
-                        >
-                          Back
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-                )}
-              </>
             )}
           </div>
         )}
       </div>
-  
-      {/* Countdown Overlay */}
-        {gameState === 'countdown' && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-            <div className={`text-6xl font-bold ${
-              settings.theme === 'dark' ? 'text-purple-400' : 'text-purple-600'
-            } animate-pulse`}>
-              {countdown}
-            </div>
-          </div>
-        )}
-
-      {/* Game Over Overlay */}
-      {showGameOver && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className={`p-8 rounded-lg ${
-            settings.theme === 'dark' ? 'bg-gray-800' : 'bg-white'
-          } shadow-xl max-w-md w-full mx-4`}>
-            <div className="flex items-center gap-4 mb-4">
-              <PlayerAvatar 
-                avatarId={playerAvatar}
-                username={username}
-              />
-              <h2 className={`text-2xl font-bold ${
-                settings.theme === 'dark' ? 'text-white' : 'text-gray-900'
-              }`}>
-                Game Over!
-              </h2>
-            </div>
-            <div className={`space-y-2 mb-6 ${
-              settings.theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-            }`}>
-              <p>Final Score: {score}</p>
-              <p>Highest Combo: {gameStats.highestCombo}x</p>
-              <p>Accuracy: {((gameStats.successfulClicks / gameStats.totalClicks) * 100 || 0).toFixed(1)}%</p>
-            </div>
-            <div className="flex gap-4">
-              <button
-                onClick={startGame}
-                className={`flex-1 px-4 py-2 rounded-lg font-bold ${
-                  settings.theme === 'dark'
-                    ? 'bg-purple-600 hover:bg-purple-500 text-white'
-                    : 'bg-purple-600 hover:bg-purple-700 text-white'
-                }`}
-              >
-                Play Again
-              </button>
-              <Link
-                to="/profile"
-                className={`px-4 py-2 rounded-lg font-bold text-center ${
-                  settings.theme === 'dark'
-                    ? 'bg-gray-600 hover:bg-gray-500 text-white'
-                    : 'bg-gray-400 hover:bg-gray-500 text-white'
-                }`}
-              >
-                Profile
-              </Link>
-              <button
-                onClick={exitGame}
-                className={`px-4 py-2 rounded-lg font-bold ${
-                  settings.theme === 'dark'
-                    ? 'bg-gray-600 hover:bg-gray-500 text-white'
-                    : 'bg-gray-400 hover:bg-gray-500 text-white'
-                }`}
-              >
-                Exit
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
-
 };
 
 export default PopItGameUI;
