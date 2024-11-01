@@ -487,14 +487,23 @@ const PopItGame = () => {
       const row = Math.floor(index / gridSize);
       const col = index % gridSize;
       
+      // Clear the current target immediately
+      setTargetButton(null);  // Add this line to remove current target
+
       // Set animation position
       setAnimationPosition({ row, col });
       setShowAnimation(true);
 
-      // Hide animation after it completes
+      /* // Hide animation after it completes
       setTimeout(() => {
         setShowAnimation(false);
-      }, 2000); // Adjust timing based on your animation length
+      }, 2000); // Adjust timing based on your animation length */
+
+      // Update score immediately
+      const newMultiplier = Math.min(multiplier + 1, 10);
+      const newScore = score + Math.round(10 * multiplier);
+      setScore(newScore);
+      setMultiplier(newMultiplier);
 
       if (particleEffects.length < maxParticleEffects) {
         setParticleEffects(prev => [...prev, {
@@ -503,9 +512,6 @@ const PopItGame = () => {
           col: col
         }]);
       }
-  
-      const newMultiplier = Math.min(multiplier + 1, 10);
-      const newScore = score + Math.round(10 * multiplier);
   
      /*  // Increase game speed with successful clicks
       const newGameSpeed = Math.min(gameSpeed + 0.15, 3.0);
@@ -518,11 +524,19 @@ const PopItGame = () => {
         reactionTimes: [...prev.reactionTimes, now - prev.lastClickTime]
       }));
       
-      setScore(newScore);
-      setMultiplier(newMultiplier);
+      //setScore(newScore);
+      //setMultiplier(newMultiplier);
       setMascotMessage(getMascotMessage(newMultiplier));
-      setTargetButton(getRandomButton());
-  
+      //setTargetButton(getRandomButton());
+      
+      // Handle animation end and new target
+      setTimeout(() => {
+        setShowAnimation(false);
+        if (gameState === 'playing') {
+          setTargetButton(getRandomButton());
+        }
+      }, 2000);
+
     } else {
 
       playSound('miss')
@@ -577,7 +591,7 @@ const PopItGame = () => {
         {/* Image Overlay */}
         <div 
           className={`absolute inset-0 flex items-center justify-center
-            ${isTarget ? 'filter drop-shadow-lg animate-pulse' : ''}`}
+            ${isTarget ? 'filter drop-shadow-lg' : ''}`}
         >
           <img
             src={isTarget ? foodBowl : blueBowl}
@@ -610,28 +624,30 @@ const PopItGame = () => {
     }
   }, [gameState, countdown, playSound, getRandomButton]);
 
-  useEffect(() => {
-    if (gameState !== 'playing') return;
-  
-    const interval = setInterval(() => {
-      // Move target to new position if not clicked in time
-      setTargetButton(getRandomButton());
-      
-      // Reduce lives and reset multiplier on timeout
-      setLives(prev => {
-        if (prev <= 1) {
-          handleGameOver();
-          return prev;
-        }
-        return prev - 1;
-      });
-      
-      setMultiplier(1);
-      setGameSpeed(1); // Reset speed on timeout
-    }, BASE_INTERVAL / gameSpeed); // Adjust interval based on game speed
-  
-    return () => clearInterval(interval);
-  }, [gameState, gameSpeed, handleGameOver, getRandomButton]);
+  // Game loop effects
+useEffect(() => {
+  if (gameState !== 'playing') return;
+  if (!targetButton) return; // Add this line to prevent interval during animation
+
+  const interval = setInterval(() => {
+    // Move target to new position if not clicked in time
+    setTargetButton(getRandomButton());
+    
+    // Reduce lives and reset multiplier on timeout
+    setLives(prev => {
+      if (prev <= 1) {
+        handleGameOver();
+        return prev;
+      }
+      return prev - 1;
+    });
+    
+    setMultiplier(1);
+    setGameSpeed(1); // Reset speed on timeout
+  }, BASE_INTERVAL / gameSpeed); // Adjust interval based on game speed
+  return () => clearInterval(interval);
+  }, [gameState, gameSpeed, handleGameOver, getRandomButton, targetButton]);
+
 
   useEffect(() => {
     if (lives <= 0 && !gameOver) {
@@ -672,6 +688,7 @@ const PopItGame = () => {
       showAnimation={showAnimation}
       animationPosition={animationPosition}
       successAnimation={successAnimation}
+      setShowAnimation={setShowAnimation}
     />
   );
 };

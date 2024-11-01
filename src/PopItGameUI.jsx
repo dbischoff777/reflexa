@@ -32,7 +32,7 @@ const PopItGameUI = ({
   showAnimation,
   animationPosition,
   successAnimation,
-  setShowAnimation
+  //onAnimationEnd
 }) => {
   const handleUsernameSubmit = (e) => {
     e.preventDefault();
@@ -267,16 +267,18 @@ const PopItGameUI = ({
                         left: `${(animationPosition.col * 100) / settings.gridSize}%`,
                         width: `${100 / settings.gridSize}%`,
                         height: `${100 / settings.gridSize}%`,
+                        pointerEvents: 'none',
                         zIndex: 50
                       }}
                     >
                       <div className="absolute inset-0 flex items-center justify-center">
                         <video
+                          key={Date.now()} 
                           autoPlay
                           muted
-                          playsInline  // Added for better mobile support
-                          className="w-3/4 h-3/4 object-contain"  // Matched to foodBowl size
-                          onEnded={() => setShowAnimation(false)}
+                          playsInline // for better mobile support
+                          className="w-3/4 h-3/4 object-contain pointer-events-none"  // Matched to foodBowl size
+                          //onEnded={onAnimationEnd}
                         >
                           <source src={successAnimation} type="video/mp4" />
                         </video>
