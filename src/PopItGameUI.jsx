@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Heart } from 'lucide-react';
+import livesIcon from './images/lives.png';
 import AvatarSelector from './components/avatar/AvatarSelector';
 import { FacebookIcon, TwitterIcon, WhatsAppIcon, LinkedInIcon } from './Icons';
 
@@ -349,36 +349,42 @@ const PopItGameUI = ({
               </div>
             )}
 
+
             {/* Responsive Grid Container */}
             <div className="w-full flex justify-center px-4">
               <div className="w-full" style={{ maxWidth: 'min(95vh, 95vw, 800px)' }}>
                 {/* Stats Display */}
-                <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
-                  <div className="flex gap-1">
+                <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
+                  <div className="flex gap-2">
                     {Array.from({ length: lives }).map((_, i) => (
-                      <Heart
-                        key={i}
-                        className={`w-6 h-6 ${
-                          settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
+                      <div 
+                        key={i} 
+                        className={`w-12 h-12 ${
+                          settings.theme === 'dark' ? 'brightness-100' : 'brightness-90'
                         }`}
-                        fill="currentColor"
-                      />
+                      >
+                        <img
+                          src={livesIcon}
+                          alt="Life"
+                          className="w-full h-full object-contain"
+                          style={{ filter: settings.theme === 'dark' ? 'hue-rotate(30deg)' : 'none' }}
+                        />
+                      </div>
                     ))}
                   </div>
-                  <div className={`text-2xl font-bold ${
+                  <div className={`text-3xl font-bold ${
                     settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
                   }`}>
                     Score: {score}
                   </div>
                   {gameState === 'playing' && (
-                    <div className={`text-lg ${
+                    <div className={`text-2xl ${
                       settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
                     }`}>
                       Multiplier: x {multiplier.toFixed(1)}
                     </div>
                   )}
                 </div>
-  
                 {/* Square Aspect Ratio Container */}
                 <div className="relative w-full pb-[100%]">
                   {/* Animation Overlay */}
