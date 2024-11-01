@@ -10,7 +10,8 @@ import './PopItGame.css';
 import mascotImage from './images/cute-mascot.png';
 import blueBowl from './images/blueBowlT.png';
 import foodBowl from './images/foodBowlT.png';
-import successAnimation from './animations/successAnimation.mp4';
+//import successAnimation from './animations/successAnimation.mp4';
+import successAnimation from './animations/successAnimation-unscreen.gif';
 import { useAvatar } from './hooks/useAvatar';
 
 const PopItGame = () => {
