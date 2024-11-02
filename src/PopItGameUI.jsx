@@ -455,24 +455,26 @@ const PopItGameUI = ({
 
 
             {/* Responsive Grid Container */}
-            <div className="w-full flex justify-center px-4">
-              <div className="w-full" style={{ maxWidth: 'min(95vh, 95vw, 800px)' }}>
+            <div className="w-full flex justify-center px-2 2xs:px-3 xs:px-4">
+              <div className="w-[95vw] 2xs:w-[90vw] xs:w-[85vw] sm:w-[80vw] md:w-[60vw] lg:w-[50vw] max-w-[800px]">
                 {/* Stats Display */}
-                <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
-                <div className={`
-                    flex items-center gap-2 p-3 rounded-lg
+                <div className="flex justify-between items-center mb-4 2xs:mb-5 sm:mb-6 flex-wrap gap-2 2xs:gap-3 xs:gap-4">
+                  <div className={`
+                    flex items-center gap-1 2xs:gap-1.5 xs:gap-2 
+                    p-2 2xs:p-2.5 xs:p-3 
+                    rounded-lg
                     transform transition-all duration-300
                     ${settings.theme === 'dark' 
                       ? 'bg-purple-900/80 text-purple-200' 
                       : 'bg-purple-100/80 text-purple-600'}
                     shadow-lg backdrop-blur-sm
                   `}>
-                    <div className="flex items-center gap-2">
-                      <div className="flex gap-1">
+                    <div className="flex items-center gap-1 2xs:gap-1.5 xs:gap-2">
+                      <div className="flex gap-0.5 2xs:gap-1">
                         {Array.from({ length: lives }).map((_, i) => (
                           <div 
                             key={i} 
-                            className="w-8 h-8"
+                            className="w-6 h-6 2xs:w-7 2xs:h-7 xs:w-8 xs:h-8"
                           >
                             <img
                               src={livesIcon}
@@ -488,24 +490,27 @@ const PopItGameUI = ({
                           </div>
                         ))}
                       </div>
-                      <span className="text-2xl font-bold ml-1">×{lives}</span>
+                      <span className="text-xl 2xs:text-xl xs:text-2xl font-bold ml-0.5 2xs:ml-1">×{lives}</span>
                     </div>
                   </div>
+
                   <div className={`
-                    flex items-center gap-2 p-3 rounded-lg
+                    flex items-center gap-1 2xs:gap-1.5 xs:gap-2 
+                    p-2 2xs:p-2.5 xs:p-3 
+                    rounded-lg
                     transform transition-all duration-300
                     ${settings.theme === 'dark' 
                       ? 'bg-purple-900/80 text-purple-200' 
                       : 'bg-purple-100/80 text-purple-600'}
                     shadow-lg backdrop-blur-sm
                   `}>
-                    <div className="flex items-center gap-2">
-                      <span className="text-3xl font-bold">Score: {score}</span>
-                      <div className="ml-1">
+                    <div className="flex items-center gap-1 2xs:gap-1.5 xs:gap-2">
+                      <span className="text-2xl 2xs:text-2xl xs:text-3xl font-bold">Score: {score}</span>
+                      <div className="ml-0.5 2xs:ml-1">
                         <img
                           src={scoreIcon}
                           alt="Score"
-                          className="w-6 h-6 object-contain"
+                          className="w-5 h-5 2xs:w-5.5 2xs:h-5.5 xs:w-6 xs:h-6 object-contain"
                           draggable="false"
                           style={{ 
                             filter: settings.theme === 'dark' 
@@ -516,35 +521,38 @@ const PopItGameUI = ({
                       </div>
                     </div>
                   </div>
+
                   {gameState === 'playing' && multiplier > 1 && (
                     <div className={`
-                      flex items-center gap-2 p-3 rounded-lg
+                      flex items-center gap-1 2xs:gap-1.5 xs:gap-2 
+                      p-2 2xs:p-2.5 xs:p-3 
+                      rounded-lg
                       transform transition-all duration-300
                       ${multiplier > 1 ? 'animate-pulse' : ''}
                       ${settings.theme === 'dark' 
-                          ? 'bg-purple-900/80 text-purple-200' 
-                          : 'bg-purple-100/80 text-purple-600'}
+                        ? 'bg-purple-900/80 text-purple-200' 
+                        : 'bg-purple-100/80 text-purple-600'}
                       shadow-lg backdrop-blur-sm
                     `}>
-                      <div className="flex items-center gap-2">
-                        <span className="text-2xl font-bold">×{multiplier.toFixed(1)}</span>
-                        <div className="ml-1">
+                      <div className="flex items-center gap-1 2xs:gap-1.5 xs:gap-2">
+                        <span className="text-xl 2xs:text-xl xs:text-2xl font-bold">×{multiplier.toFixed(1)}</span>
+                        <div className="ml-0.5 2xs:ml-1">
                           <svg 
-                              className={`w-5 h-5 ${
-                                  settings.theme === 'dark' 
-                                      ? 'text-purple-300' 
-                                      : 'text-purple-500'
-                              }`} 
-                              fill="none" 
-                              viewBox="0 0 24 24" 
-                              stroke="currentColor"
+                            className={`w-4 h-4 2xs:w-4.5 2xs:h-4.5 xs:w-5 xs:h-5 ${
+                              settings.theme === 'dark' 
+                                ? 'text-purple-300' 
+                                : 'text-purple-500'
+                            }`} 
+                            fill="none" 
+                            viewBox="0 0 24 24" 
+                            stroke="currentColor"
                           >
-                              <path 
-                                  strokeLinecap="round" 
-                                  strokeLinejoin="round" 
-                                  strokeWidth={2} 
-                                  d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                              />
+                            <path 
+                              strokeLinecap="round" 
+                              strokeLinejoin="round" 
+                              strokeWidth={2} 
+                              d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                            />
                           </svg>
                         </div>
                       </div>
@@ -552,7 +560,7 @@ const PopItGameUI = ({
                   )}
                 </div>
                 {/* Square Aspect Ratio Container */}
-                <div className="relative w-[95vw] sm:w-[80vw] md:w-[60vw] lg:w-[50vw] max-w-[500px] mx-auto">
+                <div className="relative w-[95vw] 2xs:w-[90vw] xs:w-[85vw] sm:w-[80vw] md:w-[60vw] lg:w-[50vw] max-w-[500px] mx-auto">
                   <div className="relative aspect-square">
                     {/* Animation Overlay */}
                     {showAnimation && (
@@ -580,7 +588,7 @@ const PopItGameUI = ({
                             key={Date.now()}
                             src={successAnimation}
                             alt="Success Animation"
-                            className="w-2/3 sm:w-3/4 h-2/3 sm:h-3/4 object-contain pointer-events-none"
+                            className="w-2/3 2xs:w-[70%] xs:w-[72%] sm:w-3/4 object-contain pointer-events-none"
                             draggable="false"
                           />
                         </div>
