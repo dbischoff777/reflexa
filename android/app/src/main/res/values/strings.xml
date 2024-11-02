@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">reflexa</string>
+    <string name="title_activity_main">reflexa</string>
+    <string name="package_name">com.reflexa.app</string>
+    <string name="custom_url_scheme">com.reflexa.app</string>
+</resources>
