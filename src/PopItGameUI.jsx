@@ -208,9 +208,17 @@ const PopItGameUI = ({
                 settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
               }`}>
                 {showSpeechBubble && mascotMessage && (
-                  <div className={`speech-bubble absolute left-1/2 -translate-x-1/2 -top-20 ${
-                    settings.theme === 'dark' ? 'bg-gray-700' : 'bg-white'
-                  } p-3 rounded-lg shadow-lg max-w-[200px] text-sm z-10 whitespace-normal`}>
+                  <div className={`
+                    speech-bubble 
+                    absolute left-1/2 -translate-x-1/2 -top-20 
+                    ${settings.theme === 'dark' 
+                      ? 'bg-purple-900/80 text-purple-200' 
+                      : 'bg-purple-100/80 text-purple-600'
+                    } 
+                    p-3 rounded-lg shadow-lg backdrop-blur-sm
+                    max-w-[200px] text-sm z-10 whitespace-normal
+                    transform transition-all duration-300
+                  `}>
                     {mascotMessage}
                   </div>
                 )}
