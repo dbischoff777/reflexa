@@ -104,8 +104,13 @@ const PopItGameUI = ({
             />
       {/* Main Container */}
       <div className="container mx-auto px-4 py-8 max-w-7xl">
-         {/* Add Frenchie Image here, before the Game Header */}
-          <div className="flex justify-center mb-6 pointer-events-none">
+        {/* Add Frenchie Image here, before the Game Header */}
+        <div className="flex justify-center mb-6 pointer-events-none">
+          <div className={`
+            relative
+            transition-all duration-300 ease-in-out
+            ${gameState !== 'menu' ? 'opacity-0 h-0 mb-0' : 'opacity-100 h-32 mb-6'}
+          `}>
             <img
               src={frenchieIcon}
               alt="Frenchie"
@@ -115,8 +120,13 @@ const PopItGameUI = ({
               }}
             />
           </div>
+        </div>
         {/* Game Header */}
-        <div className="text-center mb-8">
+        <div className={`
+          text-center
+          transition-all duration-300 ease-in-out
+          ${gameState !== 'menu' ? 'opacity-0 h-0 mb-0 overflow-hidden' : 'opacity-100 h-auto mb-8'}
+        `}>
           <h1 className={`text-4xl font-bold mb-2 ${
             settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
           }`}>
@@ -129,7 +139,10 @@ const PopItGameUI = ({
           </p>
           
           {/* Navigation Links */}
-          <div className="flex justify-center gap-4 mt-4">
+          <div className={`
+            flex justify-center gap-4 mt-4
+            transition-all duration-300 ease-in-out
+          `}>
             <Link
               to="/profile"
               className={`px-4 py-2 rounded-lg transition-colors ${
@@ -172,7 +185,6 @@ const PopItGameUI = ({
             </Link>
           </div>
         </div>
-  
         {/* Achievement Notification */}
         {newAchievement && (
           <div className="fixed top-4 right-4 z-50 animate-slide-in-achievement">
