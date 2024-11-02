@@ -169,46 +169,119 @@ const PopItGameUI = ({
               `} />
             </div>
             
-            {/* Optional: Add floating particles */}
+            {/* Enhanced decorative elements */}
+            <div className="absolute -z-10 inset-0 flex items-center justify-center">
+              <div className={`
+                absolute 
+                w-48 h-48 
+                rounded-full 
+                blur-2xl 
+                opacity-20
+                transition-all duration-300
+                ${settings.theme === 'dark' 
+                  ? 'bg-purple-500' 
+                  : 'bg-purple-300'
+                }
+              `} />
+              <div className={`
+                absolute 
+                w-40 h-40 
+                rounded-full 
+                blur-xl
+                opacity-15
+                animate-pulse-slow
+                ${settings.theme === 'dark' 
+                  ? 'bg-purple-400' 
+                  : 'bg-purple-200'
+                }
+              `} />
+            </div>
+            
+            {/* Enhanced floating particles */}
             <motion.div
               className="absolute inset-0"
               initial="hidden"
               animate="visible"
             >
-              {[...Array(3)].map((_, i) => (
+              {[...Array(12)].map((_, i) => (
                 <motion.div
                   key={i}
                   className={`
                     absolute 
-                    w-2 h-2 
                     rounded-full
                     ${settings.theme === 'dark' 
                       ? 'bg-purple-400' 
                       : 'bg-purple-500'
                     }
                   `}
+                  style={{
+                    width: Math.random() * 4 + 2 + 'px',
+                    height: Math.random() * 4 + 2 + 'px',
+                    opacity: Math.random() * 0.5 + 0.2
+                  }}
                   initial={{ 
                     opacity: 0,
-                    x: Math.random() * 60 - 30,
-                    y: Math.random() * 60 - 30
+                    x: Math.random() * 100 - 50,
+                    y: Math.random() * 100 - 50
                   }}
                   animate={{ 
                     opacity: [0, 0.5, 0],
-                    x: Math.random() * 60 - 30,
-                    y: Math.random() * 60 - 30,
-                    scale: [0.8, 1, 0.8]
+                    x: Math.random() * 100 - 50,
+                    y: Math.random() * 100 - 50,
+                    scale: [0.8, 1.2, 0.8]
                   }}
                   transition={{
-                    duration: 2 + Math.random(),
+                    duration: 2 + Math.random() * 2,
                     repeat: Infinity,
-                    delay: i * 0.8
+                    delay: i * 0.2,
+                    ease: "easeInOut"
+                  }}
+                />
+              ))}
+            </motion.div>
+
+            {/* Add sparkles */}
+            <motion.div
+              className="absolute inset-0"
+              initial="hidden"
+              animate="visible"
+            >
+              {[...Array(6)].map((_, i) => (
+                <motion.div
+                  key={`sparkle-${i}`}
+                  className={`
+                    absolute 
+                    w-1 h-1
+                    rotate-45
+                    ${settings.theme === 'dark' 
+                      ? 'bg-purple-300' 
+                      : 'bg-purple-400'
+                    }
+                  `}
+                  initial={{ 
+                    opacity: 0,
+                    scale: 0
+                  }}
+                  animate={{ 
+                    opacity: [0, 1, 0],
+                    scale: [0, 1, 0],
+                    rotate: [0, 90, 180]
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    delay: i * 0.3,
+                    ease: "easeInOut"
+                  }}
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    top: `${Math.random() * 100}%`,
                   }}
                 />
               ))}
             </motion.div>
           </div>
         </div>
-
         {/* Game Header */}
         <div className={`
           text-center
