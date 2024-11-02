@@ -4,6 +4,7 @@ import livesIcon from './images/lives.png';
 import frenchieIcon from './images/frenchie.png';
 import AvatarSelector from './components/avatar/AvatarSelector';
 import { FacebookIcon, TwitterIcon, WhatsAppIcon, LinkedInIcon } from './Icons';
+import ScreenProtectionStatus from './components/ScreenProtectionStatus';
 
 const PopItGameUI = ({
   settings,
@@ -33,6 +34,8 @@ const PopItGameUI = ({
   showAnimation,
   animationPosition,
   successAnimation,
+  wakeLockActive,
+  brightnessAdjusted,
   //onAnimationEnd
 }) => {
   const handleUsernameSubmit = (e) => {
@@ -53,6 +56,11 @@ const PopItGameUI = ({
             ? 'flash-red bg-gray-100 text-gray-900'
             : 'bg-gray-100 text-gray-900'
       }`}>
+        {/* Add ScreenProtectionStatus component */}
+        <ScreenProtectionStatus 
+                theme={settings.theme} 
+                wakeLockActive={wakeLockActive}
+            />
       {/* Main Container */}
       <div className="container mx-auto px-4 py-8 max-w-7xl">
          {/* Add Frenchie Image here, before the Game Header */}

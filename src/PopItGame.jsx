@@ -13,8 +13,57 @@ import foodBowl from './images/foodBowlT.png';
 //import successAnimation from './animations/successAnimation.mp4';
 import successAnimation from './animations/successAnimation-unscreen.gif';
 import { useAvatar } from './hooks/useAvatar';
+import { useScreenProtection } from './hooks/useScreenProtection';
 
 const PopItGame = () => {
+
+  // keep screen awake
+  useScreenProtection();
+
+  // Add state for wake lock status
+  const [wakeLockActive, setWakeLockActive] = useState(false);
+
+  // Initialize screen protection
+  useEffect(() => {
+    let wakeLock = null;
+
+    const requestWakeLock = async () => {
+        try {
+            wakeLock = await navigator.wakeLock.request('screen');
+            setWakeLockActive(true);
+            console.log('Wake Lock is active');
+        } catch (err) {
+            setWakeLockActive(false);
+            console.log('Wake Lock request failed:', err.message);
+        }
+    };
+
+    const handleVisibilityChange = () => {
+        if (document.visibilityState === 'visible') {
+            requestWakeLock();
+        }
+    };
+
+    // Initial wake lock request
+    requestWakeLock();
+
+    // Re-request wake lock if page visibility changes
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Cleanup
+    return () => {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+        if (wakeLock) {
+            wakeLock.release()
+                .then(() => {
+                    setWakeLockActive(false);
+                    console.log('Wake Lock released');
+                })
+                .catch((err) => console.log('Error releasing Wake Lock:', err));
+        }
+    };
+}, []);
+
   const { settings } = useSettings();
   
   //avatars
@@ -707,9 +756,9 @@ useEffect(() => {
       animationPosition={animationPosition}
       successAnimation={successAnimation}
       setShowAnimation={setShowAnimation}
+      wakeLockActive={wakeLockActive}
     />
   );
 };
 
-  
 export default PopItGame;  
