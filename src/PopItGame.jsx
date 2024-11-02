@@ -718,7 +718,11 @@ const PopItGame = () => {
       totalClicks: prev.totalClicks + 1,
       lastClickTime: now
     }));
-  
+    
+    if (navigator.vibrate) {
+      navigator.vibrate(150); // 150ms vibration
+    }
+
     if (index === targetButton) {
 
       playSound('success');
@@ -818,7 +822,11 @@ const PopItGame = () => {
       <div
         key={index}
         className="relative aspect-square w-full"
-        onClick={() => handleButtonClick(index)}
+        //onClick={() => handleButtonClick(index)}
+        onTouchStart={(e) => {
+          e.preventDefault(); // Prevent double-firing on some devices
+          handleButtonClick(index);
+        }}
       >
         {/* Background Button */}
         <button
@@ -846,8 +854,6 @@ const PopItGame = () => {
     );
   }, [targetButton, settings.theme, handleButtonClick]);
   
-
-     
   // Game loop effects
   useEffect(() => {
     if (gameState === 'countdown' && countdown > 0) {
