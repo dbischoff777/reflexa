@@ -145,6 +145,8 @@ const Settings = () => {
                 : 'bg-white border-gray-300 text-gray-700'  // Changed from border-purple-300 text-purple-900
             }`}
           >
+            <option value="1">1x1</option>
+            <option value="2">2x2</option>
             <option value="3">3x3</option>
             <option value="4">4x4</option>
             <option value="5">5x5</option>
