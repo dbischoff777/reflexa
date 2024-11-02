@@ -128,6 +128,64 @@ const PopItGame = () => {
   const [showSpeechBubble, setShowSpeechBubble] = useState(false);
   const [mascotMessage, setMascotMessage] = useState('');
 
+
+  const { screenProtection } = useSettings();
+
+  // brightness
+  const adjustBrightness = () => {
+    // Try native brightness API first
+    if ('screen' in navigator && 'brightness' in navigator.screen) {
+      try {
+        navigator.screen.brightness.set(screenProtection.brightness / 100);
+      } catch (error) {
+        console.log('Native brightness API not available, using CSS fallback');
+      }
+    }
+    
+    // CSS fallback for brightness
+    const brightnessValue = screenProtection.brightness / 100;
+    document.documentElement.style.filter = `brightness(${brightnessValue})`;
+  };
+
+
+  // color temperature
+  const adjustColorTemperature = () => {
+      const hour = new Date().getHours();
+      if (hour >= 18 || hour < 6) {
+        // Combine brightness and night mode filters
+        const brightnessValue = screenProtection.autoBrightness 
+          ? screenProtection.brightness / 100 
+          : 1;
+        document.documentElement.style.filter = `brightness(${brightnessValue}) sepia(0.2)`;
+      } else {
+        // Only apply brightness if auto-brightness is on
+        if (screenProtection.autoBrightness) {
+          const brightnessValue = screenProtection.brightness / 100;
+          document.documentElement.style.filter = `brightness(${brightnessValue})`;
+        } else {
+          document.documentElement.style.filter = 'none';
+        }
+      }
+    };
+
+  // Effect for night mode
+  useEffect(() => {
+    if (screenProtection.nightMode) {
+      const interval = setInterval(adjustColorTemperature, 60000); // Check every minute
+      adjustColorTemperature(); // Initial check
+      return () => clearInterval(interval);
+    } else {
+      document.documentElement.style.filter = 'none';
+    }
+  }, [screenProtection.nightMode]);
+
+  // Effect for brightness
+  useEffect(() => {
+    if (screenProtection.autoBrightness) {
+      adjustBrightness();
+    }
+  }, [screenProtection.autoBrightness, screenProtection.brightness]);
+
   // Add this initialization for tsParticles
   const particlesInit = useCallback(async (engine) => {
     await loadFull(engine);
