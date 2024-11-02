@@ -225,3 +225,16 @@ code {
 .animate-slide-in-achievement {
   animation: slideInFromTop 0.5s ease-out forwards;
 }
+
+/* Add to your global CSS file */
+* {
+  -webkit-user-drag: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+img {
+  pointer-events: none;
+  -webkit-user-drag: none;
+}

@@ -55,7 +55,7 @@ const PopItGameUI = ({
           : gridShake
             ? 'flash-red bg-gray-100 text-gray-900'
             : 'bg-gray-100 text-gray-900'
-      }`}>
+      }`} >
         {/* Add ScreenProtectionStatus component */}
         <ScreenProtectionStatus 
                 theme={settings.theme} 
