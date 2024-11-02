@@ -62,7 +62,7 @@ const PopItGame = () => {
                 .catch((err) => console.log('Error releasing Wake Lock:', err));
         }
     };
-}, []);
+  }, []);
 
   const { settings } = useSettings();
   
@@ -119,9 +119,12 @@ const PopItGame = () => {
     lastClickTime: null
   });
 
-  //new particle and mascot variables
+  //particle variables
   const [particleEffects, setParticleEffects] = useState([]);
   const maxParticleEffects = 2; // Limit concurrent effects
+  
+  //mascot variables
+  const [consecutiveFailures, setConsecutiveFailures] = useState(0);
   const [showSpeechBubble, setShowSpeechBubble] = useState(false);
   const [mascotMessage, setMascotMessage] = useState('');
 
@@ -325,11 +328,182 @@ const PopItGame = () => {
   
   // Define getMascotMessage with useCallback
   const getMascotMessage = useCallback((combos) => {
-    if (combos >= 8) return "AMAZING! 🌟";
-    if (combos >= 5) return "Great combo! 🎯";
-    if (combos >= 3) return "Keep it up! 👍";
-    return "Good job! 😊";
-  }, []); // No dependencies needed since it's a pure function
+    const epicMessages = [
+      "INCREDIBLE! 🌟✨",
+      "YOU'RE ON FIRE! 🔥",
+      "UNSTOPPABLE! ⚡",
+      "LEGENDARY! 👑",
+      "PHENOMENAL! 🌈",
+      "MIND-BLOWING! 💫",
+      "SPECTACULAR! ⭐",
+      "EXTRAORDINARY! 🎯",
+      "MAGNIFICENT! 🌠",
+      "PHENOMENAL! 🎪"
+    ];
+  
+    const ultraMessages = [
+      "COSMIC POWER! 🌌✨",
+      "DIVINE COMBO! 🔮💫",
+      "TRANSCENDENT! 🎇",
+      "ASTRONOMICAL! 🚀",
+      "SUPERNATURAL! 🌟",
+      "GODLIKE MOVES! ⚡👑",
+      "REALITY BENDING! 🌈✨",
+      "DIMENSION BREAKER! 💫",
+      "BEYOND EPIC! 🎭",
+      "CELESTIAL MASTERY! 🌠"
+    ];
+  
+    const supremeMessages = [
+      "UNIVERSAL DOMINATION! 🌍✨",
+      "INFINITE POWER! 💫⚡",
+      "COSMIC OVERLORD! 🌌👑",
+      "REALITY SHAPER! 🎇✨",
+      "OMNIPOTENT! 🔮💫",
+      "BEYOND LEGENDARY! 🎪✨",
+      "ABSOLUTE PERFECTION! 💯",
+      "QUANTUM MASTERY! 🚀",
+      "ETHEREAL BRILLIANCE! 🌟",
+      "TRANSCENDENT BEING! 🎭"
+    ];
+  
+    const greatMessages = [
+      "Awesome combo! 🎯",
+      "Spectacular! ⭐",
+      "Brilliant moves! 💫",
+      "You're crushing it! 💪",
+      "Outstanding! 🌟",
+      "Fantastic work! 🎨"
+    ];
+  
+    const goodMessages = [
+      "Keep it up! 👍",
+      "You're doing great! 🌟",
+      "Nice rhythm! 🎵",
+      "That's the spirit! ✨",
+      "Getting better! 🎯",
+      "Keep going! 💫"
+    ];
+  
+    const startingMessages = [
+      "Good job! 😊",
+      "Nice one! 👍",
+      "You got this! ⭐",
+      "Keep playing! 🎮",
+      "Having fun! 🎪",
+      "That's it! 💫"
+    ];
+  
+    const rareMessages = [
+      "COSMIC COMBO! 🌌",
+      "ABSOLUTELY RADICAL! 🎸",
+      "SPECTACULAR MOVES! 🌠",
+      "DIMENSIONAL SHIFT! 🎇",
+      "REALITY WARPING! 🌈",
+      "TIME BENDER! ⌛"
+    ];
+  
+    const milestoneMessages = {
+      15: "NEW RECORD! 🏆",
+      20: "GODLIKE! ⚡👑⚡",
+      25: "BEYOND LEGENDARY! 🌈✨",
+      30: "COSMIC ACHIEVEMENT! 🌌",
+      40: "IMPOSSIBLE FEAT! 💫",
+      50: "ULTIMATE MASTER! 👑💫"
+    };
+  
+    const comboSpecificMessages = {
+      5: "High Five! 🖐️",
+      7: "Lucky Seven! 🎲",
+      10: "Perfect Ten! 💯",
+      12: "Dozen of Glory! 🌟",
+      15: "Fantastic Fifteen! 🎯",
+      20: "Twenty Terror! 🔥",
+      25: "Quarter Century! 💫",
+      30: "Thirty Thunder! ⚡",
+      40: "Forty Phenomenon! 🌈",
+      50: "Fifty Frenzy! 🎪"
+    };
+  
+    const getRandomMessage = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  
+    // Check milestones first
+    if (milestoneMessages[combos]) {
+      return milestoneMessages[combos];
+    }
+  
+    // Check combo-specific messages
+    if (comboSpecificMessages[combos]) {
+      return comboSpecificMessages[combos];
+    }
+  
+    // Check for rare messages (10% chance for high combos)
+    if (combos >= 7 && Math.random() < 0.1) {
+      return getRandomMessage(rareMessages);
+    }
+  
+    // Regular combo messages with extended tiers
+    if (combos >= 30) return getRandomMessage(supremeMessages);
+    if (combos >= 20) return getRandomMessage(ultraMessages);
+    if (combos >= 10) return getRandomMessage(epicMessages);
+    if (combos >= 7) return getRandomMessage(greatMessages);
+    if (combos >= 4) return getRandomMessage(goodMessages);
+    return getRandomMessage(startingMessages);
+  }, []);  
+
+  const getFailureMessage = useCallback(() => {
+    const failureMessages = [
+      // Encouraging failures
+      "Oops! Try again! 💫",
+      "Almost had it! 🎯",
+      "So close! 💫",
+      "Keep trying! 🌟",
+      "You can do it! ⭐",
+      "Don't give up! 💪",
+  
+      // Playful failures
+      "Whoopsie! 🎪",
+      "Aw snap! 🎭",
+      "Oh no! 🙈",
+      "Oopsie-daisy! 🌼",
+      "Not quite! 🎯",
+      "Nearly there! ✨",
+  
+      // Motivational failures
+      "One more try! 🎮",
+      "Practice makes perfect! 📝",
+      "Getting better! 💫",
+      "Learning in progress! 🎓",
+      "Keep at it! 🌟",
+      "You're improving! 📈",
+  
+      // Humorous failures
+      "Butterfingers! 🦋",
+      "Oops-a-doodle! 🐣",
+      "That was sneaky! 🦊",
+      "Tricky one! 🎲",
+      "Plot twist! 🎬",
+      "Surprise move! 🎪"
+    ];
+  
+    // Special messages for consecutive failures (if you track them)
+    const persistenceMessages = [
+      "Never give up! 💪",
+      "Persistence is key! 🔑",
+      "You're getting closer! 🎯",
+      "The next one's yours! ⭐"
+    ];
+  
+    // Random selection with a twist
+    const getRandomMessage = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  
+    // Add this if you track consecutive failures
+    if (consecutiveFailures >= 3) {
+      return getRandomMessage(persistenceMessages);
+    }
+  
+    return getRandomMessage(failureMessages);
+  }, [consecutiveFailures]); // Add consecutiveFailures as dependency
 
   // Start game
   const startGame = useCallback(() => {
@@ -615,7 +789,7 @@ const PopItGame = () => {
       setGameSpeed(1);
       setLives(prev => prev - 1);
       setMultiplier(1);
-      setMascotMessage('Oops! Try again!');
+      setMascotMessage(getFailureMessage());
   
       if (lives <= 1) {
         handleGameOver();

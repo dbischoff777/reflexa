@@ -208,20 +208,42 @@ const PopItGameUI = ({
                 settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
               }`}>
                 {showSpeechBubble && mascotMessage && (
-                  <div className={`
-                    speech-bubble 
-                    absolute left-1/2 -translate-x-1/2 -top-20 
-                    ${settings.theme === 'dark' 
-                      ? 'bg-purple-900/80 text-purple-200' 
-                      : 'bg-purple-100/80 text-purple-600'
-                    } 
-                    p-3 rounded-lg shadow-lg backdrop-blur-sm
-                    max-w-[200px] text-sm z-10 whitespace-normal
-                    transform transition-all duration-300
-                  `}>
-                    {mascotMessage}
-                  </div>
-                )}
+                <div className={`
+                  speech-bubble 
+                  absolute left-1/2 -translate-x-1/2 -top-20 
+                  ${settings.theme === 'dark'
+                    ? 'bg-purple-900/80 text-purple-200' 
+                    : 'bg-purple-100/80 text-purple-600'
+                  } 
+                  p-4 rounded-2xl shadow-lg backdrop-blur-sm
+                  max-w-[200px] text-sm z-10 whitespace-normal
+                  animate-float motion-reduce:animate-none scale-100 enter:animate-scaleIn
+                  hover:scale-105 transition-transform
+                  ring-1 ${settings.theme === 'dark' ? 'ring-white/10' : 'ring-purple-300/30'}
+                  drop-shadow-[0_0_15px_rgba(168,85,247,0.2)]
+                  before:content-['']
+                  before:absolute before:bottom-[-12px] before:left-1/2 before:-translate-x-1/2
+                  before:border-[12px] before:border-transparent
+                  ${settings.theme === 'dark'
+                    ? 'before:border-t-purple-900/80'
+                    : 'before:border-t-purple-100/80'
+                  }
+                  after:content-['']
+                  after:absolute after:bottom-[-8px] after:left-[calc(50%-6px)]
+                  after:border-[6px] after:border-transparent
+                  ${settings.theme === 'dark'
+                    ? 'after:border-t-purple-900/80'
+                    : 'after:border-t-purple-100/80'
+                  }
+                  border
+                  ${settings.theme === 'dark'
+                    ? 'border-purple-700/50'
+                    : 'border-purple-300/50'
+                  }
+                `}>
+                  {mascotMessage}
+                </div>
+              )}
                 <img 
                   src={mascotImage}
                   alt="Game Mascot"
