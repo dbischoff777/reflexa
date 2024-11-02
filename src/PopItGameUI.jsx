@@ -215,20 +215,22 @@ const PopItGameUI = ({
         {gameState !== 'menu' ? (
           <div className="w-full flex flex-col items-center justify-center">
             {/* Mascot Container */}
-            <div className="w-full flex justify-center mb-8 mt-4">
-              <div className={`mascot-container relative px-8 ${
+            <div className="w-full flex justify-center mb-4 sm:mb-6 md:mb-8 mt-2 sm:mt-3 md:mt-4">
+              <div className={`mascot-container relative px-4 sm:px-6 md:px-8 ${
                 settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
               }`}>
                 {showSpeechBubble && mascotMessage && (
                 <div className={`
                   speech-bubble 
-                  absolute left-1/2 -translate-x-1/2 -top-20 
+                  absolute left-1/2 -translate-x-1/2 
+                  -top-16 sm:-top-18 md:-top-20 
                   ${settings.theme === 'dark'
                     ? 'bg-purple-900/80 text-purple-200' 
                     : 'bg-purple-100/80 text-purple-600'
                   } 
-                  p-4 rounded-2xl shadow-lg backdrop-blur-sm
-                  max-w-[200px] text-sm z-10 whitespace-normal
+                  p-3 sm:p-4 rounded-2xl shadow-lg backdrop-blur-sm
+                  max-w-[160px] sm:max-w-[180px] md:max-w-[200px] 
+                  text-xs sm:text-sm z-10 whitespace-normal
                   animate-float motion-reduce:animate-none scale-100 enter:animate-scaleIn
                   hover:scale-105 transition-transform
                   ring-1 ${settings.theme === 'dark' ? 'ring-white/10' : 'ring-purple-300/30'}
@@ -259,11 +261,10 @@ const PopItGameUI = ({
                 <img 
                   src={mascotImage}
                   alt="Game Mascot"
-                  className="w-32 h-32 object-contain animate-bounce relative z-0"
+                  className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 object-contain animate-bounce relative z-0"
                 />
               </div>
             </div>
-
             {/* Countdown Overlay */}
             {gameState === 'countdown' && (
               <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[1000]">
@@ -551,67 +552,81 @@ const PopItGameUI = ({
                   )}
                 </div>
                 {/* Square Aspect Ratio Container */}
-                <div className="relative w-full pb-[100%]">
-                  {/* Animation Overlay */}
-                  {showAnimation && (
+                <div className="relative w-[95vw] sm:w-[80vw] md:w-[60vw] lg:w-[50vw] max-w-[500px] mx-auto">
+                  <div className="relative aspect-square">
+                    {/* Animation Overlay */}
+                    {showAnimation && (
+                      <div 
+                        className="absolute pointer-events-none"
+                        style={{
+                          top: `${(animationPosition.row * 100) / settings.gridSize}%`,
+                          left: `${(animationPosition.col * 100) / settings.gridSize}%`,
+                          width: `${100 / settings.gridSize}%`,
+                          height: `${100 / settings.gridSize}%`,
+                          pointerEvents: 'none',
+                          zIndex: 50
+                        }}
+                      >
+                        <div className={`
+                          absolute 
+                          inset-0 
+                          flex 
+                          items-center 
+                          justify-center 
+                          rounded-lg
+                          ${settings.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}
+                        `}>
+                          <img
+                            key={Date.now()}
+                            src={successAnimation}
+                            alt="Success Animation"
+                            className="w-2/3 sm:w-3/4 h-2/3 sm:h-3/4 object-contain pointer-events-none"
+                            draggable="false"
+                          />
+                        </div>
+                      </div>
+                    )}
+                    {/* Absolute Position Grid */}
                     <div 
-                      className="absolute pointer-events-none"
+                      className={`
+                        absolute 
+                        inset-0 
+                        rounded-lg
+                        overflow-hidden
+                        ${gridShake ? 'animate-shake' : ''} 
+                        ${settings.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}
+                      `}
                       style={{
-                        top: `${(animationPosition.row * 100) / settings.gridSize}%`,
-                        left: `${(animationPosition.col * 100) / settings.gridSize}%`,
-                        width: `${100 / settings.gridSize}%`,
-                        height: `${100 / settings.gridSize}%`,
-                        pointerEvents: 'none',
-                        zIndex: 50
+                        display: 'grid',
+                        gridTemplateColumns: `repeat(${settings.gridSize}, 1fr)`,
+                        gap: '2%',
+                        padding: '2%',
                       }}
                     >
-                      <div className={`absolute inset-0 flex items-center justify-center rounded-lg ${
-                        settings.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'
-                      }`}>
-                        <img
-                          key={Date.now()}
-                          src={successAnimation}
-                          alt="Success Animation"
-                          className="w-3/4 h-3/4 object-contain pointer-events-none"
-                        />
-                      </div>
+                      {Array.from({ length: settings.gridSize * settings.gridSize }).map((_, index) => 
+                        renderButton(index)
+                      )}
                     </div>
-                  )}
-                  {/* Absolute Position Grid */}
-                  <div 
-                    className={`absolute inset-0 ${gridShake ? 'animate-shake' : ''} ${
-                      settings.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'
-                    }`}
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: `repeat(${settings.gridSize}, 1fr)`,
-                      gap: '2%',
-                      padding: '2%',
-                    }}
-                  >
-                    {Array.from({ length: settings.gridSize * settings.gridSize }).map((_, index) => 
-                      renderButton(index)
-                    )}
+                    {/* Particle Effects */}
+                    {particleEffects.map(effect => (
+                      <PopEffect
+                        key={effect.id}
+                        row={effect.row}
+                        col={effect.col}
+                        theme={settings.theme}
+                        onComplete={() => {
+                          setParticleEffects(prev => 
+                            prev.filter(e => e.id !== effect.id)
+                          );
+                        }}
+                      />
+                    ))}
                   </div>
-                  {/* Particle Effects */}
-                  {particleEffects.map(effect => (
-                    <PopEffect
-                      key={effect.id}
-                      row={effect.row}
-                      col={effect.col}
-                      theme={settings.theme}
-                      onComplete={() => {
-                        setParticleEffects(prev => 
-                          prev.filter(e => e.id !== effect.id)
-                        );
-                      }}
-                    />
-                  ))}
                 </div>
-              </div>
-            </div>
-          </div>
-        ) : (
+                </div>
+                </div>
+                </div>
+                ) : (
           // Menu State Content
           <div className={`flex flex-col items-center justify-center gap-6 my-8 p-6 rounded-lg ${
             settings.theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'
