@@ -64,7 +64,7 @@ const PopItGameUI = ({
       {/* Main Container */}
       <div className="container mx-auto px-4 py-8 max-w-7xl">
          {/* Add Frenchie Image here, before the Game Header */}
-          <div className="flex justify-center mb-6">
+          <div className="flex justify-center mb-6 pointer-events-none">
             <img
               src={frenchieIcon}
               alt="Frenchie"
