@@ -452,8 +452,6 @@ const PopItGameUI = ({
                 </div>
               </div>
             )}
-
-
             {/* Responsive Grid Container */}
             <div className="w-full flex justify-center px-2 2xs:px-3 xs:px-4">
               <div className="w-[95vw] 2xs:w-[90vw] xs:w-[85vw] sm:w-[80vw] md:w-[60vw] lg:w-[50vw] max-w-[800px]">
