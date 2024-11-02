@@ -42,7 +42,7 @@ const PopItGameUI = ({
       startGame();
     }
   };
-  
+
   return (
       <div className={`min-h-screen w-full fixed inset-0 ${
         settings.theme === 'dark'
@@ -461,7 +461,7 @@ const PopItGameUI = ({
         ) : (
           // Menu State Content
           <div className={`flex flex-col items-center justify-center gap-6 my-8 p-6 rounded-lg ${
-            settings.theme === 'dark' ? 'bg-gray-700' : 'bg-white'
+            settings.theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'
           }`}>
             <div className="w-256 h-256"> 
               <AvatarSelector 

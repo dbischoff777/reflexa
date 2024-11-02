@@ -34,7 +34,6 @@ const PopItGame = () => {
   const [highScore, setHighScore] = useState(0);
   const [longestStreak, setLongestStreak] = useState(0);
 
-  
   // Game mechanics
   const [multiplier, setMultiplier] = useState(1);
   const [lives, setLives] = useState(5);
