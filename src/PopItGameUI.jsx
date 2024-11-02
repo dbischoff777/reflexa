@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import livesIcon from './images/lives.png';
 import frenchieIcon from './images/frenchie.png';
@@ -109,18 +110,105 @@ const PopItGameUI = ({
           <div className={`
             relative
             transition-all duration-300 ease-in-out
-            ${gameState !== 'menu' ? 'opacity-0 h-0 mb-0' : 'opacity-100 h-32 mb-6'}
+            ${gameState !== 'menu' 
+              ? 'opacity-0 scale-95 h-0 mb-0' 
+              : 'opacity-100 scale-100 h-32 mb-6'
+            }
           `}>
-            <img
-              src={frenchieIcon}
-              alt="Frenchie"
-              className="w-32 h-32 object-contain"
-              style={{ 
-                filter: settings.theme === 'dark' ? 'brightness(100%)' : 'brightness(90%)'
+            <motion.div
+              initial={{ scale: 0.9, y: 10 }}
+              animate={{ 
+                scale: [1, 1.05, 1],
+                y: [0, -5, 0]
               }}
-            />
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                repeatType: "reverse",
+                ease: "easeInOut"
+              }}
+            >
+              <img
+                src={frenchieIcon}
+                alt="Frenchie"
+                className={`
+                  w-32 h-32 
+                  object-contain 
+                  drop-shadow-lg
+                  transition-all duration-300
+                  hover:scale-110
+                  ${settings.theme === 'dark' 
+                    ? 'filter-none' 
+                    : 'brightness-95'
+                  }
+                `}
+                style={{ 
+                  filter: `
+                    ${settings.theme === 'dark' 
+                      ? 'drop-shadow(0 0 8px rgba(147, 51, 234, 0.3))' 
+                      : 'drop-shadow(0 0 5px rgba(107, 33, 168, 0.2))'
+                    }
+                  `
+                }}
+              />
+            </motion.div>
+            
+            {/* Add decorative elements */}
+            <div className="absolute -z-10 inset-0 flex items-center justify-center">
+              <div className={`
+                absolute 
+                w-40 h-40 
+                rounded-full 
+                blur-2xl 
+                opacity-20
+                transition-all duration-300
+                ${settings.theme === 'dark' 
+                  ? 'bg-purple-500' 
+                  : 'bg-purple-300'
+                }
+              `} />
+            </div>
+            
+            {/* Optional: Add floating particles */}
+            <motion.div
+              className="absolute inset-0"
+              initial="hidden"
+              animate="visible"
+            >
+              {[...Array(3)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className={`
+                    absolute 
+                    w-2 h-2 
+                    rounded-full
+                    ${settings.theme === 'dark' 
+                      ? 'bg-purple-400' 
+                      : 'bg-purple-500'
+                    }
+                  `}
+                  initial={{ 
+                    opacity: 0,
+                    x: Math.random() * 60 - 30,
+                    y: Math.random() * 60 - 30
+                  }}
+                  animate={{ 
+                    opacity: [0, 0.5, 0],
+                    x: Math.random() * 60 - 30,
+                    y: Math.random() * 60 - 30,
+                    scale: [0.8, 1, 0.8]
+                  }}
+                  transition={{
+                    duration: 2 + Math.random(),
+                    repeat: Infinity,
+                    delay: i * 0.8
+                  }}
+                />
+              ))}
+            </motion.div>
           </div>
         </div>
+
         {/* Game Header */}
         <div className={`
           text-center

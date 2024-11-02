@@ -138,7 +138,7 @@ const About = ({ settings }) => {
               variants={listItemVariants}
             >
               <a 
-                href="https://github.com/yourusername" 
+                href="https://github.com/dbischoff777" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className={`transition-transform hover:scale-110 ${
@@ -148,18 +148,6 @@ const About = ({ settings }) => {
                 }`}
               >
                 <Github className="w-6 h-6" />
-              </a>
-              <a 
-                href="https://twitter.com/yourusername" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className={`transition-transform hover:scale-110 ${
-                  settings?.theme === 'dark'
-                    ? 'text-purple-400 hover:text-purple-300'
-                    : 'text-purple-600 hover:text-purple-500'
-                }`}
-              >
-                <Twitter className="w-6 h-6" />
               </a>
               <a 
                 href="https://buymeacoffee.com/yourusername" 
