@@ -1,116 +1,107 @@
-// achievements.js
+// src/achievements.js
+import React from 'react';
+import { Trophy, Target, Zap, Crown, Star, Award, Clock, Crosshair, Flame } from 'lucide-react';
+
+export const ACHIEVEMENTS = [
+  {
+    id: 'games_10',
+    type: 'GAMES_PLAYED',
+    requirement: 10,
+    title: 'Dedicated Player',
+    description: 'Play 10 games',
+    icon: <Target size={24} />
+  },
+  {
+    id: 'games_50',
+    type: 'GAMES_PLAYED',
+    requirement: 50,
+    title: 'Gaming Enthusiast',
+    description: 'Play 50 games',
+    icon: <Trophy size={24} />
+  },
+  {
+    id: 'score_500',
+    type: 'SCORE_SINGLE',
+    requirement: 500,
+    title: 'Rising Star',
+    description: 'Score 500 points in a single game',
+    icon: <Star size={24} />
+  },
+  {
+    id: 'score_1000',
+    type: 'SCORE_SINGLE',
+    requirement: 1000,
+    title: 'Score Master',
+    description: 'Score 1000 points in a single game',
+    icon: <Award size={24} />
+  },
+  {
+    id: 'perfect_game',
+    type: 'PERFECT_GAMES',
+    requirement: 1,
+    title: 'Flawless Victory',
+    description: 'Score 500+ points without losing lives',
+    icon: <Star size={24} />
+  },
+  {
+    id: 'reaction_master',
+    type: 'REACTION_TIME',
+    requirement: 200,
+    title: 'Lightning Reflexes',
+    description: 'Average reaction time under 200ms',
+    icon: <Zap size={24} />
+  },
+  {
+    id: 'accuracy_king',
+    type: 'ACCURACY',
+    requirement: 95,
+    title: 'Sharpshooter',
+    description: 'Achieve 95% accuracy in a single game',
+    icon: <Crosshair size={24} />
+  },
+  {
+    id: 'streak_master',
+    type: 'STREAK',
+    requirement: 5,
+    title: 'Winning Streak',
+    description: 'Win 5 games in a row',
+    icon: <Flame size={24} />
+  }
+];
+
 export const updateAchievementProgress = (stats, currentProgress) => {
   const newProgress = { ...currentProgress };
   
-  // Track games played
+  // Update basic stats
   newProgress.gamesPlayed = (newProgress.gamesPlayed || 0) + 1;
-  
-  // Track total score
-  newProgress.totalScore = (newProgress.totalScore || 0) + stats.score;
-  
-  // Track playtime (in minutes)
-  newProgress.playtime = (newProgress.playtime || 0) + (stats.gameTime / 60);
-  
-  // Track highest single game score
-  newProgress.highestScore = Math.max(
-    stats.score, 
-    newProgress.highestScore || 0
-  );
-  
-  // Track highest multiplier
-  newProgress.highestMultiplier = Math.max(
-    stats.multiplier,
-    newProgress.highestMultiplier || 0
-  );
-  
-  // Check for perfect game (500+ points without losing lives)
-  if (stats.score >= 500 && stats.livesLost === 0) {
-    newProgress.perfectGames = (newProgress.perfectGames || 0) + 1;
-  }
-  
-  // Check for speed demon (1000+ points under 2 minutes)
-  if (stats.score >= 1000 && stats.gameTime < 120) {
-    newProgress.speedDemons = (newProgress.speedDemons || 0) + 1;
-  }
-  
+  newProgress.highestScore = Math.max(stats.basic.highestScore || 0, newProgress.highestScore || 0);
+  newProgress.accuracy = Math.max(stats.performance.accuracy || 0, newProgress.accuracy || 0);
+  newProgress.bestReactionTime = Math.min(stats.performance.bestReactionTime || Infinity, newProgress.bestReactionTime || Infinity);
+  newProgress.longestStreak = Math.max(stats.session.longestStreak || 0, newProgress.longestStreak || 0);
+  newProgress.perfectGames = (newProgress.perfectGames || 0) + (stats.performance.perfectGames ? 1 : 0);
+
   return newProgress;
 };
 
 export const checkAchievementsUnlocked = (progress) => {
-  const unlockedAchievements = new Set();
-  
-  // Check GAMES_PLAYED achievements
-  ACHIEVEMENTS.GAMES_PLAYED.forEach(achievement => {
-    if (progress.gamesPlayed >= achievement.requirement) {
-      unlockedAchievements.add(achievement.id);
+  return ACHIEVEMENTS.filter(achievement => {
+    switch (achievement.type) {
+      case 'GAMES_PLAYED':
+        return (progress.gamesPlayed || 0) >= achievement.requirement;
+      case 'SCORE_SINGLE':
+        return (progress.highestScore || 0) >= achievement.requirement;
+      case 'ACCURACY':
+        return (progress.accuracy || 0) >= (achievement.requirement / 100);
+      case 'REACTION_TIME':
+        return (progress.bestReactionTime || Infinity) <= achievement.requirement;
+      case 'STREAK':
+        return (progress.longestStreak || 0) >= achievement.requirement;
+      case 'PERFECT_GAMES':
+        return (progress.perfectGames || 0) >= achievement.requirement;
+      default:
+        return false;
     }
-  });
-  
-  // Check SCORE_SINGLE achievements
-  ACHIEVEMENTS.SCORE_SINGLE.forEach(achievement => {
-    if (progress.highestScore >= achievement.target) {
-      unlockedAchievements.add(achievement.id);
-    }
-  });
-  
-  // Check TOTAL_SCORE achievements
-  ACHIEVEMENTS.TOTAL_SCORE.forEach(achievement => {
-    if (progress.totalScore >= achievement.requirement) {
-      unlockedAchievements.add(achievement.id);
-    }
-  });
-  
-  // Check PLAYTIME achievements
-  ACHIEVEMENTS.PLAYTIME.forEach(achievement => {
-    if (progress.playtime >= achievement.target) {
-      unlockedAchievements.add(achievement.id);
-    }
-  });
-  
-  // Check MULTIPLIER achievements
-  ACHIEVEMENTS.MULTIPLIER.forEach(achievement => {
-    if (progress.highestMultiplier >= achievement.requirement) {
-      unlockedAchievements.add(achievement.id);
-    }
-  });
-  
-  // Check SPECIAL achievements
-  if (progress.perfectGames > 0) {
-    unlockedAchievements.add('perfect_game');
-  }
-  if (progress.speedDemons > 0) {
-    unlockedAchievements.add('speed_demon');
-  }
-  
-  return Array.from(unlockedAchievements);
+  }).map(achievement => achievement.id);
 };
 
-export const ACHIEVEMENTS = {
-    GAMES_PLAYED: [
-      { id: 'games_10', type: 'GAMES_PLAYED', requirement: 10, title: 'Dedicated Player', description: 'Play 10 games', icon: '🎯' },
-      { id: 'games_50', type: 'GAMES_PLAYED', requirement: 50, title: 'Gaming Enthusiast', description: 'Play 50 games', icon: '🏆' },
-      { id: 'games_100', type: 'GAMES_PLAYED', requirement: 100, title: 'Gaming Veteran', description: 'Play 100 games', icon: '👑' }
-    ],
-    SCORE_SINGLE: [
-      { id: 'score_500', target: 500, title: 'Rising Star', description: 'Score 500 points in a single game', icon: '⭐' },
-      { id: 'score_1000', target: 1000, title: 'Score Master', description: 'Score 1000 points in a single game', icon: '🌟' },
-      { id: 'score_2000', target: 2000, title: 'Score Legend', description: 'Score 2000 points in a single game', icon: '💫' }
-    ],
-    TOTAL_SCORE: [
-      { id: 'total_score_5k', requirement: 5000, title: 'Point Collector', description: 'Accumulate 5,000 total points', icon: '📈' },
-      { id: 'total_score_10k', requirement: 10000, title: 'Score Hoarder', description: 'Accumulate 10,000 total points', icon: '🎯' }
-    ],
-    PLAYTIME: [
-      { id: 'playtime_1h', target: 60, title: 'Time Flies', description: 'Play for 1 hour', icon: '⏰' },
-      { id: 'playtime_3h', target: 180, title: 'Dedicated Gamer', description: 'Play for 3 hours', icon: '⌛' }
-    ],
-    MULTIPLIER: [
-      { id: 'multiplier_5x', type: 'MULTIPLIER', requirement: 5, title: 'Double Trouble', description: 'Reach a 5x multiplier', icon: '✨' },
-      { id: 'multiplier_10x', type: 'MULTIPLIER', requirement: 10, title: 'Triple Threat', description: 'Reach a 10x multiplier', icon: '🔥' }
-    ],
-    SPECIAL: [
-      { id: 'perfect_game', target: 1, title: 'Flawless Victory', description: 'Score 500+ points without losing lives', icon: '💎' },
-      { id: 'speed_demon', target: 1, title: 'Speed Demon', description: 'Score 1000+ points in under 2 minutes', icon: '⚡' }
-    ]
-  };
-  
+export const getAllAchievements = () => ACHIEVEMENTS;
