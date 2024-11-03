@@ -12,42 +12,32 @@ export const ScreenProtectionStatus = ({ theme, wakeLockActive, brightnessAdjust
                     transition={{ duration: 0.2 }}
                     className={`
                         fixed 
-                        inset-x-0
-                        bottom-0
-                        px-3 xs:px-4
-                        pb-[calc(env(safe-area-inset-bottom)+12px)]
-                        pt-3 xs:pt-4
-                        shadow-lg
+                        left-3
+                        bottom-3
+                        shadow-sm
+                        rounded-lg
                         touch-manipulation
                         ${theme === 'dark' 
-                            ? 'bg-gray-800/90 text-white' 
-                            : 'bg-white/90 text-gray-900'
+                            ? 'bg-gray-800/80 text-white' 
+                            : 'bg-white/80 text-gray-900'
                         }
-                        backdrop-blur-md
-                        z-50
+                        backdrop-blur-sm
+                        z-10
                     `}
                 >
                     <div className="
-                        max-w-screen-xl
-                        mx-auto
-                        grid grid-cols-2 
-                        gap-2 xs:gap-3
+                        flex 
+                        gap-2
+                        p-2
                         pointer-events-none
                     ">
                         {/* Screen Always On Status */}
                         <div className="
                             flex items-center 
-                            gap-2 xs:gap-3
-                            p-2 xs:p-3
-                            rounded-lg
-                            bg-opacity-10
-                            ${wakeLockActive 
-                                ? 'bg-green-500/10' 
-                                : 'bg-red-500/10'
-                            }
+                            gap-1.5
                         ">
                             <span className={`
-                                w-2.5 h-2.5 xs:w-3 xs:h-3
+                                w-1.5 h-1.5
                                 rounded-full
                                 ${wakeLockActive 
                                     ? 'bg-green-500' 
@@ -55,9 +45,8 @@ export const ScreenProtectionStatus = ({ theme, wakeLockActive, brightnessAdjust
                                 }
                             `} />
                             <span className="
-                                text-xs xs:text-sm
+                                text-[10px]
                                 font-medium
-                                truncate
                             ">
                                 Screen Always On</span>
                             
@@ -66,17 +55,10 @@ export const ScreenProtectionStatus = ({ theme, wakeLockActive, brightnessAdjust
                         {/* Brightness Status */}
                         <div className="
                             flex items-center 
-                            gap-2 xs:gap-3
-                            p-2 xs:p-3
-                            rounded-lg
-                            bg-opacity-10
-                            ${brightnessAdjusted 
-                                ? 'bg-green-500/10' 
-                                : 'bg-yellow-500/10'
-                            }
+                            gap-1.5
                         ">
                             <span className={`
-                                w-2.5 h-2.5 xs:w-3 xs:h-3
+                                w-1.5 h-1.5
                                 rounded-full
                                 ${brightnessAdjusted 
                                     ? 'bg-green-500' 
@@ -84,12 +66,10 @@ export const ScreenProtectionStatus = ({ theme, wakeLockActive, brightnessAdjust
                                 }
                             `} />
                             <span className="
-                                text-xs xs:text-sm
+                                text-[10px]
                                 font-medium
-                                truncate
                             ">
-                                Dog-Friendly</span>
-                            
+                                Dog-Friendly Colors</span>
                         </div>
                     </div>
                 </motion.div>
@@ -98,7 +78,7 @@ export const ScreenProtectionStatus = ({ theme, wakeLockActive, brightnessAdjust
     );
 };
 
-// Update defaultProps to use gameState
+// Update defaultProps
 ScreenProtectionStatus.defaultProps = {
     theme: 'light',
     wakeLockActive: false,
