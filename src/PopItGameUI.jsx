@@ -48,6 +48,12 @@ const ScoreMultiplier = ({ multiplier, theme }) => {
   );
 };
 
+// Add formatPercent function at the top of your component
+const formatPercent = (num) => {
+  if (!num && num !== 0) return '0%';
+  return `${(num * 100).toFixed(1)}%`;
+};
+
 const PopItGameUI = ({
   settings,
   username,
@@ -288,61 +294,137 @@ const PopItGameUI = ({
           transition-all duration-300 ease-in-out
           ${gameState !== 'menu' ? 'opacity-0 h-0 mb-0 overflow-hidden' : 'opacity-100 h-auto mb-8'}
         `}>
-          <h1 className={`text-4xl font-bold mb-2 ${
-            settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
-          }`}>
-            Fetch & Feast
-          </h1>
-          <p className={`text-lg ${
-            settings.theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-          }`}>
-            Fetch as many treats as you can!
-          </p>
-          
+          <div className="text-center mb-8">
+            <h1 className={`relative inline-block text-5xl font-extrabold mb-4 
+              ${settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'}
+              transition-all duration-300 hover:scale-105 transform`}
+            >
+              <span className="relative inline-block">
+                Fetch & Feast</span>
+                <span className={`absolute -bottom-2 left-0 w-full h-1 rounded-full transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100
+                  ${settings.theme === 'dark' ? 'bg-purple-400/50' : 'bg-purple-500/50'}`}></span>
+            </h1>
+            
+            <p className={`relative text-xl font-medium mb-6 mx-auto max-w-lg 
+              ${settings.theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}
+              after:content-[''] after:block after:w-20 after:h-1 after:mx-auto after:mt-4 after:rounded-full
+              ${settings.theme === 'dark' 
+                ? 'after:bg-gradient-to-r after:from-purple-400/20 after:to-transparent' 
+                : 'after:bg-gradient-to-r after:from-purple-500/20 after:to-transparent'}`}
+            >
+              Fetch as many treats as you can!
+              <span className={`block text-base mt-2 font-normal opacity-75
+                ${settings.theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                Test your best friends reflexes and aim for the high score</span>
+              
+            </p>
+          </div>
+          {/* Quick Stats */}
+          <div className="flex justify-center items-center w-full mb-8">
+            <div className="grid grid-cols-2 md:grid-cols-2 gap-6 max-w-3xl w-full px-4">
+              <div className={`p-6 rounded-xl shadow-lg text-center transform transition-all duration-200 hover:scale-105 ${
+                settings.theme === 'dark' 
+                  ? 'bg-gray-800 hover:bg-gray-700 shadow-gray-900/30' 
+                  : 'bg-white hover:bg-gray-50 shadow-gray-200/50'
+              }`}>
+                <div className={`text-base font-medium mb-2 ${
+                  settings.theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+                }`}>
+                  High Score
+                </div>
+                <div className={`text-3xl font-extrabold tracking-tight ${
+                  settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
+                }`}>
+                  {gameStats?.highScore?.toLocaleString() || '0'}
+                </div>
+              </div>
+
+              <div className={`p-6 rounded-xl shadow-lg text-center transform transition-all duration-200 hover:scale-105 ${
+                settings.theme === 'dark' 
+                  ? 'bg-gray-800 hover:bg-gray-700 shadow-gray-900/30' 
+                  : 'bg-white hover:bg-gray-50 shadow-gray-200/50'
+              }`}>
+                <div className={`text-base font-medium mb-2 ${
+                  settings.theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+                }`}>
+                  Games Played
+                </div>
+                <div className={`text-3xl font-extrabold tracking-tight ${
+                  settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
+                }`}>
+                  {gameStats?.totalGames?.toLocaleString() || '0'}
+                </div>
+              </div>
+            </div>
+          </div>
           {/* Navigation Links */}
-          <div className={`
-            flex justify-center gap-4 mt-4
-            transition-all duration-300 ease-in-out
-          `}>
+          <div className="flex justify-center gap-6 mt-6 px-4">
             <Link
               to="/profile"
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                settings.theme === 'dark'
-                  ? 'text-purple-300 hover:bg-gray-700'
-                  : 'text-purple-600 hover:bg-gray-200'
-              }`}
+              className={`group relative px-5 py-2.5 rounded-xl font-medium transition-all duration-300 ease-out
+                ${settings.theme === 'dark'
+                  ? 'text-purple-300 hover:text-purple-200 hover:bg-gray-800/50'
+                  : 'text-purple-600 hover:text-purple-500 hover:bg-purple-50/50'
+                } hover:shadow-lg hover:shadow-purple-500/10 hover:-translate-y-0.5`}
             >
-              Profile
+              <span className="relative z-10">Profile</span>
+              <span className={`absolute inset-0 rounded-xl transition-all duration-300 
+                ${settings.theme === 'dark' 
+                  ? 'group-hover:bg-gray-700/30 group-hover:border-gray-700' 
+                  : 'group-hover:bg-purple-100/30 group-hover:border-purple-100'
+                } border border-transparent`}></span>
+              
             </Link>
+
             <Link
               to="/leaderboard"
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                settings.theme === 'dark'
-                  ? 'text-purple-300 hover:bg-gray-700'
-                  : 'text-purple-600 hover:bg-gray-200'
-              }`}
+              className={`group relative px-5 py-2.5 rounded-xl font-medium transition-all duration-300 ease-out
+                ${settings.theme === 'dark'
+                  ? 'text-purple-300 hover:text-purple-200 hover:bg-gray-800/50'
+                  : 'text-purple-600 hover:text-purple-500 hover:bg-purple-50/50'
+                } hover:shadow-lg hover:shadow-purple-500/10 hover:-translate-y-0.5`}
             >
-              Leaderboard
+              <span className="relative z-10">Leaderboard</span>
+              <span className={`absolute inset-0 rounded-xl transition-all duration-300 
+                ${settings.theme === 'dark' 
+                  ? 'group-hover:bg-gray-700/30 group-hover:border-gray-700' 
+                  : 'group-hover:bg-purple-100/30 group-hover:border-purple-100'
+                } border border-transparent`}></span>
+              
             </Link>
+
             <Link
               to="/settings"
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                settings.theme === 'dark'
-                  ? 'text-purple-300 hover:bg-gray-700'
-                  : 'text-purple-600 hover:bg-gray-200'
-              }`}
+              className={`group relative px-5 py-2.5 rounded-xl font-medium transition-all duration-300 ease-out
+                ${settings.theme === 'dark'
+                  ? 'text-purple-300 hover:text-purple-200 hover:bg-gray-800/50'
+                  : 'text-purple-600 hover:text-purple-500 hover:bg-purple-50/50'
+                } hover:shadow-lg hover:shadow-purple-500/10 hover:-translate-y-0.5`}
             >
-              Settings
+              <span className="relative z-10">Settings</span>
+              <span className={`absolute inset-0 rounded-xl transition-all duration-300 
+                ${settings.theme === 'dark' 
+                  ? 'group-hover:bg-gray-700/30 group-hover:border-gray-700' 
+                  : 'group-hover:bg-purple-100/30 group-hover:border-purple-100'
+                } border border-transparent`}></span>
+              
             </Link>
+
             <Link
               to="/about"
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                settings.theme === 'dark'
-                  ? 'text-purple-300 hover:bg-gray-700'
-                  : 'text-purple-600 hover:bg-gray-200'
-              }`}
+              className={`group relative px-5 py-2.5 rounded-xl font-medium transition-all duration-300 ease-out
+                ${settings.theme === 'dark'
+                  ? 'text-purple-300 hover:text-purple-200 hover:bg-gray-800/50'
+                  : 'text-purple-600 hover:text-purple-500 hover:bg-purple-50/50'
+                } hover:shadow-lg hover:shadow-purple-500/10 hover:-translate-y-0.5`}
             >
-              About
+              <span className="relative z-10">About</span>
+              <span className={`absolute inset-0 rounded-xl transition-all duration-300 
+                ${settings.theme === 'dark' 
+                  ? 'group-hover:bg-gray-700/30 group-hover:border-gray-700' 
+                  : 'group-hover:bg-purple-100/30 group-hover:border-purple-100'
+                } border border-transparent`}></span>
+              
             </Link>
           </div>
         </div>
