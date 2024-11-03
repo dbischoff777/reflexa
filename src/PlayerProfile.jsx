@@ -1,5 +1,5 @@
 // PlayerProfile.jsx
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useCallback, useState, useEffect, cloneElement } from 'react';
 import { Link } from 'react-router-dom';
 import { Trophy, Star, Clock, Target, Award, ArrowLeft, Zap, 
          Crosshair, Flame, Crown, Share2, Download, Medal, BarChart, History } from 'lucide-react';
@@ -245,97 +245,127 @@ const PlayerProfile = () => {
   };
 
   return (
-    <div className={`min-h-screen ${
-      settings.theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'
-    }`}>
-      <div className="container mx-auto px-4 py-8">
-        <Link 
-          to="/" 
-          className={`inline-flex items-center gap-2 mb-6 ${
-            settings.theme === 'dark' ? 'text-purple-300 hover:text-purple-400' : 'text-purple-600 hover:text-purple-700'
-          }`}
-        >
-          <ArrowLeft size={20} />
-          <span>Back to Game</span>
-        </Link>
-
-        <ProfileHeader
-          username={localStorage.getItem('username')}
-          avatar={playerAvatar}
-          level={stats.progress.level}
-          experience={stats.progress.experience}
-          theme={settings.theme}
-        />
-
-        <TabNavigation
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          theme={settings.theme}
-        />
-
+    <div className={`
+      min-h-screen w-full
+      ${settings.theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'}
+    `}>
+      <div className="
+        px-3 xs:px-4 sm:px-6
+        py-4 xs:py-6 sm:py-8
+        mx-auto
+        w-full
+        max-w-screen-lg
+      ">
+        {/* Back Button */}
+        <div className="mb-4 xs:mb-6">
+          <Link 
+            to="/" 
+            className={`
+              inline-flex items-center 
+              min-h-[44px]
+              px-2
+              gap-2
+              text-sm font-medium
+              ${settings.theme === 'dark' ? 'text-purple-300 active:text-purple-400' : 'text-purple-600 active:text-purple-700'}
+            `}
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>Back to Game</span>
+          </Link>
+        </div>
+  
+        {/* Profile Header */}
+        <div className="mb-6">
+          <ProfileHeader
+            username={localStorage.getItem('username')}
+            avatar={playerAvatar}
+            level={stats.progress.level}
+            experience={stats.progress.experience}
+            theme={settings.theme}
+          />
+        </div>
+  
+        {/* Tab Navigation */}
+        <div className="mb-6">
+          <TabNavigation
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            theme={settings.theme}
+          />
+        </div>
+  
+        {/* Tab Content */}
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.15 }}
           >
             {activeTab === 'stats' && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="
+                grid 
+                grid-cols-1 xs:grid-cols-2 md:grid-cols-4 
+                gap-3 xs:gap-4
+              ">
                 <StatCard
-                  icon={<Trophy />}
+                  icon={<Trophy className="w-5 h-5" />}
                   label="Highest Score"
                   value={formatNumber(stats.basic.highestScore)}
                   theme={settings.theme}
                 />
                 <StatCard
-                  icon={<Crosshair />}
+                  icon={<Crosshair className="w-5 h-5" />}
                   label="Accuracy"
                   value={formatPercent(stats.performance.accuracy)}
                   theme={settings.theme}
                 />
                 <StatCard
-                  icon={<Zap />}
+                  icon={<Zap className="w-5 h-5" />}
                   label="Best Reaction"
                   value={`${stats.performance.bestReactionTime || 0}ms`}
                   theme={settings.theme}
                 />
                 <StatCard
-                  icon={<Star />}
+                  icon={<Star className="w-5 h-5" />}
                   label="Games Played"
                   value={formatNumber(stats.basic.gamesPlayed)}
                   theme={settings.theme}
                 />
                 <StatCard
-                  icon={<Flame />}
+                  icon={<Flame className="w-5 h-5" />}
                   label="Longest Streak"
                   value={formatNumber(stats.session.longestStreak)}
                   theme={settings.theme}
                 />
                 <StatCard
-                  icon={<Crown />}
+                  icon={<Crown className="w-5 h-5" />}
                   label="Perfect Games"
                   value={formatNumber(stats.performance.perfectGames)}
                   theme={settings.theme}
                 />
                 <StatCard
-                  icon={<Clock />}
+                  icon={<Clock className="w-5 h-5" />}
                   label="Play Time"
                   value={formatTime(stats.basic.totalPlayTime)}
                   theme={settings.theme}
                 />
                 <StatCard
-                  icon={<Target />}
+                  icon={<Target className="w-5 h-5" />}
                   label="Skill Rating"
                   value={formatNumber(stats.progress.skillRating)}
                   theme={settings.theme}
                 />
               </div>
             )}
-
+  
             {activeTab === 'achievements' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="
+                grid 
+                grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 
+                gap-3 xs:gap-4
+              ">
                 {ACHIEVEMENTS.map(achievement => (
                   <AchievementCard
                     key={achievement.id}
@@ -347,20 +377,27 @@ const PlayerProfile = () => {
                 ))}
               </div>
             )}
-
+  
             {activeTab === 'history' && (
-              <div className="space-y-4">
+              <div className="space-y-3 xs:space-y-4">
                 {recentGames.map((game, index) => (
                   <div
                     key={index}
-                    className={`p-4 rounded-lg ${
-                      settings.theme === 'dark' ? 'bg-gray-700' : 'bg-white'
-                    }`}
+                    className={`
+                      p-4
+                      rounded-lg
+                      ${settings.theme === 'dark' ? 'bg-gray-700' : 'bg-white'}
+                    `}
                   >
-                    <div className="flex justify-between items-center">
-                      <span>Score: {formatNumber(game.score)}</span>
-                      <span>Accuracy: {formatPercent(game.accuracy)}</span>
-                      <span>Time: {formatTime(game.duration)}</span>
+                    <div className="
+                      grid 
+                      grid-cols-1 xs:grid-cols-3
+                      gap-2 xs:gap-4
+                      text-sm
+                    ">
+                      <div>Score: {formatNumber(game.score)}</div>
+                      <div>Accuracy: {formatPercent(game.accuracy)}</div>
+                      <div>Time: {formatTime(game.duration)}</div>
                     </div>
                   </div>
                 ))}
@@ -371,6 +408,8 @@ const PlayerProfile = () => {
       </div>
     </div>
   );
+  
+  
 };
 
 export default PlayerProfile;
