@@ -123,14 +123,6 @@ const Settings = () => {
       `}>
         {/* Header with Game Settings title and Back button */}
         <div className="flex items-center justify-between gap-2 2xs:gap-3 xs:gap-4 mb-3 2xs:mb-4 xs:mb-5">
-          <h2 className={`
-            text-base 2xs:text-lg xs:text-xl sm:text-2xl
-            font-bold 
-            ${settings.theme === 'dark' ? 'text-white' : 'text-purple-800'}
-          `}>
-            Settings
-          </h2>
-  
           <Link
             to="/"
             className={`
@@ -155,6 +147,13 @@ const Settings = () => {
             <ArrowLeftIcon className="w-3 h-3 2xs:w-4 2xs:h-4 xs:w-5 xs:h-5" />
             <span className="2xs:inline">Save & Back</span>
           </Link>
+          <h2 className={`
+            text-base 2xs:text-lg xs:text-xl sm:text-2xl
+            font-bold 
+            ${settings.theme === 'dark' ? 'text-white' : 'text-purple-800'}
+          `}>
+            Settings
+          </h2>
         </div>
   
         {/* Screen Protection Settings */}
