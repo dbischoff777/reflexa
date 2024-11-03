@@ -69,7 +69,7 @@ const TabNavigation = ({ activeTab, onTabChange, theme }) => {
   const tabs = [
     { id: 'stats', label: 'Statistics', icon: <BarChart size={20} /> },
     { id: 'achievements', label: 'Achievements', icon: <Trophy size={20} /> },
-    { id: 'history', label: 'Game History', icon: <History size={20} /> }
+    { id: 'history', label: 'Past', icon: <History size={20} /> }
   ];
 
   return (

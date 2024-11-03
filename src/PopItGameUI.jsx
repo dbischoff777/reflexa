@@ -3,56 +3,10 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import livesIcon from './images/lives.png';
 import frenchieIcon from './images/frenchie.png';
-// At the top of PopItGameUI.jsx with other imports
 import scoreIcon from './images/score.png';
 import AvatarSelector from './components/avatar/AvatarSelector';
 import { FacebookIcon, TwitterIcon, WhatsAppIcon, LinkedInIcon } from './Icons';
 import ScreenProtectionStatus from './components/ScreenProtectionStatus';
-
-//visuals for multiplier
-const ScoreMultiplier = ({ multiplier, theme }) => {
-  if (multiplier <= 1) return null;
-
-  return (
-    <div className={`
-      fixed top-20 left-4 z-50
-      flex items-center gap-2 p-3 rounded-lg
-      transform transition-all duration-300
-      animate-pulse
-      ${theme === 'dark' 
-        ? 'bg-purple-900/80 text-purple-200' 
-        : 'bg-purple-100/80 text-purple-600'}
-      shadow-lg backdrop-blur-sm
-    `}>
-      <div className="flex items-center">
-        <span className="text-2xl font-bold">×{multiplier}</span>
-        <div className="ml-2">
-          <svg 
-            className={`w-6 h-6 ${
-              theme === 'dark' ? 'text-purple-300' : 'text-purple-500'
-            }`} 
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-            />
-          </svg>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Add formatPercent function at the top of your component
-const formatPercent = (num) => {
-  if (!num && num !== 0) return '0%';
-  return `${(num * 100).toFixed(1)}%`;
-};
 
 const PopItGameUI = ({
   settings,
