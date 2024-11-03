@@ -29,20 +29,28 @@ const AvatarSelector = ({ currentAvatar, onSelect, settings }) => {
 
   return (
     <motion.div 
-      className="flex flex-col items-center gap-4"
+      className="flex flex-col items-center 
+                 gap-2 2xs:gap-3 xs:gap-4 sm:gap-5 md:gap-6
+                 px-2 2xs:px-3 xs:px-4 sm:px-6 md:px-8"
       initial="hidden"
       animate="visible"
       variants={containerVariants}
     >
       <motion.h2 
-        className={`text-2xl font-bold relative
+        className={`
+          text-lg 2xs:text-xl xs:text-2xl sm:text-3xl md:text-4xl 
+          font-bold relative
           ${settings?.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'}
         `}
         variants={itemVariants}
       >
         Choose Your Avatar
         <motion.div 
-          className={`absolute -bottom-2 left-0 right-0 h-1 rounded-full
+          className={`
+            absolute -bottom-1 2xs:-bottom-1.5 xs:-bottom-2 
+            left-0 right-0 
+            h-0.5 xs:h-1 
+            rounded-full
             ${settings?.theme === 'dark' ? 'bg-purple-500/50' : 'bg-purple-400/50'}
           `}
           initial={{ width: 0 }}
@@ -50,9 +58,11 @@ const AvatarSelector = ({ currentAvatar, onSelect, settings }) => {
           transition={{ duration: 0.5, delay: 0.2 }}
         />
       </motion.h2>
-
+  
       <motion.div 
-        className="flex gap-4 justify-center items-center flex-wrap max-w-md"
+        className="flex gap-2 2xs:gap-3 xs:gap-4 
+                   justify-center items-center flex-wrap 
+                   w-full max-w-[144px] 2xs:max-w-[280px] xs:max-w-md"
         variants={containerVariants}
       >
         {AVAILABLE_AVATARS.map((avatar, index) => (
@@ -60,14 +70,17 @@ const AvatarSelector = ({ currentAvatar, onSelect, settings }) => {
             key={avatar.id}
             onClick={() => onSelect(avatar.id)}
             variants={itemVariants}
-            whileHover={{ scale: 1.1 }}
+            whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
             whileTap={{ scale: 0.95 }}
             className={`
               relative
-              p-2 rounded-xl
+              p-1 2xs:p-1.5 xs:p-2
+              rounded-lg xs:rounded-xl
               transition-all duration-300
               ${currentAvatar === avatar.id 
-                ? `ring-2 ${settings?.theme === 'dark' ? 'ring-purple-400' : 'ring-purple-500'} ring-offset-2 
+                ? `ring-1 xs:ring-2 
+                   ${settings?.theme === 'dark' ? 'ring-purple-400' : 'ring-purple-500'} 
+                   ring-offset-1 xs:ring-offset-2
                    ${settings?.theme === 'dark' ? 'ring-offset-gray-800' : 'ring-offset-white'}` 
                 : `hover:bg-gray-100 
                    ${settings?.theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`
@@ -79,7 +92,7 @@ const AvatarSelector = ({ currentAvatar, onSelect, settings }) => {
               {/* Avatar Image */}
               <div className={`
                 relative
-                w-16 h-16
+                w-10 h-10 2xs:w-12 2xs:h-12 xs:w-14 xs:h-14 sm:w-16 sm:h-16 md:w-20 md:h-20
                 rounded-full
                 overflow-hidden
                 transition-transform duration-300
@@ -107,7 +120,7 @@ const AvatarSelector = ({ currentAvatar, onSelect, settings }) => {
                   transition-opacity duration-300
                 `} />
               </div>
-
+  
               {/* Selection Indicator */}
               {currentAvatar === avatar.id && (
                 <motion.div
@@ -115,7 +128,7 @@ const AvatarSelector = ({ currentAvatar, onSelect, settings }) => {
                   animate={{ scale: 1 }}
                   className={`
                     absolute -top-1 -right-1
-                    w-6 h-6
+                    w-3 h-3 2xs:w-4 2xs:h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6
                     rounded-full
                     flex items-center justify-center
                     ${settings?.theme === 'dark' ? 'bg-purple-400' : 'bg-purple-500'}
@@ -124,7 +137,7 @@ const AvatarSelector = ({ currentAvatar, onSelect, settings }) => {
                   `}
                 >
                   <svg 
-                    className="w-4 h-4" 
+                    className="w-2 h-2 2xs:w-2.5 2xs:h-2.5 xs:w-3 xs:h-3 sm:w-4 sm:h-4" 
                     fill="none" 
                     strokeLinecap="round" 
                     strokeLinejoin="round" 
@@ -136,43 +149,31 @@ const AvatarSelector = ({ currentAvatar, onSelect, settings }) => {
                   </svg>
                 </motion.div>
               )}
-
-              {/* Glow Effect */}
-              <div className={`
-                absolute inset-0
-                rounded-full
-                transition-opacity duration-300
-                ${currentAvatar === avatar.id 
-                  ? 'opacity-100' 
-                  : 'opacity-0 group-hover:opacity-50'}
-                ${settings?.theme === 'dark' 
-                  ? 'bg-purple-500/20' 
-                  : 'bg-purple-300/20'}
-                blur-xl
-                -z-10
-              `} />
+  
+              {/* Avatar Name */}
+              <motion.p 
+                className={`
+                  mt-1 2xs:mt-1.5 xs:mt-2
+                  text-[10px] 2xs:text-xs xs:text-sm sm:text-base
+                  font-medium
+                  transition-colors duration-300
+                  ${currentAvatar === avatar.id 
+                    ? settings?.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
+                    : settings?.theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+                  }
+                `}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                {avatar.name}
+              </motion.p>
             </div>
-
-            {/* Avatar Name */}
-            <motion.p 
-              className={`
-                mt-2 text-sm font-medium
-                transition-colors duration-300
-                ${currentAvatar === avatar.id 
-                  ? settings?.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
-                  : settings?.theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}
-              `}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              {avatar.name}
-            </motion.p>
           </motion.button>
         ))}
       </motion.div>
     </motion.div>
-  );
+  );  
 };
 
 export default AvatarSelector;

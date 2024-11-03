@@ -95,30 +95,38 @@ const PopItGameUI = ({
   };
 
   return (
-      <div className={`min-h-screen w-full fixed inset-0 ${
-        settings.theme === 'dark'
-          ? gridShake 
-            ? 'flash-red bg-gray-800 text-white'
-            : 'bg-gray-800 text-white'
-          : gridShake
-            ? 'flash-red bg-gray-100 text-gray-900'
-            : 'bg-gray-100 text-gray-900'
-      }`} >
-        {/* Add ScreenProtectionStatus component */}
-        <ScreenProtectionStatus 
-                theme={settings.theme} 
-                wakeLockActive={wakeLockActive}
-            />
+    <div className={`min-h-screen w-full fixed inset-0 ${
+      settings.theme === 'dark'
+        ? gridShake 
+          ? 'flash-red bg-gray-800 text-white'
+          : 'bg-gray-800 text-white'
+        : gridShake
+          ? 'flash-red bg-gray-100 text-gray-900'
+          : 'bg-gray-100 text-gray-900'
+    }`}>
+      <ScreenProtectionStatus 
+        theme={settings.theme} 
+        wakeLockActive={wakeLockActive}
+      />
+      
       {/* Main Container */}
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Add Frenchie Image here, before the Game Header */}
-        <div className="flex justify-center mb-6 pointer-events-none">
+      <div className="container mx-auto 
+                      px-2 2xs:px-3 xs:px-4 sm:px-6 lg:px-8 
+                      py-2 2xs:py-3 xs:py-4 sm:py-6 lg:py-8 
+                      max-w-7xl">
+  
+      {/* Frenchie Image Container */}
+      <div className="flex justify-center 
+                      mb-2 2xs:mb-3 xs:mb-4 sm:mb-5 md:mb-6 
+                      pointer-events-none">
           <div className={`
             relative
             transition-all duration-300 ease-in-out
             ${gameState !== 'menu' 
-              ? 'opacity-0 scale-95 h-0 mb-0' 
-              : 'opacity-100 scale-100 h-32 mb-6'
+              ? 'opacity-0 scale-95 h-0 mb-0 overflow-hidden' 
+              : `opacity-100 scale-100 
+                h-16 2xs:h-20 xs:h-24 sm:h-28 md:h-32 lg:h-36 xl:h-40
+                mb-2 2xs:mb-3 xs:mb-4 sm:mb-5 md:mb-6`
             }
           `}>
             <motion.div
@@ -288,146 +296,108 @@ const PopItGameUI = ({
             </motion.div>
           </div>
         </div>
-        {/* Game Header */}
+      {/* Game Header */}
         <div className={`
           text-center
           transition-all duration-300 ease-in-out
-          ${gameState !== 'menu' ? 'opacity-0 h-0 mb-0 overflow-hidden' : 'opacity-100 h-auto mb-8'}
+          ${gameState !== 'menu' 
+            ? 'opacity-0 h-0 overflow-hidden' 
+            : 'opacity-100 h-auto mb-4 2xs:mb-5 xs:mb-6 sm:mb-7 md:mb-8'
+          }
         `}>
-          <div className="text-center mb-8">
-            <h1 className={`relative inline-block text-5xl font-extrabold mb-4 
+          <div className="text-center mb-3 2xs:mb-4 xs:mb-6 sm:mb-7 md:mb-8">
+            <h1 className={`
+              relative inline-block 
+              text-2xl 2xs:text-3xl xs:text-4xl sm:text-5xl md:text-6xl
+              font-extrabold 
+              mb-2 2xs:mb-3 xs:mb-4 
               ${settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'}
-              transition-all duration-300 hover:scale-105 transform`}
-            >
+              transition-all duration-300 
+              hover:scale-[1.02] xs:hover:scale-[1.03] sm:hover:scale-105 
+              transform
+            `}>
               <span className="relative inline-block">
                 Fetch & Feast</span>
-                <span className={`absolute -bottom-2 left-0 w-full h-1 rounded-full transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100
-                  ${settings.theme === 'dark' ? 'bg-purple-400/50' : 'bg-purple-500/50'}`}></span>
+              
+              <span className={`
+                absolute 
+                -bottom-1 2xs:-bottom-1.5 xs:-bottom-2 
+                left-0 w-full 
+                h-0.5 xs:h-1 
+                rounded-full 
+                transform scale-x-0 
+                transition-transform duration-300 
+                group-hover:scale-x-100
+                ${settings.theme === 'dark' ? 'bg-purple-400/50' : 'bg-purple-500/50'}
+              `}></span>
             </h1>
             
-            <p className={`relative text-xl font-medium mb-6 mx-auto max-w-lg 
+            <p className={`
+              relative 
+              text-sm 2xs:text-base xs:text-lg sm:text-xl md:text-2xl
+              font-medium 
+              mb-3 2xs:mb-4 xs:mb-5 sm:mb-6 
+              mx-auto 
+              max-w-[90%] xs:max-w-md sm:max-w-lg
               ${settings.theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}
-              after:content-[''] after:block after:w-20 after:h-1 after:mx-auto after:mt-4 after:rounded-full
+              after:content-[''] 
+              after:block 
+              after:w-12 2xs:after:w-16 xs:after:w-20 
+              after:h-0.5 xs:after:h-1 
+              after:mx-auto 
+              after:mt-2 2xs:after:mt-3 xs:after:mt-4 
+              after:rounded-full
               ${settings.theme === 'dark' 
                 ? 'after:bg-gradient-to-r after:from-purple-400/20 after:to-transparent' 
-                : 'after:bg-gradient-to-r after:from-purple-500/20 after:to-transparent'}`}
-            >
+                : 'after:bg-gradient-to-r after:from-purple-500/20 after:to-transparent'}
+            `}>
               Fetch as many treats as you can!
-              <span className={`block text-base mt-2 font-normal opacity-75
-                ${settings.theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                Test your best friends reflexes and aim for the high score</span>
-              
             </p>
           </div>
-          {/* Quick Stats */}
-          <div className="flex justify-center items-center w-full mb-8">
-            <div className="grid grid-cols-2 md:grid-cols-2 gap-6 max-w-3xl w-full px-4">
-              <div className={`p-6 rounded-xl shadow-lg text-center transform transition-all duration-200 hover:scale-105 ${
-                settings.theme === 'dark' 
-                  ? 'bg-gray-800 hover:bg-gray-700 shadow-gray-900/30' 
-                  : 'bg-white hover:bg-gray-50 shadow-gray-200/50'
-              }`}>
-                <div className={`text-base font-medium mb-2 ${
-                  settings.theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                }`}>
-                  High Score
-                </div>
-                <div className={`text-3xl font-extrabold tracking-tight ${
-                  settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
-                }`}>
-                  {gameStats?.highScore?.toLocaleString() || '0'}
-                </div>
-              </div>
-
-              <div className={`p-6 rounded-xl shadow-lg text-center transform transition-all duration-200 hover:scale-105 ${
-                settings.theme === 'dark' 
-                  ? 'bg-gray-800 hover:bg-gray-700 shadow-gray-900/30' 
-                  : 'bg-white hover:bg-gray-50 shadow-gray-200/50'
-              }`}>
-                <div className={`text-base font-medium mb-2 ${
-                  settings.theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                }`}>
-                  Games Played
-                </div>
-                <div className={`text-3xl font-extrabold tracking-tight ${
-                  settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
-                }`}>
-                  {gameStats?.totalGames?.toLocaleString() || '0'}
-                </div>
-              </div>
-            </div>
-          </div>
-          {/* Navigation Links */}
-          <div className="flex justify-center gap-6 mt-6 px-4">
-            <Link
-              to="/profile"
-              className={`group relative px-5 py-2.5 rounded-xl font-medium transition-all duration-300 ease-out
-                ${settings.theme === 'dark'
-                  ? 'text-purple-300 hover:text-purple-200 hover:bg-gray-800/50'
-                  : 'text-purple-600 hover:text-purple-500 hover:bg-purple-50/50'
-                } hover:shadow-lg hover:shadow-purple-500/10 hover:-translate-y-0.5`}
-            >
-              <span className="relative z-10">Profile</span>
-              <span className={`absolute inset-0 rounded-xl transition-all duration-300 
-                ${settings.theme === 'dark' 
-                  ? 'group-hover:bg-gray-700/30 group-hover:border-gray-700' 
-                  : 'group-hover:bg-purple-100/30 group-hover:border-purple-100'
-                } border border-transparent`}></span>
-              
-            </Link>
-
-            <Link
-              to="/leaderboard"
-              className={`group relative px-5 py-2.5 rounded-xl font-medium transition-all duration-300 ease-out
-                ${settings.theme === 'dark'
-                  ? 'text-purple-300 hover:text-purple-200 hover:bg-gray-800/50'
-                  : 'text-purple-600 hover:text-purple-500 hover:bg-purple-50/50'
-                } hover:shadow-lg hover:shadow-purple-500/10 hover:-translate-y-0.5`}
-            >
-              <span className="relative z-10">Leaderboard</span>
-              <span className={`absolute inset-0 rounded-xl transition-all duration-300 
-                ${settings.theme === 'dark' 
-                  ? 'group-hover:bg-gray-700/30 group-hover:border-gray-700' 
-                  : 'group-hover:bg-purple-100/30 group-hover:border-purple-100'
-                } border border-transparent`}></span>
-              
-            </Link>
-
-            <Link
-              to="/settings"
-              className={`group relative px-5 py-2.5 rounded-xl font-medium transition-all duration-300 ease-out
-                ${settings.theme === 'dark'
-                  ? 'text-purple-300 hover:text-purple-200 hover:bg-gray-800/50'
-                  : 'text-purple-600 hover:text-purple-500 hover:bg-purple-50/50'
-                } hover:shadow-lg hover:shadow-purple-500/10 hover:-translate-y-0.5`}
-            >
-              <span className="relative z-10">Settings</span>
-              <span className={`absolute inset-0 rounded-xl transition-all duration-300 
-                ${settings.theme === 'dark' 
-                  ? 'group-hover:bg-gray-700/30 group-hover:border-gray-700' 
-                  : 'group-hover:bg-purple-100/30 group-hover:border-purple-100'
-                } border border-transparent`}></span>
-              
-            </Link>
-
-            <Link
-              to="/about"
-              className={`group relative px-5 py-2.5 rounded-xl font-medium transition-all duration-300 ease-out
-                ${settings.theme === 'dark'
-                  ? 'text-purple-300 hover:text-purple-200 hover:bg-gray-800/50'
-                  : 'text-purple-600 hover:text-purple-500 hover:bg-purple-50/50'
-                } hover:shadow-lg hover:shadow-purple-500/10 hover:-translate-y-0.5`}
-            >
-              <span className="relative z-10">About</span>
-              <span className={`absolute inset-0 rounded-xl transition-all duration-300 
-                ${settings.theme === 'dark' 
-                  ? 'group-hover:bg-gray-700/30 group-hover:border-gray-700' 
-                  : 'group-hover:bg-purple-100/30 group-hover:border-purple-100'
-                } border border-transparent`}></span>
-              
-            </Link>
-          </div>
         </div>
+        {/* Navigation Links */}
+        <div className={`
+          flex flex-wrap justify-center 
+          gap-2 2xs:gap-3 xs:gap-4 sm:gap-6
+          transition-all duration-300 ease-in-out
+          ${gameState !== 'menu' 
+            ? 'opacity-0 scale-95 h-0 mt-0 overflow-hidden' 
+            : 'opacity-100 scale-100 mt-4 2xs:mt-5 xs:mt-6 sm:mt-8'
+          }
+        `}>
+          {['Profile', 'Leaderboard', 'Settings', 'About'].map((item) => (
+            <Link
+              key={item}
+              to={`/${item.toLowerCase()}`}
+              className={`
+                group relative 
+                px-3 2xs:px-4 xs:px-5 
+                py-2 2xs:py-2.5 
+                rounded-lg xs:rounded-xl 
+                font-medium 
+                transition-all duration-300 ease-out
+                ${settings.theme === 'dark'
+                  ? 'text-purple-300 hover:text-purple-200'
+                  : 'text-purple-600 hover:text-purple-500'
+                }
+              `}
+            >
+              <span className="relative z-10">{item}</span>
+              {/* Link Glow Effect */}
+              <div className={`
+                absolute inset-0
+                rounded-lg xs:rounded-xl
+                transition-all duration-300
+                opacity-0 group-hover:opacity-100
+                ${settings.theme === 'dark'
+                  ? 'bg-purple-500/10 shadow-[0_0_15px_rgba(168,85,247,0.5)]'
+                  : 'bg-purple-500/5 shadow-[0_0_15px_rgba(147,51,234,0.3)]'
+                }
+              `} />
+            </Link>
+          ))}
+        </div>
+
         {/* Achievement Notification */}
         {newAchievement && (
           <div className="fixed top-4 right-4 z-50 animate-slide-in-achievement">
@@ -870,12 +840,12 @@ const PopItGameUI = ({
                         }}
                       />
                     ))}
+                    </div>
                   </div>
                 </div>
-                </div>
-                </div>
-                </div>
-                ) : (
+              </div>
+            </div>
+          ) : (
           // Menu State Content
           <div className={`flex flex-col items-center justify-center gap-6 my-8 p-6 rounded-lg ${
             settings.theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'
@@ -925,9 +895,9 @@ const PopItGameUI = ({
               </button>
             )}
           </div>
-        )}
+          )}
+        </div>
       </div>
-    </div>
   );
 };
 
