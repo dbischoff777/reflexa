@@ -107,6 +107,8 @@ const PopItGameUI = ({
       <ScreenProtectionStatus 
         theme={settings.theme} 
         wakeLockActive={wakeLockActive}
+        brightnessAdjusted={brightnessAdjusted}
+        gameState={gameState}
       />
       
       {/* Main Container */}
