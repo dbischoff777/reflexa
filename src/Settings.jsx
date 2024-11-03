@@ -276,10 +276,8 @@ const Settings = () => {
               </div>
             )}
           </div>
-
-
-                    {/* Night Mode */}
-                    <div className="mb-3 xs:mb-4">
+            {/* Night Mode */}
+            <div className="mb-3 xs:mb-4">
             <div className="
               flex items-center justify-between
               mb-2 xs:mb-3
@@ -411,6 +409,8 @@ const Settings = () => {
                 focus:ring-purple-500
               `}
             >
+              <option value="1">1x1</option>
+              <option value="2">2x2</option>
               <option value="3">3x3</option>
               <option value="4">4x4</option>
               <option value="5">5x5</option>
