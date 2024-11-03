@@ -109,38 +109,92 @@ export const useScreenProtection = () => {
           document.documentElement.style.filter = 'none';
         }
       }, [screenProtection.autoBrightness, screenProtection.brightness]);
-    
-      return { adjustBrightness, adjustColorTemperature };
+      
 
-    // Additional screen protection features
-    useEffect(() => {
+      // Additional screen protection features
+      useEffect(() => {
+        // Prevent zooming with wheel/trackpad/pinch
         const preventZoom = (e) => {
-            if (e.ctrlKey || e.metaKey) {
-                e.preventDefault();
-            }
+          // Prevent ctrl/cmd + wheel zoom
+          if ((e.ctrlKey || e.metaKey) && e.type === 'wheel') {
+            e.preventDefault();
+            return false;
+          }
+    
+          // Prevent ctrl/cmd + +/- zoom
+          if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '-' || e.key === '=')) {
+            e.preventDefault();
+            return false;
+          }
         };
-
+    
+        // Prevent pull-to-refresh on mobile
         const preventPullToRefresh = (e) => {
-            if (e.touches.length === 1 && e.touches[0].clientY < 10) {
-                e.preventDefault();
-            }
+          // Prevent overscroll
+          if (window.scrollY === 0 && e.touches.length === 1) {
+            e.preventDefault();
+          }
         };
-
-        // Prevent zooming
-        document.addEventListener('wheel', preventZoom, { passive: false });
-        document.addEventListener('keydown', preventZoom);
-
-        // Prevent pull-to-refresh
-        document.addEventListener('touchstart', preventPullToRefresh, { passive: false });
-
-        // Optional: Prevent context menu
-        document.addEventListener('contextmenu', (e) => e.preventDefault());
-
+    
+        // Prevent pinch zoom on mobile
+        const preventTouchZoom = (e) => {
+          if (e.touches.length > 1) {
+            e.preventDefault();
+          }
+        };
+    
+        // Add meta viewport tag to prevent scaling
+        const metaViewport = document.createElement('meta');
+        metaViewport.name = 'viewport';
+        metaViewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+        document.head.appendChild(metaViewport);
+    
+        // Add CSS to prevent overscroll behavior
+        document.body.style.overflow = 'hidden';
+        document.body.style.position = 'fixed';
+        document.body.style.width = '100%';
+        document.body.style.height = '100%';
+        document.body.style.overscrollBehavior = 'none';
+        document.documentElement.style.overscrollBehavior = 'none';
+        document.documentElement.style.touchAction = 'none';
+    
+        // Add event listeners with capture and passive false
+        document.addEventListener('wheel', preventZoom, { passive: false, capture: true });
+        document.addEventListener('keydown', preventZoom, { passive: false, capture: true });
+        document.addEventListener('touchstart', preventPullToRefresh, { passive: false, capture: true });
+        document.addEventListener('touchmove', preventTouchZoom, { passive: false, capture: true });
+        document.addEventListener('gesturestart', (e) => e.preventDefault(), { passive: false, capture: true });
+        document.addEventListener('gesturechange', (e) => e.preventDefault(), { passive: false, capture: true });
+        document.addEventListener('gestureend', (e) => e.preventDefault(), { passive: false, capture: true });
+    
+        // Prevent context menu
+        document.addEventListener('contextmenu', (e) => e.preventDefault(), { capture: true });
+    
+        // Cleanup function
         return () => {
-            document.removeEventListener('wheel', preventZoom);
-            document.removeEventListener('keydown', preventZoom);
-            document.removeEventListener('touchstart', preventPullToRefresh);
-            document.removeEventListener('contextmenu', (e) => e.preventDefault());
+          // Remove meta viewport tag
+          metaViewport.remove();
+    
+          // Reset CSS
+          document.body.style.removeProperty('overflow');
+          document.body.style.removeProperty('position');
+          document.body.style.removeProperty('width');
+          document.body.style.removeProperty('height');
+          document.body.style.removeProperty('overscroll-behavior');
+          document.documentElement.style.removeProperty('overscroll-behavior');
+          document.documentElement.style.removeProperty('touch-action');
+    
+          // Remove event listeners
+          document.removeEventListener('wheel', preventZoom, { capture: true });
+          document.removeEventListener('keydown', preventZoom, { capture: true });
+          document.removeEventListener('touchstart', preventPullToRefresh, { capture: true });
+          document.removeEventListener('touchmove', preventTouchZoom, { capture: true });
+          document.removeEventListener('gesturestart', (e) => e.preventDefault(), { capture: true });
+          document.removeEventListener('gesturechange', (e) => e.preventDefault(), { capture: true });
+          document.removeEventListener('gestureend', (e) => e.preventDefault(), { capture: true });
+          document.removeEventListener('contextmenu', (e) => e.preventDefault(), { capture: true });
         };
-    }, []);
+      }, []);
+
+    return { adjustBrightness, adjustColorTemperature };      
 };
