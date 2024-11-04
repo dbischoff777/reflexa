@@ -806,13 +806,6 @@ const PopItGameUI = ({
           <div className={`flex flex-col items-center justify-center gap-6 my-8 p-6 rounded-lg ${
             settings.theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'
           }`}>
-            <div className="w-256 h-256"> 
-              <AvatarSelector 
-                currentAvatar={playerAvatar}
-                onSelect={setPlayerAvatar}
-                className="w-full h-full [image-rendering:-webkit-optimize-contrast]"
-              />
-            </div>
             {showUsernameInput ? (
               <form onSubmit={handleUsernameSubmit} className="w-full max-w-xs">
                 <input

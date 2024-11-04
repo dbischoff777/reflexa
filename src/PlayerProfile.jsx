@@ -12,6 +12,7 @@ import {
   getAllAchievements 
 } from './achievements';
 import { getAvatarImage } from './constants/avatars';
+import AvatarSelector from './components/avatar/AvatarSelector';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const StatCard = ({ icon, label, value, theme }) => (
@@ -27,12 +28,12 @@ const StatCard = ({ icon, label, value, theme }) => (
   </div>
 );
 
-const ProfileHeader = ({ username, avatar, level, experience, theme }) => (
+const ProfileHeader = ({ username, avatar, level, experience, theme, onAvatarClick }) => (
   <div className={`rounded-lg shadow-lg p-6 mb-6 ${
     theme === 'dark' ? 'bg-gray-700' : 'bg-white'
   }`}>
     <div className="flex items-center gap-4">
-      <div className="relative">
+    <div className="relative cursor-pointer" onClick={onAvatarClick}>
         <img
           src={getAvatarImage(avatar)}
           alt={`${username}'s avatar`}
@@ -46,7 +47,7 @@ const ProfileHeader = ({ username, avatar, level, experience, theme }) => (
         <h1 className="text-2xl font-bold">{username}</h1>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <span className="text-sm">Level {level}</span>
+            <span className="text-sm">Level {level || 1}</span>
             <div className="w-32">
               <div className="h-2 bg-gray-200 rounded-full">
                 <div
@@ -57,8 +58,7 @@ const ProfileHeader = ({ username, avatar, level, experience, theme }) => (
             </div>
           </div>
           <span className="text-sm text-gray-500">
-            {experience} / {(Math.floor(experience / 100) + 1) * 100} XP</span>
-          
+            {experience || 0} / {(Math.floor(experience / 100) + 1) * 100 || 0} XP</span>
         </div>
       </div>
     </div>
@@ -138,7 +138,8 @@ const PlayerProfile = () => {
   const [achievementProgress, setAchievementProgress] = useState({});
   const [unlockedAchievements, setUnlockedAchievements] = useState([]);
   const [recentGames, setRecentGames] = useState([]);
-  const [playerAvatar] = useState(() => localStorage.getItem('playerAvatar') || 'ninja');
+  const [playerAvatar, setPlayerAvatar] = useState(() => localStorage.getItem('playerAvatar') || 'default');
+  const [isAvatarSelectorOpen, setIsAvatarSelectorOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('stats');
 
   // Calculate achievement progress percentage
@@ -244,6 +245,16 @@ const PlayerProfile = () => {
     return `${hours}h ${minutes}m`;
   };
 
+  const handleAvatarClick = () => {
+    setIsAvatarSelectorOpen(true);
+  };
+
+  const handleAvatarChange = (newAvatar) => {
+    setPlayerAvatar(newAvatar);
+    localStorage.setItem('playerAvatar', newAvatar);
+    setIsAvatarSelectorOpen(false);
+  };
+
   return (
     <div className={`
       min-h-screen w-full
@@ -277,11 +288,12 @@ const PlayerProfile = () => {
         {/* Profile Header */}
         <div className="mb-6">
           <ProfileHeader
-            username={localStorage.getItem('username')}
+            username={stats.username}
             avatar={playerAvatar}
-            level={stats.progress.level}
-            experience={stats.progress.experience}
+            level={Math.floor(stats.experience / 100) + 1}
+            experience={stats.experience}
             theme={settings.theme}
+            onAvatarClick={handleAvatarClick}
           />
         </div>
   
@@ -405,11 +417,29 @@ const PlayerProfile = () => {
             )}
           </motion.div>
         </AnimatePresence>
+        {/* Avatar Selector Modal */}
+        {isAvatarSelectorOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-4 w-full max-w-[320px] max-h-[90vh] flex flex-col">
+              <div className="flex-grow overflow-y-clip">
+                <AvatarSelector
+                  currentAvatar={playerAvatar}
+                  onSelect={handleAvatarChange}
+                  className="w-full h-full [image-rendering:-webkit-optimize-contrast]"
+                />
+              </div>
+              <button
+                className="mt-4 w-full bg-purple-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors duration-200"
+                onClick={() => setIsAvatarSelectorOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
-  
-  
 };
 
 export default PlayerProfile;
