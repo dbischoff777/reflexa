@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useSettings } from '../Settings';
 
 export const useScreenProtection = () => {
@@ -40,7 +40,7 @@ export const useScreenProtection = () => {
     }, []);
 
     // brightness
-    const adjustBrightness = () => {
+    const adjustBrightness = useCallback(() => {
         // Try native brightness API first
         if ('screen' in navigator && 'brightness' in navigator.screen) {
           try {
@@ -53,11 +53,11 @@ export const useScreenProtection = () => {
         // CSS fallback for brightness
         const brightnessValue = screenProtection.brightness / 100;
         document.documentElement.style.filter = `brightness(${brightnessValue})`;
-      };
+    }, [screenProtection.brightness]);
     
 
     // color temperature
-    const adjustColorTemperature = () => {
+    const adjustColorTemperature = useCallback(() => {
         const hour = new Date().getHours();
         if (hour >= 18 || hour < 6) {
           // Combine brightness and night mode filters
@@ -74,7 +74,7 @@ export const useScreenProtection = () => {
             document.documentElement.style.filter = 'none';
           }
         }
-      };
+      }, [screenProtection.autoBrightness, screenProtection.brightness]);
 
       useEffect(() => {
         if (screenProtection.nightMode) {
@@ -87,13 +87,13 @@ export const useScreenProtection = () => {
         } else {
           document.documentElement.style.filter = 'none';
         }
-      }, [screenProtection.nightMode]);
+      }, [screenProtection.nightMode, screenProtection.autoBrightness, adjustBrightness, adjustColorTemperature]);
     
       useEffect(() => {
         if (screenProtection.autoBrightness) {
           adjustBrightness();
         }
-      }, [screenProtection.autoBrightness, screenProtection.brightness]);
+      }, [screenProtection.autoBrightness, screenProtection.brightness, adjustBrightness]);
     
       useEffect(() => {
         if (screenProtection.autoBrightness) {
@@ -108,7 +108,9 @@ export const useScreenProtection = () => {
           // If both features are off, remove filters
           document.documentElement.style.filter = 'none';
         }
-      }, [screenProtection.autoBrightness, screenProtection.brightness]);
+      }, [screenProtection.autoBrightness, screenProtection.brightness, adjustBrightness, adjustColorTemperature,
+        screenProtection.nightMode
+      ]);
       
 
       /* // Additional screen protection features

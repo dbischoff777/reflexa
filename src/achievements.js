@@ -1,6 +1,6 @@
 // src/achievements.js
 import React from 'react';
-import { Trophy, Target, Zap, Crown, Star, Award, Clock, Crosshair, Flame } from 'lucide-react';
+import { Trophy, Target, Zap, Star, Award, Crosshair, Flame } from 'lucide-react';
 
 export const ACHIEVEMENTS = [
   {
