@@ -772,15 +772,19 @@ const PopItGameUI = ({
                         ${settings.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}
                       `}
                       style={{
+                        '--grid-aspect-ratio': `${settings.gridColumns} / ${settings.gridRows}`,
                         display: 'grid',
-                        gridTemplateColumns: `repeat(${settings.gridSize}, 1fr)`,
+                        gridTemplateColumns: `repeat(${settings.gridColumns}, 1fr)`,
+                        gridTemplateRows: `repeat(${settings.gridRows}, 1fr)`,
                         gap: '2%',
                         padding: '2%',
                       }}
                     >
-                      {Array.from({ length: settings.gridSize * settings.gridSize }).map((_, index) => 
-                        renderButton(index)
-                      )}
+                      {Array.from({ length: settings.gridColumns * settings.gridRows }).map((_, index) => (
+                        <div key={index} className="relative w-full h-full">
+                          {renderButton(index)}
+                        </div>
+                      ))}
                     </div>
                     {/* Particle Effects */}
                     {particleEffects.map(effect => (
@@ -806,6 +810,7 @@ const PopItGameUI = ({
           <div className={`flex flex-col items-center justify-center gap-6 my-8 p-6 rounded-lg ${
             settings.theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'
           }`}>
+           
             {showUsernameInput ? (
               <form onSubmit={handleUsernameSubmit} className="w-full max-w-xs">
                 <input

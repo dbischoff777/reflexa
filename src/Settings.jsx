@@ -88,8 +88,32 @@ const Settings = () => {
   };
 
   const handleGridSizeChange = (e) => {
-    updateSettings({ gridSize: parseInt(e.target.value) });
-  };
+    const value = e.target.value;
+    switch (value) {
+      case "2x1":
+        updateSettings({
+          gridSize: value,
+          gridColumns: 2,
+          gridRows: 1
+        });
+        break;
+      case "3x1":
+        updateSettings({
+          gridSize: value,
+          gridColumns: 3,
+          gridRows: 1
+        });
+        break;
+      default:
+        const size = parseInt(value, 10);
+        updateSettings({
+          gridSize: size,
+          gridColumns: size,
+          gridRows: size
+        });
+        break;
+    }
+  }  
 
   const handleThemeChange = () => {
     updateSettings({ theme: settings.theme === 'light' ? 'dark' : 'light' });
@@ -410,6 +434,8 @@ const Settings = () => {
               `}
             >
               <option value="1">1x1</option>
+              <option value="2x1">2x1</option>
+              <option value="3x1">3x1</option>
               <option value="2">2x2</option>
               <option value="3">3x3</option>
               <option value="4">4x4</option>

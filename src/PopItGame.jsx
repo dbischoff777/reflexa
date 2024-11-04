@@ -929,27 +929,27 @@ const PopItGame = () => {
   }, [gameState, countdown, playSound, getRandomButton]);
 
   // Game loop effects
-useEffect(() => {
-  if (gameState !== 'playing') return;
-  if (!targetButton) return; // Add this line to prevent interval during animation
+  useEffect(() => {
+    if (gameState !== 'playing') return;
+    if (!targetButton) return; // Add this line to prevent interval during animation
 
-  const interval = setInterval(() => {
-    // Move target to new position if not clicked in time
-    setTargetButton(getRandomButton());
-    
-    // Reduce lives and reset multiplier on timeout
-    setLives(prev => {
-      if (prev <= 1) {
-        handleGameOver();
-        return prev;
-      }
-      return prev - 1;
-    });
-    
-    setMultiplier(1);
-    setGameSpeed(1); // Reset speed on timeout
-  }, BASE_INTERVAL / gameSpeed); // Adjust interval based on game speed
-  return () => clearInterval(interval);
+    const interval = setInterval(() => {
+      // Move target to new position if not clicked in time
+      setTargetButton(getRandomButton());
+      
+      // Reduce lives and reset multiplier on timeout
+      setLives(prev => {
+        if (prev <= 1) {
+          handleGameOver();
+          return prev;
+        }
+        return prev - 1;
+      });
+      
+      setMultiplier(1);
+      setGameSpeed(1); // Reset speed on timeout
+    }, BASE_INTERVAL / gameSpeed); // Adjust interval based on game speed
+    return () => clearInterval(interval);
   }, [gameState, gameSpeed, handleGameOver, getRandomButton, targetButton]);
 
 
