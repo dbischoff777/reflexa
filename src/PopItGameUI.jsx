@@ -678,7 +678,7 @@ const PopItGameUI = ({
                 <div className="flex justify-between items-center mb-4 sm:mb-6 flex-wrap gap-2 sm:gap-4">
                   <StatBox theme={settings.theme}>
                     <div className="flex items-center gap-1 sm:gap-2">
-                      <LivesIcons lives={lives} theme={settings.theme} />
+                      <LivesIcons lives={1} theme={settings.theme} />
                       <span className="text-lg sm:text-xl font-bold">×{lives}</span>
                     </div>
                   </StatBox>
