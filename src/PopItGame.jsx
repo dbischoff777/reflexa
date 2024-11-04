@@ -71,6 +71,7 @@ const PopItGame = () => {
   //success animation
   const [showAnimation, setShowAnimation] = useState(false);
   const [animationPosition, setAnimationPosition] = useState({ x: 0, y: 0 });
+  const [isAnimationPlaying, setIsAnimationPlaying] = useState(false);
 
   // Game state
   const [gameState, setGameState] = useState('menu'); // menu, countdown, playing, over
@@ -183,7 +184,7 @@ const PopItGame = () => {
     if (screenProtection.autoBrightness) {
       adjustBrightness();
     }
-  }, [screenProtection.autoBrightness, screenProtection.brightness]);
+  }, [screenProtection.autoBrightness, screenProtection.brightness, adjustBrightness]);
 
   // Add this initialization for tsParticles
   const particlesInit = useCallback(async (engine) => {
@@ -317,10 +318,10 @@ const PopItGame = () => {
     }
   }, [settings.soundEnabled]);
 
-  // Get random button for target
   const getRandomButton = useCallback(() => {
-    return Math.floor(Math.random() * (settings.gridSize * settings.gridSize));
-  }, [settings.gridSize]);
+    const totalButtons = settings.gridRows * settings.gridColumns;
+    return Math.floor(Math.random() * totalButtons);
+  }, [settings.gridRows, settings.gridColumns]);   
 
   const [maxMultiplier, setMaxMultiplier] = useState(1);
 
@@ -695,12 +696,12 @@ const PopItGame = () => {
     updateLeaderboard,
     updateRecentGames,
     playSound,
-    score,
-    gameStats,
     setGameOver,
     setShowGameOver,
     setGameState,
     setNewAchievement,
+    score,
+    gameStats,
     lives,
     multiplier,
     maxMultiplier
@@ -756,7 +757,7 @@ const PopItGame = () => {
 
         setNewAchievement(achievementDetails);
     }
-}, [score, multiplier]);
+}, [calculateFinalStats, gameStats.combos, gameStats.reactionTimes, maxMultiplier]);
 
   // Call checkAndUpdateAchievements when relevant game events occur
   useEffect(() => {
@@ -781,13 +782,20 @@ const PopItGame = () => {
     }
 
     if (index === targetButton) {
-
+      setIsAnimationPlaying(true);
       playSound('success');
 
-      // Calculate grid position based on index
-      const gridSize = settings.gridSize;
-      const row = Math.floor(index / gridSize);
-      const col = index % gridSize;
+      // Calculate grid position based on index and current grid dimensions
+      const col = index % settings.gridColumns;
+      let row;
+
+      // Special handling for 2x1 and 3x1 grids
+      if (settings.gridRows === 1) {
+        row = 0;
+      } else {
+        // For all other grid sizes
+        row = settings.gridRows - Math.floor(index / settings.gridColumns) - 1;
+      }
       
       // Clear the current target immediately
       setTargetButton(null);  // Add this line to remove current target
@@ -837,7 +845,7 @@ const PopItGame = () => {
         if (gameState === 'playing') {
           setTargetButton(getRandomButton());
         }
-      }, 2000);
+      }, 2000, setIsAnimationPlaying(false));
 
     } else {
 
@@ -858,6 +866,9 @@ const PopItGame = () => {
     }
   }, [
     gameState,
+    gameOver,
+    gameStarted,
+    getFailureMessage,
     targetButton,
     multiplier,
     score,
@@ -867,8 +878,9 @@ const PopItGame = () => {
     getMascotMessage,
     playSound,
     particleEffects.length,
+    settings.gridColumns,
+    settings.gridRows,
     settings.gridSize,
-    gameSpeed,
   ]);
     
   //Update the renderButton function
@@ -879,34 +891,38 @@ const PopItGame = () => {
       <div
         key={index}
         className="relative aspect-square w-full"
-        //onClick={() => handleButtonClick(index)}
+        onClick={() => handleButtonClick(index)}
         onTouchStart={(e) => {
           e.preventDefault(); // Prevent double-firing on some devices
           handleButtonClick(index);
         }}
       >
-        {/* Background Button */}
-        <button
-          className={`absolute inset-0 rounded-full transition-all duration-200 
-            ${settings.theme === 'dark' 
-              ? 'bg-gray-700 hover:bg-gray-600' 
-              : 'bg-gray-200 hover:bg-gray-300'
-            }`}
-        />
-        
-        {/* Image Overlay */}
-        <div 
-          className={`absolute inset-0 flex items-center justify-center
-            ${isTarget ? 'filter drop-shadow-lg' : ''}`}
-        >
-          <img
-            src={isTarget ? foodBowl : blueBowl}
-            alt={isTarget ? "Food Bowl" : "Blue Bowl"}
-            className={`w-3/4 h-3/4 object-contain pointer-events-none
-              transition-transform duration-200
-              ${isTarget ? 'hover:scale-110' : ''}`}
-          />
-        </div>
+        {!showAnimation && (
+          <>
+            {/* Background Button */}
+            <button
+              className={`absolute inset-0 rounded-full transition-all duration-200 
+                ${settings.theme === 'dark' 
+                  ? 'bg-gray-700 hover:bg-gray-600' 
+                  : 'bg-gray-200 hover:bg-gray-300'
+                }`}
+            />
+            
+            {/* Image Overlay */}
+            <div 
+              className={`absolute inset-0 flex items-center justify-center
+                ${isTarget ? 'filter drop-shadow-lg' : ''}`}
+            >
+              <img
+                src={isTarget ? foodBowl : blueBowl}
+                alt={isTarget ? "Food Bowl" : "Blue Bowl"}
+                className={`w-3/4 h-3/4 object-contain pointer-events-none
+                  transition-transform duration-200
+                  ${isTarget ? 'hover:scale-110' : ''}`}
+              />
+            </div>
+          </>
+        )}
       </div>
     );
   }, [targetButton, settings.theme, handleButtonClick]);

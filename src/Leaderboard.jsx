@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeftIcon, Crown, Medal, Trophy, Star, Search, Clock, ArrowUp, ArrowDown, Award, Target, Zap } from 'lucide-react';
+import { ArrowLeftIcon, Medal, Trophy, Search, ArrowUp, ArrowDown, Award, Target, Zap } from 'lucide-react';
 import { useSettings } from './Settings';
 
 const Leaderboard = () => {

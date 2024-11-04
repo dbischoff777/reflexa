@@ -4,8 +4,7 @@ import { Link } from 'react-router-dom';
 import livesIcon from './images/lives.png';
 import frenchieIcon from './images/frenchie.png';
 import scoreIcon from './images/score.png';
-import AvatarSelector from './components/avatar/AvatarSelector';
-import { FacebookIcon, TwitterIcon, WhatsAppIcon, LinkedInIcon } from './Icons';
+import { FacebookIcon, TwitterIcon, WhatsAppIcon } from './Icons';
 import ScreenProtectionStatus from './components/ScreenProtectionStatus';
 
 const PopItGameUI = ({
@@ -30,8 +29,6 @@ const PopItGameUI = ({
   exitGame,
   renderButton,
   PopEffect,
-  playerAvatar,
-  setPlayerAvatar,
   newAchievement,
   showAnimation,
   animationPosition,
@@ -46,6 +43,14 @@ const PopItGameUI = ({
       localStorage.setItem('username', username.trim());
       startGame();
     }
+  };
+
+  const calculateHeight = () => {
+    if (settings.gridRows === 1) {
+      if (settings.gridColumns === 2) return '150%';
+      if (settings.gridColumns === 3) return '165%';
+    }
+    return `${100 / settings.gridRows}%`;
   };
 
   return (
@@ -506,10 +511,10 @@ const PopItGameUI = ({
                       {/* Facebook */}
                       <button
                         onClick={() => {
-                          const shareText = `I just scored ${score} points in Fetch & Feast!`;
+                          const shareText = encodeURIComponent(`I just scored ${score} points in Fetch & Feast!`);
                           const url = encodeURIComponent(window.location.href);
                           window.open(
-                            `https://facebook.com/sharer/sharer.php?u=${url}`,
+                            `https://facebook.com/sharer/sharer.php?u=${url}&quote=${shareText}`,
                             'facebook-share',
                             'width=580,height=296'
                           );
@@ -560,25 +565,6 @@ const PopItGameUI = ({
                         }`}
                       >
                         <WhatsAppIcon className="w-6 h-6" />
-                      </button>
-
-                      {/* LinkedIn */}
-                      <button
-                        onClick={() => {
-                          const url = encodeURIComponent(window.location.href);
-                          window.open(
-                            `https://www.linkedin.com/sharing/share-offsite/?url=${url}`,
-                            'linkedin-share',
-                            'width=750,height=600'
-                          );
-                        }}
-                        className={`p-2 rounded-lg transition-colors ${
-                          settings.theme === 'dark'
-                            ? 'bg-[#0077b5] hover:bg-[#006399] text-white'
-                            : 'bg-[#0077b5] hover:bg-[#006399] text-white'
-                        }`}
-                      >
-                        <LinkedInIcon className="w-6 h-6" />
                       </button>
                     </div>
                   </div>
@@ -731,36 +717,36 @@ const PopItGameUI = ({
                   <div className="relative aspect-square">
                     {/* Animation Overlay */}
                     {showAnimation && (
-                      <div 
-                        className="absolute pointer-events-none"
-                        style={{
-                          top: `${(animationPosition.row * 100) / settings.gridSize}%`,
-                          left: `${(animationPosition.col * 100) / settings.gridSize}%`,
-                          width: `${100 / settings.gridSize}%`,
-                          height: `${100 / settings.gridSize}%`,
-                          pointerEvents: 'none',
-                          zIndex: 50
-                        }}
-                      >
-                        <div className={`
-                          absolute 
-                          inset-0 
-                          flex 
-                          items-center 
-                          justify-center 
-                          rounded-lg
-                          ${settings.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}
-                        `}>
-                          <img
-                            key={Date.now()}
-                            src={successAnimation}
-                            alt="Success Animation"
-                            className="w-2/3 2xs:w-[70%] xs:w-[72%] sm:w-3/4 object-contain pointer-events-none"
-                            draggable="false"
-                          />
-                        </div>
+                    <div 
+                      className="absolute pointer-events-none"
+                      style={{
+                        bottom: `${animationPosition.row * (100 / settings.gridRows)}%`,
+                        left: `${animationPosition.col * (100 / settings.gridColumns)}%`,
+                        width: `${100 / settings.gridColumns}%`,
+                        height: calculateHeight(),
+                        pointerEvents: 'none',
+                        zIndex: 50,
+                      }}
+                    >
+                      <div className={`
+                        absolute 
+                        inset-0 
+                        flex 
+                        items-center 
+                        justify-center 
+                        rounded-lg
+                        ${settings.theme === 'dark' ? 'transparent' : 'transparent'}
+                      `}>
+                        <img
+                          key={Date.now()}
+                          src={successAnimation}
+                          alt="Success Animation"
+                          className="w-2/3 2xs:w-[70%] xs:w-[72%] sm:w-3/4 object-contain pointer-events-none"
+                          draggable="false"
+                        />
                       </div>
-                    )}
+                    </div>
+                  )}
                     {/* Absolute Position Grid */}
                     <div 
                       className={`

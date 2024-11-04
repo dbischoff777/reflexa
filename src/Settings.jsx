@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Sun, Moon, ArrowLeftIcon } from 'lucide-react';
 import { useScreenProtection } from './hooks/useScreenProtection';
 
@@ -76,7 +76,6 @@ export const useSettings = () => {
 
 const Settings = () => {
   const { settings, updateSettings, screenProtection, setScreenProtection } = useSettings();
-  const navigate = useNavigate();
   const { adjustBrightness, adjustColorTemperature } = useScreenProtection();
 
   const handleToggleSound = () => {

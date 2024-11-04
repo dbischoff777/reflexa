@@ -1,15 +1,14 @@
 // PlayerProfile.jsx
-import React, { createContext, useContext, useCallback, useState, useEffect, cloneElement } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Trophy, Star, Clock, Target, Award, ArrowLeft, Zap, 
-         Crosshair, Flame, Crown, Share2, Download, Medal, BarChart, History } from 'lucide-react';
+import { Trophy, Star, Clock, Target, ArrowLeft, Zap, 
+         Crosshair, Flame, Crown, Medal, BarChart, History } from 'lucide-react';
 import { useSettings } from './Settings';
 import { getPlayerStats } from './utils/playerStats';
 import { 
   ACHIEVEMENTS, 
   updateAchievementProgress, 
-  checkAchievementsUnlocked, 
-  getAllAchievements 
+  checkAchievementsUnlocked,  
 } from './achievements';
 import { getAvatarImage } from './constants/avatars';
 import AvatarSelector from './components/avatar/AvatarSelector';
@@ -218,7 +217,7 @@ const PlayerProfile = () => {
       window.removeEventListener('storage', handleStorageChange);
       clearInterval(intervalId);
     };
-  }, []);
+  }, [checkProgress]);
 
   // Load data on mount
   useEffect(() => {
