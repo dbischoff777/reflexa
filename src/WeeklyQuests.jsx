@@ -1,8 +1,9 @@
 import React from 'react';
 import { usePlayer } from './utils/PlayerContext';
+import { WEEKLY_QUEST_TIERS } from './utils/questTiers';
 
 const WeeklyQuests = ({ onClose, theme }) => {
-    const { playerData, addCoins } = usePlayer();
+    const { playerData, updatePlayerData, addCoins } = usePlayer();
     const bgColor = theme === 'dark' ? 'bg-gray-800' : 'bg-white';
     const textColor = theme === 'dark' ? 'text-white' : 'text-gray-800';
     const buttonClass = `px-4 py-2 rounded ${
@@ -11,12 +12,37 @@ const WeeklyQuests = ({ onClose, theme }) => {
         : 'bg-purple-600 hover:bg-purple-700 text-white'
     }`;
 
-  const quests = [
-    { id: 1, description: 'Complete 20 games', progress: 12, total: 20, reward: '500 coins' },
-    { id: 2, description: 'Achieve a total score of 50,000 points', progress: 32000, total: 50000, reward: '1000 coins' },
-    { id: 3, description: 'Get a 10x multiplier', progress: 0, total: 1, reward: '1500 coins' },
-    { id: 4, description: 'Play the game for 7 days in a row', progress: 5, total: 7, reward: '2000 coins' },
-  ];
+    const getCurrentTier = (questType, playerProgress) => {
+        const tiers = WEEKLY_QUEST_TIERS[questType];
+        return tiers.find(tier => playerProgress < tier) || tiers[tiers.length - 1];
+      };
+
+      const quests = [
+        { 
+          id: 1, 
+          type: 'GAMES_PLAYED',
+          description: `Play ${getCurrentTier('GAMES_PLAYED', playerData.weeklyGamesPlayed)} games`, 
+          progress: playerData.weeklyGamesPlayed || 0, 
+          total: getCurrentTier('GAMES_PLAYED', playerData.weeklyGamesPlayed), 
+          reward: '500 coins' 
+        },
+        { 
+          id: 2, 
+          type: 'SCORE_SINGLE',
+          description: `Score ${getCurrentTier('SCORE_SINGLE', playerData.weeklyHighScore)} points in a single game`, 
+          progress: playerData.weeklyHighScore || 0, 
+          total: getCurrentTier('SCORE_SINGLE', playerData.weeklyHighScore), 
+          reward: '1000 coins' 
+        },
+        { 
+          id: 3, 
+          type: 'MULTIPLIER',
+          description: `Get a ${getCurrentTier('MULTIPLIER', playerData.weeklyHighestMultiplier)}x multiplier`, 
+          progress: playerData.weeklyHighestMultiplier || 0, 
+          total: getCurrentTier('MULTIPLIER', playerData.weeklyHighestMultiplier), 
+          reward: '1500 coins' 
+        },
+    ];
 
   const handleClaimRewards = () => {
     quests.forEach(quest => {

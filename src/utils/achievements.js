@@ -1,4 +1,3 @@
-// src/achievements.js
 import React from 'react';
 import { Trophy, Target, Zap, Star, Award, Crosshair, Flame } from 'lucide-react';
 
@@ -75,7 +74,7 @@ export const updateAchievementProgress = (stats, currentProgress) => {
   // Update basic stats
   newProgress.gamesPlayed = (newProgress.gamesPlayed || 0) + 1;
   newProgress.highestScore = Math.max(stats.basic.highestScore || 0, newProgress.highestScore || 0);
-  newProgress.accuracy = Math.max(stats.performance.accuracy || 0, newProgress.accuracy || 0);
+  newProgress.accuracy = Math.round(Math.max((stats.performance.accuracy || 0) * 100, (newProgress.accuracy || 0) * 100));
   newProgress.bestReactionTime = Math.min(stats.performance.bestReactionTime || Infinity, newProgress.bestReactionTime || Infinity);
   newProgress.longestStreak = Math.max(stats.session.longestStreak || 0, newProgress.longestStreak || 0);
   newProgress.perfectGames = (newProgress.perfectGames || 0) + (stats.performance.perfectGames ? 1 : 0);

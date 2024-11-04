@@ -3,7 +3,7 @@ import PopItGameUI from './PopItGameUI';
 import soundManager from './sounds/sound';
 import { useSettings } from './Settings';
 import { updatePlayerStats } from './utils/playerStats';
-import { checkAchievementsUnlocked, ACHIEVEMENTS} from './achievements';
+import { checkAchievementsUnlocked, ACHIEVEMENTS} from './utils/achievements';
 import Particles from "react-tsparticles";
 import { loadFull } from "tsparticles";
 import './PopItGame.css';
@@ -13,6 +13,7 @@ import foodBowl from './images/foodBowlT.png';
 import successAnimation from './animations/successAnimation-unscreen.gif';
 import { useAvatar } from './hooks/useAvatar';
 import { useScreenProtection } from './hooks/useScreenProtection';
+import { usePlayer } from './utils/PlayerContext';
 
 const PopItGame = () => {
 
@@ -91,6 +92,7 @@ const PopItGame = () => {
   const [flashRed, setFlashRed] = useState(false);
   
   // Timing and stats
+  const { playerData, updatePlayerData } = usePlayer();
   const [startTime, setStartTime] = useState(null);
   const [gameTime, setGameTime] = useState(0);
   const [gameSpeed, setGameSpeed] = useState(1);
@@ -646,7 +648,24 @@ const PopItGame = () => {
   const handleGameOver = useCallback(() => {
     const endTime = Date.now();
     const finalStats = calculateFinalStats(endTime);
-    
+
+    // Update player data with the new stats
+    updatePlayerData({
+      dailyGamesPlayed: (playerData.dailyGamesPlayed || 0) + 1,
+      weeklyGamesPlayed: (playerData.weeklyGamesPlayed || 0) + 1,
+      dailyHighScore: Math.max(playerData.dailyHighScore || 0, finalStats.score),
+      weeklyHighScore: Math.max(playerData.weeklyHighScore || 0, finalStats.score),
+      dailyHighestMultiplier: Math.max(playerData.dailyHighestMultiplier || 0, finalStats.maxMultiplier),
+      weeklyHighestMultiplier: Math.max(playerData.weeklyHighestMultiplier || 0, finalStats.maxMultiplier),
+      totalGamesPlayed: (playerData.totalGamesPlayed || 0) + 1,
+      totalScore: (playerData.totalScore || 0) + finalStats.score,
+      bestScore: Math.max(playerData.bestScore || 0, finalStats.score),
+      bestMultiplier: Math.max(playerData.bestMultiplier || 0, finalStats.maxMultiplier),
+      totalGameTime: (playerData.totalGameTime || 0) + finalStats.duration,
+      averageScore: ((playerData.averageScore || 0) * (playerData.totalGamesPlayed || 0) + finalStats.score) / ((playerData.totalGamesPlayed || 0) + 1),
+      averageMultiplier: ((playerData.averageMultiplier || 0) * (playerData.totalGamesPlayed || 0) + finalStats.maxMultiplier) / ((playerData.totalGamesPlayed || 0) + 1),
+    });
+
     // Create final stats for UI display
     const gameUIStats = {
         score: score,

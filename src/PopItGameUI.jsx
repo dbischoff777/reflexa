@@ -25,7 +25,6 @@ const PopItGameUI = ({
   showGameOver,
   gameStats,
   gridShake,
-  flashRed,
   particleEffects,
   setParticleEffects,
   startGame,

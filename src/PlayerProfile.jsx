@@ -9,7 +9,7 @@ import {
   ACHIEVEMENTS, 
   updateAchievementProgress, 
   checkAchievementsUnlocked,  
-} from './achievements';
+} from './utils/achievements';
 import { getAvatarImage } from './constants/avatars';
 import AvatarSelector from './components/avatar/AvatarSelector';
 import { motion, AnimatePresence } from 'framer-motion';
