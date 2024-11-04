@@ -23,6 +23,7 @@ const PopItGameUI = ({
   showGameOver,
   gameStats,
   gridShake,
+  flashRed,
   particleEffects,
   setParticleEffects,
   startGame,
@@ -53,14 +54,78 @@ const PopItGameUI = ({
     return `${100 / settings.gridRows}%`;
   };
 
+  const StatBox = ({ theme, children, extraClasses = '' }) => (
+    <div className={`
+      flex items-center gap-1 sm:gap-2 
+      p-2 sm:p-3 
+      rounded-lg
+      transform transition-all duration-300
+      ${theme === 'dark' ? 'bg-purple-900/80 text-purple-200' : 'bg-purple-100/80 text-purple-600'}
+      shadow-lg backdrop-blur-sm
+      ${extraClasses}
+    `}>
+      {children}
+    </div>
+  );
+  
+  const StatIcon = ({ src, alt, theme }) => (
+    <div className="ml-0.5 sm:ml-1">
+      <img
+        src={src}
+        alt={alt}
+        className="w-5 h-5 sm:w-6 sm:h-6 object-contain"
+        draggable="false"
+        loading="lazy"
+        style={{ 
+          filter: theme === 'dark' ? 'brightness(100%) hue-rotate(30deg)' : 'brightness(90%)'
+        }}
+      />
+    </div>
+  );
+  
+  const LivesIcons = ({ lives, theme }) => (
+    <div className="flex gap-0.5 sm:gap-1">
+      {Array.from({ length: lives }).map((_, i) => (
+        <div key={i} className="w-6 h-6 sm:w-7 sm:h-7">
+          <img
+            src={livesIcon}
+            alt="Life"
+            className="w-full h-full object-contain"
+            draggable="false"
+            loading="lazy"
+            style={{ 
+              filter: theme === 'dark' ? 'brightness(100%) hue-rotate(30deg)' : 'brightness(90%)'
+            }}
+          />
+        </div>
+      ))}
+    </div>
+  );
+  
+  const MultiplierIcon = ({ theme }) => (
+    <svg 
+      className={`w-4 h-4 sm:w-5 sm:h-5 ${theme === 'dark' ? 'text-purple-300' : 'text-purple-500'}`} 
+      fill="none" 
+      viewBox="0 0 24 24" 
+      stroke="currentColor"
+    >
+      <path 
+        strokeLinecap="round" 
+        strokeLinejoin="round" 
+        strokeWidth={2} 
+        d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+      />
+    </svg>
+  );
+  
   return (
     <div className={`min-h-screen w-full fixed inset-0 ${
       settings.theme === 'dark'
         ? gridShake 
-          ? 'flash-red bg-gray-800 text-white'
+          ? 'animate-shake-and-flash bg-gray-800 text-white'
           : 'bg-gray-800 text-white'
         : gridShake
-          ? 'flash-red bg-gray-100 text-gray-900'
+          ? 'animate-shake-and-flash bg-gray-100 text-gray-900'
           : 'bg-gray-100 text-gray-900'
     }`}>
       <ScreenProtectionStatus 
@@ -608,186 +673,106 @@ const PopItGameUI = ({
               </div>
             )}
             {/* Responsive Grid Container */}
-            <div className="w-full flex justify-center px-2 2xs:px-3 xs:px-4">
-              <div className="w-[95vw] 2xs:w-[90vw] xs:w-[85vw] sm:w-[80vw] md:w-[60vw] lg:w-[50vw] max-w-[800px]">
-                {/* Stats Display */}
-                <div className="flex justify-between items-center mb-4 2xs:mb-5 sm:mb-6 flex-wrap gap-2 2xs:gap-3 xs:gap-4">
-                  <div className={`
-                    flex items-center gap-1 2xs:gap-1.5 xs:gap-2 
-                    p-2 2xs:p-2.5 xs:p-3 
-                    rounded-lg
-                    transform transition-all duration-300
-                    ${settings.theme === 'dark' 
-                      ? 'bg-purple-900/80 text-purple-200' 
-                      : 'bg-purple-100/80 text-purple-600'}
-                    shadow-lg backdrop-blur-sm
-                  `}>
-                    <div className="flex items-center gap-1 2xs:gap-1.5 xs:gap-2">
-                      <div className="flex gap-0.5 2xs:gap-1">
-                        {Array.from({ length: lives }).map((_, i) => (
-                          <div 
-                            key={i} 
-                            className="w-6 h-6 2xs:w-7 2xs:h-7 xs:w-8 xs:h-8"
-                          >
-                            <img
-                              src={livesIcon}
-                              alt="Life"
-                              className="w-full h-full object-contain"
-                              draggable="false"
-                              style={{ 
-                                filter: settings.theme === 'dark' 
-                                  ? 'brightness(100%) hue-rotate(30deg)' 
-                                  : 'brightness(90%)'
-                              }}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                      <span className="text-xl 2xs:text-xl xs:text-2xl font-bold ml-0.5 2xs:ml-1">×{lives}</span>
+            <div className="w-full flex justify-center px-2 sm:px-4">
+              <div className="w-full max-w-[95vw] sm:max-w-[80vw] md:max-w-[60vw] lg:max-w-[50vw] xl:max-w-[800px]">
+                <div className="flex justify-between items-center mb-4 sm:mb-6 flex-wrap gap-2 sm:gap-4">
+                  <StatBox theme={settings.theme}>
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      <LivesIcons lives={lives} theme={settings.theme} />
+                      <span className="text-lg sm:text-xl font-bold">×{lives}</span>
                     </div>
-                  </div>
-
-                  <div className={`
-                    flex items-center gap-1 2xs:gap-1.5 xs:gap-2 
-                    p-2 2xs:p-2.5 xs:p-3 
-                    rounded-lg
-                    transform transition-all duration-300
-                    ${settings.theme === 'dark' 
-                      ? 'bg-purple-900/80 text-purple-200' 
-                      : 'bg-purple-100/80 text-purple-600'}
-                    shadow-lg backdrop-blur-sm
-                  `}>
-                    <div className="flex items-center gap-1 2xs:gap-1.5 xs:gap-2">
-                      <span className="text-2xl 2xs:text-2xl xs:text-3xl font-bold">Score: {score}</span>
-                      <div className="ml-0.5 2xs:ml-1">
-                        <img
-                          src={scoreIcon}
-                          alt="Score"
-                          className="w-5 h-5 2xs:w-5.5 2xs:h-5.5 xs:w-6 xs:h-6 object-contain"
-                          draggable="false"
-                          style={{ 
-                            filter: settings.theme === 'dark' 
-                              ? 'brightness(100%) hue-rotate(30deg)' 
-                              : 'brightness(90%)'
-                          }}
-                        />
-                      </div>
+                  </StatBox>
+                  <StatBox theme={settings.theme}>
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      <span className="text-lg sm:text-xl font-bold">Score: {score}</span>
+                      <StatIcon src={scoreIcon} alt="Score" theme={settings.theme} />
                     </div>
-                  </div>
-
+                  </StatBox>
                   {gameState === 'playing' && multiplier > 1 && (
-                    <div className={`
-                      flex items-center gap-1 2xs:gap-1.5 xs:gap-2 
-                      p-2 2xs:p-2.5 xs:p-3 
-                      rounded-lg
-                      transform transition-all duration-300
-                      ${multiplier > 1 ? 'animate-pulse' : ''}
-                      ${settings.theme === 'dark' 
-                        ? 'bg-purple-900/80 text-purple-200' 
-                        : 'bg-purple-100/80 text-purple-600'}
-                      shadow-lg backdrop-blur-sm
-                    `}>
-                      <div className="flex items-center gap-1 2xs:gap-1.5 xs:gap-2">
-                        <span className="text-xl 2xs:text-xl xs:text-2xl font-bold">×{multiplier.toFixed(1)}</span>
-                        <div className="ml-0.5 2xs:ml-1">
-                          <svg 
-                            className={`w-4 h-4 2xs:w-4.5 2xs:h-4.5 xs:w-5 xs:h-5 ${
-                              settings.theme === 'dark' 
-                                ? 'text-purple-300' 
-                                : 'text-purple-500'
-                            }`} 
-                            fill="none" 
-                            viewBox="0 0 24 24" 
-                            stroke="currentColor"
-                          >
-                            <path 
-                              strokeLinecap="round" 
-                              strokeLinejoin="round" 
-                              strokeWidth={2} 
-                              d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                            />
-                          </svg>
-                        </div>
+                    <StatBox theme={settings.theme} extraClasses={multiplier > 1 ? 'animate-pulse' : ''}>
+                      <div className="flex items-center gap-1 sm:gap-2">
+                        <span className="text-lg sm:text-xl font-bold">×{multiplier.toFixed(1)}</span>
+                        <MultiplierIcon theme={settings.theme} />
                       </div>
-                    </div>
+                    </StatBox>
                   )}
                 </div>
-                {/* Square Aspect Ratio Container */}
-                <div className="relative w-[95vw] 2xs:w-[90vw] xs:w-[85vw] sm:w-[80vw] md:w-[60vw] lg:w-[50vw] max-w-[500px] mx-auto">
-                  <div className="relative aspect-square">
-                    {/* Animation Overlay */}
-                    {showAnimation && (
-                    <div 
-                      className="absolute pointer-events-none"
-                      style={{
-                        bottom: `${animationPosition.row * (100 / settings.gridRows)}%`,
-                        left: `${animationPosition.col * (100 / settings.gridColumns)}%`,
-                        width: `${100 / settings.gridColumns}%`,
-                        height: calculateHeight(),
-                        pointerEvents: 'none',
-                        zIndex: 50,
-                      }}
-                    >
-                      <div className={`
-                        absolute 
-                        inset-0 
-                        flex 
-                        items-center 
-                        justify-center 
-                        rounded-lg
-                        ${settings.theme === 'dark' ? 'transparent' : 'transparent'}
-                      `}>
-                        <img
-                          key={Date.now()}
-                          src={successAnimation}
-                          alt="Success Animation"
-                          className="w-2/3 2xs:w-[70%] xs:w-[72%] sm:w-3/4 object-contain pointer-events-none"
-                          draggable="false"
-                        />
-                      </div>
-                    </div>
-                  )}
-                    {/* Absolute Position Grid */}
-                    <div 
-                      className={`
-                        absolute 
-                        inset-0 
-                        rounded-lg
-                        overflow-hidden
-                        ${gridShake ? 'animate-shake' : ''} 
-                        ${settings.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}
-                      `}
-                      style={{
-                        '--grid-aspect-ratio': `${settings.gridColumns} / ${settings.gridRows}`,
-                        display: 'grid',
-                        gridTemplateColumns: `repeat(${settings.gridColumns}, 1fr)`,
-                        gridTemplateRows: `repeat(${settings.gridRows}, 1fr)`,
-                        gap: '2%',
-                        padding: '2%',
-                      }}
-                    >
-                      {Array.from({ length: settings.gridColumns * settings.gridRows }).map((_, index) => (
-                        <div key={index} className="relative w-full h-full">
-                          {renderButton(index)}
-                        </div>
-                      ))}
-                    </div>
-                    {/* Particle Effects */}
-                    {particleEffects.map(effect => (
-                      <PopEffect
-                        key={effect.id}
-                        row={effect.row}
-                        col={effect.col}
-                        theme={settings.theme}
-                        onComplete={() => {
-                          setParticleEffects(prev => 
-                            prev.filter(e => e.id !== effect.id)
-                          );
-                        }}
+              </div>
+            </div>
+              {/* Square Aspect Ratio Container */}
+              <div className="relative w-[95vw] 2xs:w-[90vw] xs:w-[85vw] sm:w-[80vw] md:w-[60vw] lg:w-[50vw] max-w-[500px] mx-auto">
+                <div className="relative aspect-square">
+                  {/* Animation Overlay */}
+                  {showAnimation && (
+                  <div 
+                    className="absolute pointer-events-none"
+                    style={{
+                      bottom: `${animationPosition.row * (100 / settings.gridRows)}%`,
+                      left: `${animationPosition.col * (100 / settings.gridColumns)}%`,
+                      width: `${100 / settings.gridColumns}%`,
+                      height: calculateHeight(),
+                      pointerEvents: 'none',
+                      zIndex: 50,
+                    }}
+                  >
+                    <div className={`
+                      absolute 
+                      inset-0 
+                      flex 
+                      items-center 
+                      justify-center 
+                      rounded-lg
+                      ${settings.theme === 'dark' ? 'transparent' : 'transparent'}
+                    `}>
+                      <img
+                        key={Date.now()}
+                        src={successAnimation}
+                        alt="Success Animation"
+                        className="w-2/3 2xs:w-[70%] xs:w-[72%] sm:w-3/4 object-contain pointer-events-none"
+                        draggable="false"
                       />
-                    ))}
                     </div>
                   </div>
+                )}
+                {/* Absolute Position Grid */}
+                <div 
+                  className={`
+                    absolute 
+                    inset-0 
+                    rounded-lg
+                    overflow-hidden
+                    ${gridShake ? 'animate-shake-and-flash' : ''} 
+                    ${settings.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}
+                  `}
+                  style={{
+                    '--grid-aspect-ratio': `${settings.gridColumns} / ${settings.gridRows}`,
+                    display: 'grid',
+                    gridTemplateColumns: `repeat(${settings.gridColumns}, 1fr)`,
+                    gridTemplateRows: `repeat(${settings.gridRows}, 1fr)`,
+                    gap: '2%',
+                    padding: '2%',
+                  }}
+                >
+                  {Array.from({ length: settings.gridColumns * settings.gridRows }).map((_, index) => (
+                    <div key={index} className="relative w-full h-full">
+                      {renderButton(index)}
+                    </div>
+                  ))}
+                </div>
+                {/* Particle Effects */}
+                {particleEffects.map(effect => (
+                  <PopEffect
+                    key={effect.id}
+                    row={effect.row}
+                    col={effect.col}
+                    theme={settings.theme}
+                    onComplete={() => {
+                      setParticleEffects(prev => 
+                        prev.filter(e => e.id !== effect.id)
+                      );
+                    }}
+                  />
+                ))}
                 </div>
               </div>
             </div>

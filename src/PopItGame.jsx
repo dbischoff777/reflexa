@@ -88,6 +88,7 @@ const PopItGame = () => {
   const [lives, setLives] = useState(5);
   const [targetButton, setTargetButton] = useState(null);
   const [gridShake, setGridShake] = useState(false);
+  const [flashRed, setFlashRed] = useState(false);
   
   // Timing and stats
   const [startTime, setStartTime] = useState(null);
@@ -852,7 +853,11 @@ const PopItGame = () => {
       playSound('miss')
       // Handle incorrect 
       setGridShake(true);
-      setTimeout(() => setGridShake(false), 300);
+      setFlashRed(true);
+      setTimeout(() => {
+        setGridShake(false);
+        setFlashRed(false);
+      }, 300);
       
       // Reset speed and multiplier on miss
       setGameSpeed(1);
@@ -996,6 +1001,7 @@ const PopItGame = () => {
       showGameOver={showGameOver}
       gameStats={gameStats}
       gridShake={gridShake}
+      flashRed={flashRed}
       particleEffects={particleEffects}
       startGame={startGame}
       exitGame={handleExit}
