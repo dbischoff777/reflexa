@@ -192,8 +192,16 @@ const PopItGame = () => {
     await loadFull(engine);
   }, []);
 
+  const calculateHeight = () => {
+    if (settings.gridRows === 1) {
+      if (settings.gridColumns === 2) return '150%';
+      if (settings.gridColumns === 3) return '165%';
+    }
+    return `${100 / settings.gridRows}%`;
+  };
+
   // Update the PopEffect component
-  const PopEffect = ({ row, col, onComplete }) => {
+  const PopEffect = ({ row, col, theme, gridRows, gridColumns, onComplete }) => {
     // Array of vibrant colors for particles
     const particleColors = [
       // Purples
@@ -269,30 +277,39 @@ const PopItGame = () => {
     };
   
     useEffect(() => {
-      const timer = setTimeout(onComplete, 300);
+      const timer = setTimeout(onComplete, 500);
       return () => clearTimeout(timer);
     }, [onComplete]);
   
     return (
-      <div
-        style={{
-          position: 'absolute',
-          left: `${(col * (100 / settings.gridSize))}%`,
-          top: `${(row * (100 / settings.gridSize))}%`,
-          width: `${100 / settings.gridSize}%`,
-          height: `${100 / settings.gridSize}%`,
-          pointerEvents: 'none',
-          zIndex: 1000
+    <div
+      className="absolute pointer-events-none"
+      style={{
+        bottom: `${row * (100 / gridRows)}%`,
+        left: `${col * (100 / gridColumns)}%`,
+        width: `${100 / gridColumns}%`,
+        height: `${100 / gridRows}%`,
+        pointerEvents: 'none',
+        zIndex: 1000
+      }}
+    >
+      <Particles
+        id={`pop-effect-${Date.now()}`}
+        init={particlesInit}
+        options={{
+          ...options,
+          particles: {
+            ...options.particles,
+            size: {
+              ...options.particles.size,
+              value: Math.min(100 / gridColumns, 100 / gridRows) / 10
+            }
+          }
         }}
-      >
-        <Particles
-          id={`pop-effect-${Date.now()}`}
-          init={particlesInit}
-          options={options}
-        />
-      </div>
-    );
-  };
+      />
+    </div>
+  );
+};
   
   //mascot speechbubble
   useEffect(() => {

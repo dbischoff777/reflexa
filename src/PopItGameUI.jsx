@@ -766,6 +766,8 @@ const PopItGameUI = ({
                     row={effect.row}
                     col={effect.col}
                     theme={settings.theme}
+                    gridRows={settings.gridRows}
+                    gridColumns={settings.gridColumns}
                     onComplete={() => {
                       setParticleEffects(prev => 
                         prev.filter(e => e.id !== effect.id)
