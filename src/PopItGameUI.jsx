@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import livesIcon from './images/lives.png';
@@ -6,6 +6,8 @@ import frenchieIcon from './images/frenchie.png';
 import scoreIcon from './images/score.png';
 import { FacebookIcon, TwitterIcon, WhatsAppIcon } from './Icons';
 import ScreenProtectionStatus from './components/ScreenProtectionStatus';
+import DailyQuests from './DailyQuests';
+import WeeklyQuests from './WeeklyQuests';
 
 const PopItGameUI = ({
   settings,
@@ -38,6 +40,11 @@ const PopItGameUI = ({
   brightnessAdjusted,
   //onAnimationEnd
 }) => {
+  
+  //quest buttons
+  const [showDailyQuests, setShowDailyQuests] = useState(false);
+  const [showWeeklyQuests, setShowWeeklyQuests] = useState(false);
+
   const handleUsernameSubmit = (e) => {
     e.preventDefault();
     if (username.trim()) {
@@ -810,6 +817,7 @@ const PopItGameUI = ({
                 </button>
               </form>
             ) : (
+              <div className="flex flex-col items-center gap-4 mt-6">
               <button
                 onClick={startGame}
                 className={`w-full max-w-xs py-2 px-4 rounded-lg font-semibold ${
@@ -820,6 +828,53 @@ const PopItGameUI = ({
               >
                 Start Game
               </button>
+
+              {/* Header for Quests */}
+              <h3 className={`text-lg font-semibold mt-4 ${
+                settings.theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+              }`}>
+                Your Puppies Quests
+              </h3>
+
+              <div className="flex w-full max-w-xs gap-2">
+                {/* Daily Quests Button */}
+                <button
+                  onClick={() => setShowDailyQuests(true)}
+                  className={`flex-1 py-2 px-4 rounded-lg font-semibold ${
+                    settings.theme === 'dark'
+                      ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                    : 'bg-purple-600 hover:bg-purple-700 text-white'
+                  }`}
+                >
+                  Daily
+                </button>
+
+                {/* Weekly Quests Button */}
+                <button
+                  onClick={() => setShowWeeklyQuests(true)}
+                  className={`flex-1 py-2 px-4 rounded-lg font-semibold ${
+                    settings.theme === 'dark'
+                      ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                    : 'bg-purple-600 hover:bg-purple-700 text-white'
+                  }`}
+                >
+                  Weekly
+                </button>
+              </div>
+
+              {showDailyQuests && (
+                <DailyQuests 
+                  onClose={() => setShowDailyQuests(false)} 
+                  theme={settings.theme}
+                />
+              )}
+              {showWeeklyQuests && (
+                <WeeklyQuests 
+                  onClose={() => setShowWeeklyQuests(false)} 
+                  theme={settings.theme}
+                />
+              )}
+            </div>
             )}
           </div>
           )}

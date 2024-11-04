@@ -6,6 +6,7 @@ import Settings from './Settings';
 import { SettingsProvider, useSettings } from './Settings';
 import Leaderboard from './Leaderboard';
 import PlayerProfile from './PlayerProfile';
+import { PlayerProvider } from './utils/PlayerContext';
 
 // Create a wrapper component to access the context
 const AppRoutes = () => {
@@ -25,11 +26,13 @@ const AppRoutes = () => {
 function App() {
   return (
     <SettingsProvider>
-      <div className="App">
-        <Router>
-          <AppRoutes />
-        </Router>
-      </div>
+      <PlayerProvider>
+        <div className="App">
+          <Router>
+            <AppRoutes />
+          </Router>
+        </div>
+      </PlayerProvider>
     </SettingsProvider>
   );
 }

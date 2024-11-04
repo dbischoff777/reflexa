@@ -13,6 +13,7 @@ import {
 import { getAvatarImage } from './constants/avatars';
 import AvatarSelector from './components/avatar/AvatarSelector';
 import { motion, AnimatePresence } from 'framer-motion';
+import { usePlayer } from './utils/PlayerContext';
 
 const StatCard = ({ icon, label, value, theme }) => (
   <div className={`p-4 rounded-lg ${
@@ -132,6 +133,7 @@ const AchievementCard = ({ achievement, progress, unlocked, theme }) => (
 );
 
 const PlayerProfile = () => {
+  const { playerData } = usePlayer();
   const { settings } = useSettings();
   const [stats, setStats] = useState(() => getPlayerStats());
   const [achievementProgress, setAchievementProgress] = useState({});
@@ -286,15 +288,27 @@ const PlayerProfile = () => {
   
         {/* Profile Header */}
         <div className="mb-6">
-          <ProfileHeader
-            username={stats.username}
-            avatar={playerAvatar}
-            level={Math.floor(stats.experience / 100) + 1}
-            experience={stats.experience}
-            theme={settings.theme}
-            onAvatarClick={handleAvatarClick}
-          />
+          <div className="flex justify-between items-center">
+            <ProfileHeader
+              username={stats.username}
+              avatar={playerAvatar}
+              level={Math.floor(stats.experience / 100) + 1}
+              experience={stats.experience}
+              theme={settings.theme}
+              onAvatarClick={handleAvatarClick}
+            />
+            <div className={`
+              text-lg font-semibold
+              ${settings.theme === 'dark' ? 'text-yellow-300' : 'text-yellow-600'}
+            `}>
+              <div className="flex items-center">
+                <span className="mr-2" role="img" aria-label="Coin">🪙</span>
+                <span>{playerData.coins}</span>
+              </div>
+            </div>
+          </div>
         </div>
+
   
         {/* Tab Navigation */}
         <div className="mb-6">
