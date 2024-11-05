@@ -7,6 +7,7 @@ const WeeklyQuests = ({ onClose, theme }) => {
     const { playerData, updatePlayerData, addCoins } = usePlayer();
     const [claimedRewards, setClaimedRewards] = useState([]);
     const [isAnimating, setIsAnimating] = useState(false);
+    const [animationAmount, setAnimationAmount] = useState(0);
     const [lastClaimDate, setLastClaimDate] = useState(null);
 
     const bgColor = theme === 'dark' ? 'bg-gray-800' : 'bg-white';
@@ -113,11 +114,15 @@ const WeeklyQuests = ({ onClose, theme }) => {
 
     const showFloatingCoins = (amount) => {
         setIsAnimating(true);
-        setTimeout(() => setIsAnimating(false), 2000); // Animation duration
+        setAnimationAmount(amount);
+        setTimeout(() => {
+            setIsAnimating(false);
+            setAnimationAmount(0);
+        }, 2000); // Animation duration
     };
 
   // Disable claim button if all rewards have been claimed
-  const canClaimRewards = isNewWeek() && quests.some(quest => quest.progress >= quest.total);
+  const canClaimRewards = isNewWeek() && quests.some(quest => quest.progress >= quest.total && !claimedRewards.includes(quest.id));
 
   const renderProgressBar = (progress, total) => {
     const percentage = (progress / total) * 100;
@@ -136,7 +141,10 @@ const WeeklyQuests = ({ onClose, theme }) => {
         <div className={`${bgColor} ${textColor} p-6 rounded-lg shadow-xl max-w-md w-full relative`}>
             {isAnimating && (
                 <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-yellow-400 text-6xl animate-bounce">🪙</div>
+                    <div className="text-yellow-400 text-4xl animate-bounce flex items-center">
+                        <span className="mr-2">🪙</span>
+                        <span className="font-bold">+{animationAmount}</span>
+                    </div>
                 </div>
             )}
             <h2 className="text-2xl font-bold mb-4">Weekly Quests</h2>

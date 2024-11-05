@@ -10,6 +10,7 @@ const DailyQuests = ({ onClose, theme }) => {
     const [claimedRewards, setClaimedRewards] = useState([]);
     const [isAnimating, setIsAnimating] = useState(false);
     const [lastClaimDate, setLastClaimDate] = useState(null);
+    const [animationAmount, setAnimationAmount] = useState(0);
 
     const bgColor = theme === 'dark' ? 'bg-gray-800' : 'bg-white';
     const textColor = theme === 'dark' ? 'text-white' : 'text-gray-800';
@@ -118,12 +119,16 @@ const DailyQuests = ({ onClose, theme }) => {
   };
 
   const showFloatingCoins = (amount) => {
-      setIsAnimating(true);
-      setTimeout(() => setIsAnimating(false), 2000); // Animation duration
-  };
+    setIsAnimating(true);
+    setAnimationAmount(amount);
+    setTimeout(() => {
+        setIsAnimating(false);
+        setAnimationAmount(0);
+    }, 2000); // Animation duration
+};
 
   // disable claim button if all rewards have been claimed
-  const canClaimRewards = isNewDay() && quests.some(quest => quest.progress >= quest.total);
+  const canClaimRewards = isNewDay() && quests.some(quest => quest.progress >= quest.total && !claimedRewards.includes(quest.id));
 
   const renderProgressBar = (progress, total) => {
     const percentage = (progress / total) * 100;
@@ -142,7 +147,10 @@ const DailyQuests = ({ onClose, theme }) => {
         <div className={`${bgColor} ${textColor} p-6 rounded-lg shadow-xl max-w-md w-full relative`}>
             {isAnimating && (
                 <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-yellow-400 text-6xl animate-bounce">🪙</div>
+                    <div className="text-yellow-400 text-4xl animate-bounce flex items-center">
+                        <span className="mr-2">🪙</span>
+                        <span className="font-bold">+{animationAmount}</span>
+                    </div>
                 </div>
             )}
             <h2 className="text-2xl font-bold mb-4">Daily Quests</h2>
@@ -161,23 +169,23 @@ const DailyQuests = ({ onClose, theme }) => {
                 </div>
             ))}
             <div className="flex justify-between mt-4">
-                    <button 
-                        onClick={onClose}
-                        className={buttonClass}
-                    >
-                        Close
-                    </button>
-                    <button 
-                        className={`${buttonClass} ${!canClaimRewards ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        disabled={!canClaimRewards}
-                        onClick={handleClaimRewards}
-                    >
-                        Claim Rewards
-                    </button>
-                </div>
+                <button 
+                    onClick={onClose}
+                    className={buttonClass}
+                >
+                    Close
+                </button>
+                <button 
+                    className={`${buttonClass} ${!canClaimRewards ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={!canClaimRewards}
+                    onClick={handleClaimRewards}
+                >
+                    Claim Rewards
+                </button>
             </div>
         </div>
-    );
+    </div>
+  );
 };
 
 export default DailyQuests;
