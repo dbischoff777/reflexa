@@ -100,6 +100,7 @@ const WeeklyQuests = ({ onClose, theme }) => {
         if (totalCoinsEarned > 0) {
             setClaimedRewards(newClaimedRewards);
             updatePlayerData(updatedPlayerData);
+            addCoins(totalCoinsEarned); // This should update the coins in the context
             showFloatingCoins(totalCoinsEarned);
             toast.success(`Congratulations! You earned ${totalCoinsEarned} coins!`);
 

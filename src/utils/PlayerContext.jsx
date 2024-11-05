@@ -35,7 +35,10 @@ export const PlayerProvider = ({ children }) => {
   };
 
   const addCoins = (amount) => {
-    updatePlayerData({ coins: playerData.coins + amount });
+    setPlayerData(prevData => ({
+      ...prevData,
+      coins: prevData.coins + amount
+    }));
   };
 
   return (

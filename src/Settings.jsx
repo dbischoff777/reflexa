@@ -8,6 +8,8 @@ const SettingsContext = createContext();
 const defaultSettings = {
   difficulty: 'medium',
   gridSize: 3,
+  gridColumns: 3,
+  gridRows: 3,
   theme: 'light',
   countdownTimer: true,
   vibration: true,
