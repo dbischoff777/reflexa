@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePlayer } from './utils/PlayerContext';
 import { WEEKLY_QUEST_TIERS } from './utils/questTiers';
 import { toast } from 'react-toastify';
@@ -7,6 +7,8 @@ const WeeklyQuests = ({ onClose, theme }) => {
     const { playerData, updatePlayerData, addCoins } = usePlayer();
     const [claimedRewards, setClaimedRewards] = useState([]);
     const [isAnimating, setIsAnimating] = useState(false);
+    const [lastClaimDate, setLastClaimDate] = useState(null);
+
     const bgColor = theme === 'dark' ? 'bg-gray-800' : 'bg-white';
     const textColor = theme === 'dark' ? 'text-white' : 'text-gray-800';
     const buttonClass = `px-4 py-2 rounded ${
@@ -14,6 +16,14 @@ const WeeklyQuests = ({ onClose, theme }) => {
         ? 'bg-purple-600 hover:bg-purple-700 text-white'
         : 'bg-purple-600 hover:bg-purple-700 text-white'
     }`;
+
+    useEffect(() => {
+            // Load last claim date from localStorage
+            const savedLastClaimDate = localStorage.getItem('lastWeeklyQuestClaimDate');
+            if (savedLastClaimDate) {
+                setLastClaimDate(new Date(savedLastClaimDate));
+            }
+        }, []);
 
     const getCurrentTier = (questType, playerProgress) => {
         const tiers = WEEKLY_QUEST_TIERS[questType];
@@ -47,50 +57,67 @@ const WeeklyQuests = ({ onClose, theme }) => {
         },
     ];    
 
+    const isNewWeek = () => {
+        if (!lastClaimDate) return true;
+        const now = new Date();
+        const weekDiff = Math.floor((now - lastClaimDate) / (7 * 24 * 60 * 60 * 1000));
+        return weekDiff >= 1;
+    };
+
     const handleClaimRewards = () => {
-      let totalCoinsEarned = 0;
-      const newClaimedRewards = [];
-      const updatedPlayerData = { ...playerData };
+        if (!isNewWeek()) {
+            toast.info("Weekly quests can only be claimed once per week. Please come back next week!");
+            return;
+        }
 
-      quests.forEach(quest => {
-          if (quest.progress >= quest.total && !claimedRewards.includes(quest.id)) {
-              const coinsEarned = parseInt(quest.reward);
-              addCoins(coinsEarned);
-              totalCoinsEarned += coinsEarned;
-              newClaimedRewards.push(quest.id);
+        let totalCoinsEarned = 0;
+        const newClaimedRewards = [];
+        const updatedPlayerData = { ...playerData };
 
-              // Reset the progress for the claimed quest
-              switch(quest.type) {
-                  case 'GAMES_PLAYED':
-                      updatedPlayerData.weeklyGamesPlayed = 0;
-                      break;
-                  case 'SCORE_SINGLE':
-                      updatedPlayerData.weeklyHighScore = 0;
-                      break;
-                  case 'MULTIPLIER':
-                      updatedPlayerData.weeklyHighestMultiplier = 0;
-                      break;
-              }
-          }
-      });
+        quests.forEach(quest => {
+            if (quest.progress >= quest.total) {
+                const coinsEarned = parseInt(quest.reward);
+                addCoins(coinsEarned);
+                totalCoinsEarned += coinsEarned;
+                newClaimedRewards.push(quest.id);
 
-      if (totalCoinsEarned > 0) {
-          setClaimedRewards(prev => [...prev, ...newClaimedRewards]);
-          updatePlayerData(updatedPlayerData);
-          showFloatingCoins(totalCoinsEarned);
-          toast.success(`Congratulations! You earned ${totalCoinsEarned} coins!`);
-      } else {
-          toast.info("No rewards to claim at this time.");
-      }
-  };
+                // Reset the progress for the claimed quest
+                switch(quest.type) {
+                    case 'GAMES_PLAYED':
+                        updatedPlayerData.weeklyGamesPlayed = 0;
+                        break;
+                    case 'SCORE_SINGLE':
+                        updatedPlayerData.weeklyHighScore = 0;
+                        break;
+                    case 'MULTIPLIER':
+                        updatedPlayerData.weeklyHighestMultiplier = 0;
+                        break;
+                }
+            }
+        });
 
-  const showFloatingCoins = (amount) => {
-      setIsAnimating(true);
-      setTimeout(() => setIsAnimating(false), 2000); // Animation duration
-  };
+        if (totalCoinsEarned > 0) {
+            setClaimedRewards(newClaimedRewards);
+            updatePlayerData(updatedPlayerData);
+            showFloatingCoins(totalCoinsEarned);
+            toast.success(`Congratulations! You earned ${totalCoinsEarned} coins!`);
+
+            // Update last claim date
+            const now = new Date();
+            setLastClaimDate(now);
+            localStorage.setItem('lastWeeklyQuestClaimDate', now.toISOString());
+        } else {
+            toast.info("No rewards to claim at this time.");
+        }
+    };
+
+    const showFloatingCoins = (amount) => {
+        setIsAnimating(true);
+        setTimeout(() => setIsAnimating(false), 2000); // Animation duration
+    };
 
   // Disable claim button if all rewards have been claimed
-  const allRewardsClaimed = quests.every(quest => claimedRewards.includes(quest.id));
+  const canClaimRewards = isNewWeek() && quests.some(quest => quest.progress >= quest.total);
 
   const renderProgressBar = (progress, total) => {
     const percentage = (progress / total) * 100;
@@ -105,45 +132,45 @@ const WeeklyQuests = ({ onClose, theme }) => {
   };
 
   return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div className={`${bgColor} ${textColor} p-6 rounded-lg shadow-xl max-w-md w-full relative`}>
-                {isAnimating && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="text-yellow-400 text-6xl animate-bounce">🪙</div>
-                    </div>
-                )}
-                <h2 className="text-2xl font-bold mb-4">Weekly Quests</h2>
-                <p className="mb-4">Current Coins: {playerData.coins}</p>
-                {quests.map(quest => (
-                    <div key={quest.id} className="border-b pb-4 last:border-b-0">
-                        <p className="font-semibold mb-2">{quest.description}</p>
-                        {renderProgressBar(quest.progress, quest.total)}
-                        <div className="flex justify-between text-sm">
-                            <span>Progress: {quest.progress}/{quest.total}</span>
-                            <span>Reward: {quest.reward}</span>
-                        </div>
-                        {claimedRewards.includes(quest.id) && (
-                            <p className="text-green-500 mt-2">Claimed</p>
-                        )}
-                    </div>
-                ))}
-                <div className="flex justify-between mt-4">
-                    <button 
-                        onClick={onClose}
-                        className={buttonClass}
-                    >
-                        Close
-                    </button>
-                    <button 
-                        className={`${buttonClass} ${allRewardsClaimed || !quests.some(q => q.progress >= q.total) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        disabled={allRewardsClaimed || !quests.some(q => q.progress >= q.total)}
-                        onClick={handleClaimRewards}
-                    >
-                        Claim Rewards
-                    </button>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+        <div className={`${bgColor} ${textColor} p-6 rounded-lg shadow-xl max-w-md w-full relative`}>
+            {isAnimating && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-yellow-400 text-6xl animate-bounce">🪙</div>
                 </div>
+            )}
+            <h2 className="text-2xl font-bold mb-4">Weekly Quests</h2>
+            <p className="mb-4">Current Coins: {playerData.coins}</p>
+            {quests.map(quest => (
+                <div key={quest.id} className="border-b pb-4 last:border-b-0">
+                    <p className="font-semibold mb-2">{quest.description}</p>
+                    {renderProgressBar(quest.progress, quest.total)}
+                    <div className="flex justify-between text-sm">
+                        <span>Progress: {quest.progress}/{quest.total}</span>
+                        <span>Reward: {quest.reward}</span>
+                    </div>
+                    {claimedRewards.includes(quest.id) && (
+                        <p className="text-green-500 mt-2">Claimed</p>
+                    )}
+                </div>
+            ))}
+            <div className="flex justify-between mt-4">
+                <button 
+                    onClick={onClose}
+                    className={buttonClass}
+                >
+                    Close
+                </button>
+                <button 
+                    className={`${buttonClass} ${!canClaimRewards ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={!canClaimRewards}
+                    onClick={handleClaimRewards}
+                >
+                    Claim Rewards
+                </button>
             </div>
         </div>
+    </div>
     );
 };
 

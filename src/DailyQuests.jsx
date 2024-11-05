@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePlayer } from './utils/PlayerContext';
 import { DAILY_QUEST_TIERS } from './utils/questTiers';
 import { toast } from 'react-toastify';
@@ -9,6 +9,8 @@ const DailyQuests = ({ onClose, theme }) => {
     const { playerData, updatePlayerData, addCoins } = usePlayer();
     const [claimedRewards, setClaimedRewards] = useState([]);
     const [isAnimating, setIsAnimating] = useState(false);
+    const [lastClaimDate, setLastClaimDate] = useState(null);
+
     const bgColor = theme === 'dark' ? 'bg-gray-800' : 'bg-white';
     const textColor = theme === 'dark' ? 'text-white' : 'text-gray-800';
     const buttonClass = `px-4 py-2 rounded ${
@@ -16,6 +18,14 @@ const DailyQuests = ({ onClose, theme }) => {
         ? 'bg-purple-600 hover:bg-purple-700 text-white'
         : 'bg-purple-600 hover:bg-purple-700 text-white'
     }`
+    
+    useEffect(() => {
+      // Load last claim date from localStorage
+      const savedLastClaimDate = localStorage.getItem('lastDailyQuestClaimDate');
+      if (savedLastClaimDate) {
+          setLastClaimDate(new Date(savedLastClaimDate));
+      }
+    }, []);
 
     const getCurrentTier = (questType, playerProgress) => {
         const tiers = DAILY_QUEST_TIERS[questType];
@@ -51,42 +61,60 @@ const DailyQuests = ({ onClose, theme }) => {
           reward: '300 coins' 
       },
   ];
-    
+
+    const isNewDay = () => {
+      if (!lastClaimDate) return true;
+      const now = new Date();
+      return now.getDate() !== lastClaimDate.getDate() ||
+            now.getMonth() !== lastClaimDate.getMonth() ||
+            now.getFullYear() !== lastClaimDate.getFullYear();
+    };
+
     const handleClaimRewards = () => {
+      if (!isNewDay()) {
+        toast.info("Daily quests can only be claimed once per day. Please come back tomorrow!");
+        return;
+      }
+
       let totalCoinsEarned = 0;
       const newClaimedRewards = [];
       const updatedPlayerData = { ...playerData };
 
       quests.forEach(quest => {
-          if (quest.progress >= quest.total && !claimedRewards.includes(quest.id)) {
-              const coinsEarned = parseInt(quest.reward);
-              addCoins(coinsEarned);
-              totalCoinsEarned += coinsEarned;
-              newClaimedRewards.push(quest.id);
+        if (quest.progress >= quest.total) {
+            const coinsEarned = parseInt(quest.reward);
+            addCoins(coinsEarned);
+            totalCoinsEarned += coinsEarned;
+            newClaimedRewards.push(quest.id);
 
-              // Reset the progress for the claimed quest
-              switch(quest.type) {
-                  case 'GAMES_PLAYED':
-                      updatedPlayerData.dailyGamesPlayed = 0;
-                      break;
-                  case 'SCORE_SINGLE':
-                      updatedPlayerData.dailyHighScore = 0;
-                      break;
-                  case 'MULTIPLIER':
-                      updatedPlayerData.dailyHighestMultiplier = 0;
-                      break;
-              }
-          }
-      });
+            // Reset the progress for the claimed quest
+            switch(quest.type) {
+                case 'GAMES_PLAYED':
+                    updatedPlayerData.dailyGamesPlayed = 0;
+                    break;
+                case 'SCORE_SINGLE':
+                    updatedPlayerData.dailyHighScore = 0;
+                    break;
+                case 'MULTIPLIER':
+                    updatedPlayerData.dailyHighestMultiplier = 0;
+                    break;
+            }
+        }
+    });
 
-      if (totalCoinsEarned > 0) {
-          setClaimedRewards(prev => [...prev, ...newClaimedRewards]);
-          updatePlayerData(updatedPlayerData);
-          showFloatingCoins(totalCoinsEarned);
-          toast.success(`Congratulations! You earned ${totalCoinsEarned} coins!`);
-      } else {
-          toast.info("No rewards to claim at this time.");
-      }
+    if (totalCoinsEarned > 0) {
+        setClaimedRewards(newClaimedRewards);
+        updatePlayerData(updatedPlayerData);
+        showFloatingCoins(totalCoinsEarned);
+        toast.success(`Congratulations! You earned ${totalCoinsEarned} coins!`);
+
+        // Update last claim date
+        const now = new Date();
+        setLastClaimDate(now);
+        localStorage.setItem('lastDailyQuestClaimDate', now.toISOString());
+    } else {
+        toast.info("No rewards to claim at this time.");
+    }
   };
 
   const showFloatingCoins = (amount) => {
@@ -95,7 +123,7 @@ const DailyQuests = ({ onClose, theme }) => {
   };
 
   // disable claim button if all rewards have been claimed
-  const allRewardsClaimed = quests.every(quest => claimedRewards.includes(quest.id));
+  const canClaimRewards = isNewDay() && quests.some(quest => quest.progress >= quest.total);
 
   const renderProgressBar = (progress, total) => {
     const percentage = (progress / total) * 100;
@@ -133,23 +161,23 @@ const DailyQuests = ({ onClose, theme }) => {
                 </div>
             ))}
             <div className="flex justify-between mt-4">
-                <button 
-                    onClick={onClose}
-                    className={buttonClass}
-                >
-                    Close
-                </button>
-                <button 
-                    className={`${buttonClass} ${allRewardsClaimed || !quests.some(q => q.progress >= q.total) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    disabled={allRewardsClaimed || !quests.some(q => q.progress >= q.total)}
-                    onClick={handleClaimRewards}
-                >
-                    Claim Rewards
-                </button>
+                    <button 
+                        onClick={onClose}
+                        className={buttonClass}
+                    >
+                        Close
+                    </button>
+                    <button 
+                        className={`${buttonClass} ${!canClaimRewards ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        disabled={!canClaimRewards}
+                        onClick={handleClaimRewards}
+                    >
+                        Claim Rewards
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
-);
+    );
 };
 
 export default DailyQuests;
