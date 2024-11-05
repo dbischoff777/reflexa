@@ -7,6 +7,8 @@ import { SettingsProvider, useSettings } from './Settings';
 import Leaderboard from './Leaderboard';
 import PlayerProfile from './PlayerProfile';
 import { PlayerProvider } from './utils/PlayerContext';
+import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer } from 'react-toastify';
 
 // Create a wrapper component to access the context
 const AppRoutes = () => {
@@ -27,11 +29,12 @@ function App() {
   return (
     <SettingsProvider>
       <PlayerProvider>
-        <div className="App">
-          <Router>
-            <AppRoutes />
-          </Router>
-        </div>
+        <ToastContainer />
+          <div className="App">
+            <Router>
+              <AppRoutes />
+            </Router>
+          </div>
       </PlayerProvider>
     </SettingsProvider>
   );
