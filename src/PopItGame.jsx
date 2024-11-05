@@ -848,7 +848,7 @@ const PopItGame = () => {
 
       // Update score immediately
       const newMultiplier = Math.min(multiplier + 1, 10);
-      const newScore = score + Math.round(10 * multiplier);
+      const newScore = score + Math.round(50 * multiplier);
       setScore(newScore);
       setMultiplier(newMultiplier);
 

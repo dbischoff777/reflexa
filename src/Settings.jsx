@@ -7,7 +7,7 @@ const SettingsContext = createContext();
 
 const defaultSettings = {
   difficulty: 'medium',
-  gridSize: 4,
+  gridSize: 3,
   theme: 'light',
   countdownTimer: true,
   vibration: true,
