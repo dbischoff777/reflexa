@@ -125,7 +125,7 @@ const WeeklyQuests = ({ onClose, theme }) => {
                   </div>
                 </div>,
                 {
-                  duration: 1000,
+                  duration: 500,
                   style: {
                     background: '#4c1d95',
                     color: '#ffffff',
