@@ -8,7 +8,7 @@ import { FacebookIcon, TwitterIcon, WhatsAppIcon } from './Icons';
 import ScreenProtectionStatus from './components/ScreenProtectionStatus';
 import DailyQuests from './DailyQuests';
 import WeeklyQuests from './WeeklyQuests';
-import Shop from './components/Shop';
+import { LucideUser, LucideSettings, LucideBarChart2, LucideInfo, LucidePlay, LucideCalendar, ShoppingCart, Clock, Trophy } from 'lucide-react';
 
 const PopItGameUI = ({
   settings,
@@ -409,22 +409,48 @@ const PopItGameUI = ({
                 rounded-lg xs:rounded-xl 
                 font-medium 
                 transition-all duration-300 ease-out
+                hover:scale-105
                 ${settings.theme === 'dark'
                   ? 'text-purple-300 hover:text-purple-200'
                   : 'text-purple-600 hover:text-purple-500'
                 }
               `}
             >
-              <span className="relative z-10">{item}</span>
+              {/* Icons for each nav item */}
+              {item === 'Profile' && (
+                <LucideUser className="h-6 w-6" />
+              )}
+              {item === 'Leaderboard' && (
+                <Trophy className="h-6 w-6" />
+              )}
+              {item === 'Settings' && (
+                <LucideSettings className="h-6 w-6" />
+              )}
+              {item === 'About' && (
+                <LucideInfo className="h-6 w-6" />
+              )}
+              
               {/* Link Glow Effect */}
               <div className={`
                 absolute inset-0
                 rounded-lg xs:rounded-xl
                 transition-all duration-300
                 opacity-0 group-hover:opacity-100
+                transform group-hover:scale-105
                 ${settings.theme === 'dark'
-                  ? 'bg-purple-500/10 shadow-[0_0_15px_rgba(168,85,247,0.5)]'
-                  : 'bg-purple-500/5 shadow-[0_0_15px_rgba(147,51,234,0.3)]'
+                  ? 'bg-purple-500/15 shadow-[0_0_25px_rgba(168,85,247,0.6)] border border-purple-400/20' 
+                  : 'bg-purple-500/10 shadow-[0_0_25px_rgba(147,51,234,0.4)] border border-purple-500/20'
+                }
+              `} />
+              {/* Subtle Gradient Overlay */}
+              <div className={`
+                absolute inset-0 
+                rounded-lg xs:rounded-xl
+                opacity-0 group-hover:opacity-100
+                transition-opacity duration-300
+                ${settings.theme === 'dark'
+                  ? 'bg-gradient-to-br from-purple-400/5 to-purple-600/5'
+                  : 'bg-gradient-to-br from-purple-300/5 to-purple-500/5'
                 }
               `} />
             </Link>
@@ -829,10 +855,7 @@ const PopItGameUI = ({
                     : 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white'
                   }`}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                <LucidePlay className="h-6 w-6" />
                 Start Game
               </button>
 
@@ -848,9 +871,7 @@ const PopItGameUI = ({
                     : 'bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white'
                   }`}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
-                </svg>
+                <ShoppingCart className="h-5 w-5" />
                 Shop
               </Link>
 
@@ -876,9 +897,7 @@ const PopItGameUI = ({
                     }
                   `}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"/>
-                  </svg>
+                  <Clock className="h-5 w-5" />
                   Daily
                 </button>
 
@@ -896,9 +915,7 @@ const PopItGameUI = ({
                     }
                   `}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd"/>
-                  </svg>
+                  <LucideCalendar className="h-5 w-5" />
                   Weekly
                 </button>
               </div>
