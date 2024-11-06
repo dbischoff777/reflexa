@@ -549,35 +549,67 @@ const PopItGameUI = ({
             </div>
             {/* Countdown Overlay */}
             {gameState === 'countdown' && (
-              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[1000]">
-                <div className={`text-6xl font-bold ${
-                  settings.theme === 'dark' ? 'text-purple-400' : 'text-purple-600'
-                } animate-pulse`}>
-                  {countdown}
+              <div className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-[1000]">
+                <div className={`
+                  relative
+                  flex items-center justify-center
+                  w-32 h-32 sm:w-40 sm:h-40
+                  rounded-full
+                  ${settings.theme === 'dark' ? 'bg-purple-900/40' : 'bg-purple-100/40'}
+                  shadow-lg
+                  before:absolute before:inset-0
+                  before:rounded-full
+                  before:animate-ping
+                  before:bg-purple-500/20
+                `}>
+                  <div className={`
+                    text-7xl sm:text-8xl font-bold
+                    ${settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'}
+                    animate-bounce
+                    drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]
+                  `}>
+                    {countdown}
+                  </div>
                 </div>
               </div>
             )}
 
             {/* Game Over Overlay */}
             {showGameOver && (
-              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[1000]">
-                <div className={`p-8 rounded-lg text-center ${
-                  settings.theme === 'dark' ? 'bg-gray-800' : 'bg-white'
-                }`}>
-                  <h2 className={`text-4xl font-bold mb-4 ${
-                    settings.theme === 'dark' ? 'text-purple-400' : 'text-purple-600'
-                  }`}>
+              <div className="fixed inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-[1000]">
+                <div className={`
+                  p-8 rounded-2xl text-center shadow-2xl
+                  transform transition-all duration-300 ease-out
+                  animate-fadeIn scale-100 
+                  max-w-md w-full mx-4
+                  ${settings.theme === 'dark' 
+                    ? 'bg-gray-800/95 border border-purple-500/20' 
+                    : 'bg-white/95 border border-purple-200'
+                  }
+                `}>
+                  <h2 className={`
+                    text-5xl font-bold mb-6
+                    bg-gradient-to-r from-purple-400 to-pink-400 
+                    bg-clip-text text-transparent
+                    drop-shadow-lg
+                  `}>
                     Game Over!
                   </h2>
-                  <div className={`mb-6 ${
-                    settings.theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                  }`}>
-                    <p className="text-xl mb-2">Final Score: {gameStats.score}</p>
-                    <p className="text-lg">High Score: {gameStats.highscore}</p>
+                  
+                  <div className={`
+                    mb-8 space-y-3
+                    ${settings.theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}
+                  `}>
+                    <p className="text-2xl font-semibold">
+                      Final Score: <span className="text-purple-500">{gameStats.score}</span>
+                    </p>
+                    <p className="text-xl">
+                      High Score: <span className="text-purple-500">{gameStats.highscore}</span>
+                    </p>
                   </div>
 
                   {/* Share Score Section */}
-                  <div className="flex flex-col gap-3 mb-4">
+                  <div className="flex flex-col gap-4 mb-6">
                     {/* Main Share Button */}
                     <button
                       onClick={async () => {
@@ -590,32 +622,32 @@ const PopItGameUI = ({
                               text: shareText,
                               url: window.location.href
                             });
-                            //showToast('Score shared successfully!');
                           } else {
                             await navigator.clipboard.writeText(shareText + '\n' + window.location.href);
-                            //showToast('Score copied to clipboard!');
                           }
                         } catch (error) {
                           try {
                             await navigator.clipboard.writeText(shareText + '\n' + window.location.href);
-                            //showToast('Score copied to clipboard!');
                           } catch (clipboardError) {
-                            //showToast('Failed to share score');
                             console.error('Share failed:', error);
                           }
                         }
                       }}
-                      className={`w-full px-4 py-2 rounded-lg font-bold ${
-                        settings.theme === 'dark'
-                          ? 'bg-blue-600 hover:bg-blue-500 text-white'
-                          : 'bg-blue-600 hover:bg-blue-700 text-white'
-                      }`}
+                      className={`
+                        w-full px-6 py-3 rounded-xl font-bold text-lg
+                        transform transition-all duration-200
+                        hover:scale-105 active:scale-95
+                        ${settings.theme === 'dark'
+                          ? 'bg-gradient-to-r from-blue-600 to-blue-400 text-white shadow-lg hover:shadow-blue-500/30'
+                          : 'bg-gradient-to-r from-blue-500 to-blue-400 text-white shadow-lg hover:shadow-blue-500/30'
+                        }
+                      `}
                     >
                       Share Score
                     </button>
 
                     {/* Social Media Share Buttons */}
-                    <div className="flex justify-center gap-3">
+                    <div className="flex justify-center gap-4">
                       {/* Facebook */}
                       <button
                         onClick={() => {
@@ -627,13 +659,14 @@ const PopItGameUI = ({
                             'width=580,height=296'
                           );
                         }}
-                        className={`p-2 rounded-lg transition-colors ${
-                          settings.theme === 'dark'
-                            ? 'bg-[#1877f2] hover:bg-[#0d6ce4] text-white'
-                            : 'bg-[#1877f2] hover:bg-[#0d6ce4] text-white'
-                        }`}
+                        className={`
+                          p-3 rounded-xl transition-all duration-200
+                          hover:scale-110 active:scale-95
+                          shadow-lg hover:shadow-[#1877f2]/30
+                          bg-[#1877f2] hover:bg-[#0d6ce4] text-white
+                        `}
                       >
-                        <FacebookIcon className="w-6 h-6" />
+                        <FacebookIcon className="w-7 h-7" />
                       </button>
 
                       {/* Twitter/X */}
@@ -649,13 +682,14 @@ const PopItGameUI = ({
                             'width=550,height=235'
                           );
                         }}
-                        className={`p-2 rounded-lg transition-colors ${
-                          settings.theme === 'dark'
-                            ? 'bg-black hover:bg-gray-800 text-white'
-                            : 'bg-black hover:bg-gray-800 text-white'
-                        }`}
+                        className={`
+                          p-3 rounded-xl transition-all duration-200
+                          hover:scale-110 active:scale-95
+                          shadow-lg hover:shadow-black/30
+                          bg-black hover:bg-gray-800 text-white
+                        `}
                       >
-                        <TwitterIcon className="w-6 h-6" />
+                        <TwitterIcon className="w-7 h-7" />
                       </button>
 
                       {/* WhatsApp */}
@@ -666,13 +700,14 @@ const PopItGameUI = ({
                           );
                           window.open(`https://api.whatsapp.com/send?text=${shareText}`);
                         }}
-                        className={`p-2 rounded-lg transition-colors ${
-                          settings.theme === 'dark'
-                            ? 'bg-[#25D366] hover:bg-[#20bd5a] text-white'
-                            : 'bg-[#25D366] hover:bg-[#20bd5a] text-white'
-                        }`}
+                        className={`
+                          p-3 rounded-xl transition-all duration-200
+                          hover:scale-110 active:scale-95
+                          shadow-lg hover:shadow-[#25D366]/30
+                          bg-[#25D366] hover:bg-[#20bd5a] text-white
+                        `}
                       >
-                        <WhatsAppIcon className="w-6 h-6" />
+                        <WhatsAppIcon className="w-7 h-7" />
                       </button>
                     </div>
                   </div>
@@ -681,33 +716,45 @@ const PopItGameUI = ({
                   <div className="flex flex-col gap-3">
                     <button
                       onClick={startGame}
-                      className={`w-full px-4 py-2 rounded-lg font-bold ${
-                        settings.theme === 'dark'
-                          ? 'bg-purple-600 hover:bg-purple-500 text-white'
-                          : 'bg-purple-600 hover:bg-purple-700 text-white'
-                      }`}
+                      className={`
+                        w-full px-6 py-3 rounded-xl font-bold text-lg
+                        transform transition-all duration-200
+                        hover:scale-105 active:scale-95
+                        ${settings.theme === 'dark'
+                          ? 'bg-gradient-to-r from-purple-600 to-purple-400 text-white shadow-lg hover:shadow-purple-500/30'
+                          : 'bg-gradient-to-r from-purple-500 to-purple-400 text-white shadow-lg hover:shadow-purple-500/30'
+                        }
+                      `}
                     >
                       Play Again
                     </button>
                     
                     <Link
                       to="/profile"
-                      className={`w-full px-4 py-2 rounded-lg font-bold text-center ${
-                        settings.theme === 'dark'
-                          ? 'bg-gray-600 hover:bg-gray-500 text-white'
-                          : 'bg-gray-400 hover:bg-gray-500 text-white'
-                      }`}
+                      className={`
+                        w-full px-6 py-3 rounded-xl font-bold text-lg
+                        transform transition-all duration-200
+                        hover:scale-105 active:scale-95
+                        ${settings.theme === 'dark'
+                          ? 'bg-gradient-to-r from-gray-600 to-gray-500 text-white shadow-lg hover:shadow-gray-500/30'
+                          : 'bg-gradient-to-r from-gray-500 to-gray-400 text-white shadow-lg hover:shadow-gray-500/30'
+                        }
+                      `}
                     >
                       Profile
                     </Link>
                     
                     <button
                       onClick={exitGame}
-                      className={`w-full px-4 py-2 rounded-lg font-bold ${
-                        settings.theme === 'dark'
-                          ? 'bg-gray-600 hover:bg-gray-500 text-white'
-                          : 'bg-gray-400 hover:bg-gray-500 text-white'
-                      }`}
+                      className={`
+                        w-full px-6 py-3 rounded-xl font-bold text-lg
+                        transform transition-all duration-200
+                        hover:scale-105 active:scale-95
+                        ${settings.theme === 'dark'
+                          ? 'bg-gradient-to-r from-gray-600 to-gray-500 text-white shadow-lg hover:shadow-gray-500/30'
+                          : 'bg-gradient-to-r from-gray-500 to-gray-400 text-white shadow-lg hover:shadow-gray-500/30'
+                        }
+                      `}
                     >
                       Exit
                     </button>
@@ -719,22 +766,29 @@ const PopItGameUI = ({
             <div className="w-full flex justify-center px-2 sm:px-4">
               <div className="w-full max-w-[95vw] sm:max-w-[80vw] md:max-w-[60vw] lg:max-w-[50vw] xl:max-w-[800px]">
                 <div className="flex justify-between items-center mb-4 sm:mb-6 flex-wrap gap-2 sm:gap-4">
-                  <StatBox theme={settings.theme}>
+                  <StatBox theme={settings.theme} extraClasses="hover:scale-105 transition-transform">
                     <div className="flex items-center gap-1 sm:gap-2">
                       <LivesIcons lives={1} theme={settings.theme} />
-                      <span className="text-lg sm:text-xl font-bold">×{lives}</span>
+                      <span className="text-lg sm:text-xl font-bold tracking-tight">×{lives}</span>
                     </div>
                   </StatBox>
-                  <StatBox theme={settings.theme}>
+                  <StatBox theme={settings.theme} extraClasses="hover:scale-105 transition-transform">
                     <div className="flex items-center gap-1 sm:gap-2">
-                      <span className="text-lg sm:text-xl font-bold">Score: {score}</span>
+                      <span className="text-lg sm:text-xl font-bold tracking-tight">Score: {score.toLocaleString()}</span>
                       <StatIcon src={scoreIcon} alt="Score" theme={settings.theme} />
                     </div>
                   </StatBox>
                   {gameState === 'playing' && multiplier > 1 && (
-                    <StatBox theme={settings.theme} extraClasses={multiplier > 1 ? 'animate-pulse' : ''}>
+                    <StatBox 
+                      theme={settings.theme} 
+                      extraClasses={`
+                        ${multiplier > 1 ? 'animate-pulse' : ''}
+                        hover:scale-105 transition-transform
+                        ${multiplier >= 3 ? 'ring-2 ring-purple-400' : ''}
+                      `}
+                    >
                       <div className="flex items-center gap-1 sm:gap-2">
-                        <span className="text-lg sm:text-xl font-bold">×{multiplier.toFixed(1)}</span>
+                        <span className="text-lg sm:text-xl font-bold tracking-tight">×{multiplier.toFixed(1)}</span>
                         <MultiplierIcon theme={settings.theme} />
                       </div>
                     </StatBox>
