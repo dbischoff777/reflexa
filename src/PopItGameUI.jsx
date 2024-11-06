@@ -891,6 +891,7 @@ const PopItGameUI = ({
                     transition-all duration-200 transform hover:scale-105
                     flex items-center justify-center gap-2
                     shadow-lg hover:shadow-xl
+                    min-w-[120px] w-1/2
                     ${settings.theme === 'dark'
                       ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white'
                       : 'bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-500 hover:to-orange-500 text-white'
@@ -909,6 +910,7 @@ const PopItGameUI = ({
                     transition-all duration-200 transform hover:scale-105 
                     flex items-center justify-center gap-2
                     shadow-lg hover:shadow-xl
+                    min-w-[120px] w-1/2
                     ${settings.theme === 'dark'
                       ? 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white'
                       : 'bg-gradient-to-r from-blue-400 to-indigo-400 hover:from-blue-500 hover:to-indigo-500 text-white'
