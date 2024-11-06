@@ -287,28 +287,56 @@ const PlayerProfile = () => {
         </div>
   
         {/* Profile Header */}
-        <div className="mb-6">
-          <div className="flex justify-between items-center">
-            <ProfileHeader
-              username={localStorage.getItem('username') || 'Player'}
-              avatar={playerAvatar}
-              level={Math.floor(stats.progress.experience / 100) + 1}
-              experience={stats.progress.experience}
-              theme={settings.theme}
-              onAvatarClick={handleAvatarClick}
-            />
-            <div className={`
-              text-lg font-semibold
-              ${settings.theme === 'dark' ? 'text-yellow-300' : 'text-yellow-600'}
-            `}>
-              <div className="flex items-center">
-                <span className="mr-2" role="img" aria-label="Coin">🪙</span>
-                <span>{playerData.coins || 0}</span>
+        <div className="mb-4 sm:mb-6 px-2 sm:px-4">
+          <div className="flex flex-col gap-3">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <div className="relative cursor-pointer" onClick={handleAvatarClick}>
+                  <img
+                    src={getAvatarImage(playerAvatar)}
+                    alt="Player avatar"
+                    className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-purple-500"
+                  />
+                  <div className="absolute -bottom-1 -right-1 bg-purple-500 rounded-full p-1">
+                    <Medal size={14} className="text-white" />
+                  </div>
+                </div>
+                <div>
+                  <h1 className="text-xl sm:text-2xl font-bold">
+                    {localStorage.getItem('username') || 'Player'}
+                  </h1>
+                  <div className="text-sm text-gray-500">
+                    Level {Math.floor(stats.progress.experience / 100) + 1}
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="w-32 bg-gray-200 rounded-full h-2">
+                      <div
+                        className="h-2 bg-purple-600 rounded-full"
+                        style={{ width: `${((stats.progress.experience % 100) / 100) * 100}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-gray-500">
+                      {stats.progress.experience || 0} / {(Math.floor(stats.progress.experience / 100) + 1) * 100 || 0} XP
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className={`
+                inline-flex items-center px-3 py-1.5 rounded-full
+                text-sm sm:text-base font-medium
+                ${settings.theme === 'dark' 
+                  ? 'bg-yellow-900/20 text-yellow-300' 
+                  : 'bg-yellow-50 text-yellow-600'
+                }
+              `}>
+                <div className="flex items-center">
+                  <span className="mr-1.5" role="img" aria-label="Coin">🪙</span>
+                  <span>{playerData.coins || 0}</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
-
   
         {/* Tab Navigation */}
         <div className="mb-6">
