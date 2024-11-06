@@ -6,7 +6,7 @@ import { toast } from 'react-toastify';
 
 
 const DailyQuests = ({ onClose, theme }) => {
-    const { playerData, updatePlayerData, addCoins } = usePlayer();
+    const { playerData, updatePlayerData, addCoins, updateExperience } = usePlayer();
     const [claimedRewards, setClaimedRewards] = useState([]);
     const [isAnimating, setIsAnimating] = useState(false);
     const [lastClaimDate, setLastClaimDate] = useState(null);
@@ -78,14 +78,17 @@ const DailyQuests = ({ onClose, theme }) => {
       }
 
       let totalCoinsEarned = 0;
+      let totalXpEarned = 0;
       const newClaimedRewards = [];
       const updatedPlayerData = { ...playerData };
 
       quests.forEach(quest => {
         if (quest.progress >= quest.total) {
             const coinsEarned = parseInt(quest.reward);
+            const xpEarned = quest.xpReward;
             addCoins(coinsEarned);
             totalCoinsEarned += coinsEarned;
+            totalXpEarned += xpEarned;
             newClaimedRewards.push(quest.id);
 
             // Reset the progress for the claimed quest
@@ -108,8 +111,7 @@ const DailyQuests = ({ onClose, theme }) => {
         updatePlayerData(updatedPlayerData);
         addCoins(totalCoinsEarned); // This should update the coins in the context
         showFloatingCoins(totalCoinsEarned);
-        toast.success(`Congratulations! You earned ${totalCoinsEarned} coins!`);
-
+        toast.success(`Congratulations! You earned ${totalCoinsEarned} coins`);
         // Update last claim date
         const now = new Date();
         setLastClaimDate(now);

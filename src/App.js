@@ -27,16 +27,16 @@ const AppRoutes = () => {
 
 function App() {
   return (
-    <SettingsProvider>
-      <PlayerProvider>
-        <ToastContainer />
+    <Router>
+      <SettingsProvider>
+        <PlayerProvider>
+          <ToastContainer />
           <div className="App">
-            <Router>
-              <AppRoutes />
-            </Router>
+            <AppRoutes />
           </div>
-      </PlayerProvider>
-    </SettingsProvider>
+        </PlayerProvider>
+      </SettingsProvider>
+    </Router>
   );
 }
 
