@@ -7,8 +7,9 @@ const WeeklyQuests = ({ onClose, theme }) => {
     const { playerData, updatePlayerData, addCoins, updateExperience } = usePlayer();
     const [claimedRewards, setClaimedRewards] = useState([]);
     const [isAnimating, setIsAnimating] = useState(false);
-    const [animationAmount, setAnimationAmount] = useState(0);
     const [lastClaimDate, setLastClaimDate] = useState(null);
+    const [animationAmount, setAnimationAmount] = useState(0);
+    const [randomTiers, setRandomTiers] = useState({});
 
     const bgColor = theme === 'dark' ? 'bg-gray-800' : 'bg-white';
     const textColor = theme === 'dark' ? 'text-white' : 'text-gray-800';
@@ -19,44 +20,51 @@ const WeeklyQuests = ({ onClose, theme }) => {
     }`;
 
     useEffect(() => {
-            // Load last claim date from localStorage
-            const savedLastClaimDate = localStorage.getItem('lastWeeklyQuestClaimDate');
-            if (savedLastClaimDate) {
-                setLastClaimDate(new Date(savedLastClaimDate));
-            }
-        }, []);
+        // Load last claim date from localStorage
+        const savedLastClaimDate = localStorage.getItem('lastWeeklyQuestClaimDate');
+        if (savedLastClaimDate) {
+            setLastClaimDate(new Date(savedLastClaimDate));
+        }
 
-    const getCurrentTier = (questType, playerProgress) => {
-        const tiers = WEEKLY_QUEST_TIERS[questType];
-        return tiers.find(tier => playerProgress < tier) || tiers[tiers.length - 1];
-      };
+        // Generate random tiers
+        setRandomTiers(getRandomTier(WEEKLY_QUEST_TIERS));
+    }, []);
 
-      const quests = [
+    const getRandomTier = (tiers) => {
+        const randomTiers = {};
+        for (const [key, values] of Object.entries(tiers)) {
+            const randomIndex = Math.floor(Math.random() * values.length);
+            randomTiers[key] = values[randomIndex];
+        }
+        return randomTiers;
+    };
+
+    const quests = [
         { 
             id: 1, 
             type: 'GAMES_PLAYED',
-            description: `Play ${getCurrentTier('GAMES_PLAYED', playerData.weeklyGamesPlayed)} games`, 
-            progress: Math.min(playerData.weeklyGamesPlayed || 0, getCurrentTier('GAMES_PLAYED', playerData.weeklyGamesPlayed)),
-            total: getCurrentTier('GAMES_PLAYED', playerData.weeklyGamesPlayed), 
+            description: `Play ${randomTiers.GAMES_PLAYED || 20} games this week`, 
+            progress: Math.min(playerData.weeklyGamesPlayed || 0, randomTiers.GAMES_PLAYED || 20),
+            total: randomTiers.GAMES_PLAYED || 20, 
             reward: '500 coins' 
         },
         { 
             id: 2, 
             type: 'SCORE_SINGLE',
-            description: `Score ${getCurrentTier('SCORE_SINGLE', playerData.weeklyHighScore)} points in a single game`, 
-            progress: Math.min(playerData.weeklyHighScore || 0, getCurrentTier('SCORE_SINGLE', playerData.weeklyHighScore)),
-            total: getCurrentTier('SCORE_SINGLE', playerData.weeklyHighScore), 
-            reward: '1000 coins' 
+            description: `Score ${randomTiers.SCORE_SINGLE || 500} points in a single game this week`, 
+            progress: Math.min(playerData.weeklyHighScore || 0, randomTiers.SCORE_SINGLE || 500),
+            total: randomTiers.SCORE_SINGLE || 500, 
+            reward: '750 coins' 
         },
         { 
             id: 3, 
             type: 'MULTIPLIER',
-            description: `Get a ${getCurrentTier('MULTIPLIER', playerData.weeklyHighestMultiplier)}x multiplier`, 
-            progress: Math.min(playerData.weeklyHighestMultiplier || 0, getCurrentTier('MULTIPLIER', playerData.weeklyHighestMultiplier)),
-            total: getCurrentTier('MULTIPLIER', playerData.weeklyHighestMultiplier), 
-            reward: '1500 coins' 
+            description: `Get a ${randomTiers.MULTIPLIER || 5}x multiplier this week`, 
+            progress: Math.min(playerData.weeklyHighestMultiplier || 0, randomTiers.MULTIPLIER || 5),
+            total: randomTiers.MULTIPLIER || 5, 
+            reward: '1000 coins' 
         },
-    ];    
+    ];
 
     const isNewWeek = () => {
         if (!lastClaimDate) return true;
@@ -105,7 +113,9 @@ const WeeklyQuests = ({ onClose, theme }) => {
             updatePlayerData(updatedPlayerData);
             addCoins(totalCoinsEarned); // This should update the coins in the context
             showFloatingCoins(totalCoinsEarned);
-            toast.success(`Congratulations! You earned ${totalCoinsEarned} coins`);
+            toast.success(`Congratulations! You earned ${totalCoinsEarned} coins`, {
+                duration: 1000 // Duration in milliseconds (1 seconds in this case)
+            });
             // Update last claim date
             const now = new Date();
             setLastClaimDate(now);

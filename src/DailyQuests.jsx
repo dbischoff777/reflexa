@@ -3,14 +3,13 @@ import { usePlayer } from './utils/PlayerContext';
 import { DAILY_QUEST_TIERS } from './utils/questTiers';
 import { toast } from 'react-toastify';
 
-
-
 const DailyQuests = ({ onClose, theme }) => {
     const { playerData, updatePlayerData, addCoins, updateExperience } = usePlayer();
     const [claimedRewards, setClaimedRewards] = useState([]);
     const [isAnimating, setIsAnimating] = useState(false);
     const [lastClaimDate, setLastClaimDate] = useState(null);
     const [animationAmount, setAnimationAmount] = useState(0);
+    const [randomTiers, setRandomTiers] = useState({});
 
     const bgColor = theme === 'dark' ? 'bg-gray-800' : 'bg-white';
     const textColor = theme === 'dark' ? 'text-white' : 'text-gray-800';
@@ -18,50 +17,54 @@ const DailyQuests = ({ onClose, theme }) => {
         theme === 'dark'
         ? 'bg-purple-600 hover:bg-purple-700 text-white'
         : 'bg-purple-600 hover:bg-purple-700 text-white'
-    }`
+    }`;
     
     useEffect(() => {
-      // Load last claim date from localStorage
-      const savedLastClaimDate = localStorage.getItem('lastDailyQuestClaimDate');
-      if (savedLastClaimDate) {
-          setLastClaimDate(new Date(savedLastClaimDate));
-      }
+        // Load last claim date from localStorage
+        const savedLastClaimDate = localStorage.getItem('lastDailyQuestClaimDate');
+        if (savedLastClaimDate) {
+            setLastClaimDate(new Date(savedLastClaimDate));
+        }
+
+        // Generate random tiers
+        setRandomTiers(getRandomTier(DAILY_QUEST_TIERS));
     }, []);
 
-    const getCurrentTier = (questType, playerProgress) => {
-        const tiers = DAILY_QUEST_TIERS[questType];
-        return tiers.find(tier => playerProgress < tier) || tiers[tiers.length - 1];
-      };
-
-    const gamesPlayedProgress = playerData.dailyGamesPlayed || 0;
-    const currentGamesPlayedTier = getCurrentTier('GAMES_PLAYED', gamesPlayedProgress);
+    const getRandomTier = (tiers) => {
+        const randomTiers = {};
+        for (const [key, values] of Object.entries(tiers)) {
+            const randomIndex = Math.floor(Math.random() * values.length);
+            randomTiers[key] = values[randomIndex];
+        }
+        return randomTiers;
+    };
 
     const quests = [
-      { 
-          id: 1, 
-          type: 'GAMES_PLAYED',
-          description: `Play ${getCurrentTier('GAMES_PLAYED', playerData.dailyGamesPlayed)} games`, 
-          progress: Math.min(playerData.dailyGamesPlayed || 0, getCurrentTier('GAMES_PLAYED', playerData.dailyGamesPlayed)),
-          total: getCurrentTier('GAMES_PLAYED', playerData.dailyGamesPlayed), 
-          reward: '100 coins' 
-      },
-      { 
-          id: 2, 
-          type: 'SCORE_SINGLE',
-          description: `Score ${getCurrentTier('SCORE_SINGLE', playerData.dailyHighScore)} points in a single game`, 
-          progress: Math.min(playerData.dailyHighScore || 0, getCurrentTier('SCORE_SINGLE', playerData.dailyHighScore)),
-          total: getCurrentTier('SCORE_SINGLE', playerData.dailyHighScore), 
-          reward: '200 coins' 
-      },
-      { 
-          id: 3, 
-          type: 'MULTIPLIER',
-          description: `Get a ${getCurrentTier('MULTIPLIER', playerData.dailyHighestMultiplier)}x multiplier`, 
-          progress: Math.min(playerData.dailyHighestMultiplier || 0, getCurrentTier('MULTIPLIER', playerData.dailyHighestMultiplier)),
-          total: getCurrentTier('MULTIPLIER', playerData.dailyHighestMultiplier), 
-          reward: '300 coins' 
-      },
-  ];
+        { 
+            id: 1, 
+            type: 'GAMES_PLAYED',
+            description: `Play ${randomTiers.GAMES_PLAYED || 5} games`, 
+            progress: Math.min(playerData.dailyGamesPlayed || 0, randomTiers.GAMES_PLAYED || 5),
+            total: randomTiers.GAMES_PLAYED || 5, 
+            reward: '100 coins' 
+        },
+        { 
+            id: 2, 
+            type: 'SCORE_SINGLE',
+            description: `Score ${randomTiers.SCORE_SINGLE || 100} points in a single game`, 
+            progress: Math.min(playerData.dailyHighScore || 0, randomTiers.SCORE_SINGLE || 100),
+            total: randomTiers.SCORE_SINGLE || 100, 
+            reward: '200 coins' 
+        },
+        { 
+            id: 3, 
+            type: 'MULTIPLIER',
+            description: `Get a ${randomTiers.MULTIPLIER || 2}x multiplier`, 
+            progress: Math.min(playerData.dailyHighestMultiplier || 0, randomTiers.MULTIPLIER || 2),
+            total: randomTiers.MULTIPLIER || 2, 
+            reward: '300 coins' 
+        },
+    ];
 
     const isNewDay = () => {
       if (!lastClaimDate) return true;
@@ -111,7 +114,9 @@ const DailyQuests = ({ onClose, theme }) => {
         updatePlayerData(updatedPlayerData);
         addCoins(totalCoinsEarned); // This should update the coins in the context
         showFloatingCoins(totalCoinsEarned);
-        toast.success(`Congratulations! You earned ${totalCoinsEarned} coins`);
+        toast.success(`Congratulations! You earned ${totalCoinsEarned} coins`, {
+            duration: 1000 // Duration in milliseconds (1 seconds in this case)
+        });
         // Update last claim date
         const now = new Date();
         setLastClaimDate(now);
