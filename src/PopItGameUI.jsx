@@ -940,9 +940,29 @@ const PopItGameUI = ({
               </Link>
 
               {/* Header for Quests */}
-              <h3 className={`text-lg font-semibold mt-4 ${
-                settings.theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
-              }`}>
+              <h3 className={`
+                text-lg sm:text-xl md:text-2xl
+                font-bold
+                mt-4 mb-2
+                text-center
+                relative
+                ${settings.theme === 'dark' ? 'text-purple-200' : 'text-purple-700'}
+                after:content-['']
+                after:block
+                after:w-16 sm:after:w-20
+                after:h-0.5
+                after:mx-auto
+                after:mt-2
+                after:rounded-full
+                ${settings.theme === 'dark' 
+                  ? 'after:bg-gradient-to-r after:from-purple-400/30 after:to-transparent'
+                  : 'after:bg-gradient-to-r after:from-purple-500/30 after:to-transparent'
+                }
+                transition-all
+                duration-300
+                transform
+                hover:scale-[1.02]
+              `}>
                 Your Puppies Quests
               </h3>
 
