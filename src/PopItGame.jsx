@@ -355,6 +355,11 @@ const PopItGame = () => {
   // Calculate final stats
   const calculateFinalStats = useCallback((endTime) => {
     const duration = Math.floor((endTime - gameStats.startTime) / 1000);
+    const baseExperience = Math.floor(score / 10); // Base experience from score
+    const timeBonus = Math.floor(duration / 10); // Bonus for game duration
+    const multiplierBonus = Math.floor(maxMultiplier * 5); // Bonus for highest multiplier achieved
+    const experienceGained = baseExperience + timeBonus + multiplierBonus;
+
     return {
       ...gameStats,
       score,
@@ -367,7 +372,8 @@ const PopItGame = () => {
       bestReactionTime: Math.min(...gameStats.reactionTimes) || 0,
       scorePerMinute: score / (duration / 60),
       lives,
-      maxLives: 5
+      maxLives: 5,
+      experienceGained
     };
   }, [gameStats, score, gameTime, lives, maxMultiplier]);
 

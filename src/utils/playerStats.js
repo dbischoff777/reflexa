@@ -103,19 +103,18 @@ export const initialPlayerStats = {
       stats.timeStats.totalSessionTime += gameData.duration;
   
       // Update progress
-      const xpGained = Math.floor(gameData.score / 10 + gameData.longestStreak + (gameData.lives * 10));
-      const currentLevel = stats.progress.level;
+      const xpGained = gameData.experienceGained;
       stats.progress.experience += xpGained;
 
       // Calculate new level
       const newLevel = Math.floor(Math.sqrt(stats.progress.experience / 100)) + 1;
 
-      // If level increased, reset experience
-      if (newLevel > currentLevel) {
-          stats.progress.experience = 0;
+      // If level increased, update level and reset experience
+      if (newLevel > stats.progress.level) {
+        stats.progress.level = newLevel;
+        stats.progress.experience = 0;
       }
 
-      stats.progress.level = newLevel;
       stats.progress.skillRating = calculateSkillRating(stats);
 
       stats.progress.skillRating = calculateSkillRating(stats);

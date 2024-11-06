@@ -290,10 +290,10 @@ const PlayerProfile = () => {
         <div className="mb-6">
           <div className="flex justify-between items-center">
             <ProfileHeader
-              username={stats.username}
+              username={localStorage.getItem('username') || 'Player'}
               avatar={playerAvatar}
-              level={Math.floor(stats.experience / 100) + 1}
-              experience={stats.experience}
+              level={Math.floor(stats.progress.experience / 100) + 1}
+              experience={stats.progress.experience}
               theme={settings.theme}
               onAvatarClick={handleAvatarClick}
             />
@@ -303,7 +303,7 @@ const PlayerProfile = () => {
             `}>
               <div className="flex items-center">
                 <span className="mr-2" role="img" aria-label="Coin">🪙</span>
-                <span>{playerData.coins}</span>
+                <span>{playerData.coins || 0}</span>
               </div>
             </div>
           </div>
