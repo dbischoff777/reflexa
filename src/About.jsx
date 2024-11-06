@@ -36,7 +36,7 @@ const About = ({ settings }) => {
       <div className="
         min-h-full
         flex items-center justify-center
-        px-3 py-4 xs:p-4 sm:p-6
+        px-1 py-2 2xs:px-2 xs:px-3 sm:px-6 
         pb-safe
       ">
         <motion.div
@@ -50,10 +50,10 @@ const About = ({ settings }) => {
             className={`
               relative 
               w-full
-              max-w-[280px] xs:max-w-[320px] sm:max-w-[400px]
+              max-w-[240px] 2xs:max-w-[280px] xs:max-w-[320px] sm:max-w-[400px]
               mx-auto
-              rounded-xl
-              p-4 xs:p-5 sm:p-6
+              rounded-md xs:rounded-lg sm:rounded-xl
+              p-2 2xs:p-3 xs:p-4 sm:p-6
               ${settings?.theme === 'dark' 
                 ? 'bg-gray-700' 
                 : 'bg-gray-100'
@@ -70,7 +70,7 @@ const About = ({ settings }) => {
               className={`
                 absolute 
                 top-0 left-0
-                p-4
+                p-2 2xs:p-3 xs:p-4
                 touch-manipulation
                 active:opacity-70
                 transition-opacity
@@ -81,20 +81,20 @@ const About = ({ settings }) => {
               `}
               aria-label="Back to home"
             >
-              <ArrowLeft className="w-6 h-6" />
+              <ArrowLeft className="w-4 h-4 2xs:w-5 2xs:h-5 sm:w-6 sm:h-6" />
             </Link>
       
             {/* Title Section */}
             <div className="
               text-center 
-              mt-8 xs:mt-10
-              mb-4 xs:mb-5 sm:mb-6
+              mt-4 2xs:mt-6 xs:mt-8 sm:mt-10
+              mb-2 2xs:mb-3 xs:mb-4 sm:mb-6
             ">
               <motion.h1 
                 className={`
-                  text-xl xs:text-2xl sm:text-3xl
+                  text-base 2xs:text-lg xs:text-xl sm:text-3xl
                   font-bold 
-                  mb-2 xs:mb-3
+                  mb-1 2xs:mb-1.5 xs:mb-2 sm:mb-3
                   ${settings?.theme === 'dark'
                     ? 'text-purple-300'
                     : 'text-purple-600'
@@ -107,16 +107,16 @@ const About = ({ settings }) => {
                 About Fetch & Feast
               </motion.h1>
               <motion.div 
-                className="h-1 mx-auto rounded-full bg-purple-500 w-16 xs:w-20"
+                className="h-0.5 2xs:h-1 mx-auto rounded-full bg-purple-500 w-8 2xs:w-12 xs:w-16 sm:w-20"
                 initial={{ width: 0 }}
-                animate={{ width: '4rem' }}
+                animate={{ width: '2rem' }}
                 transition={{ duration: 0.3, delay: 0.2 }}
               />
             </div>
       
             {/* Content Section */}
             <div className={`
-              space-y-4 xs:space-y-5
+              space-y-2 2xs:space-y-3 xs:space-y-4 sm:space-y-5
               ${settings?.theme === 'dark'
                 ? 'text-gray-200'
                 : 'text-gray-700'
@@ -124,36 +124,34 @@ const About = ({ settings }) => {
             `}>
               <motion.p 
                 className="
-                  text-sm xs:text-base
+                  text-[11px] 2xs:text-xs xs:text-sm sm:text-base
                   leading-relaxed
                 "
                 variants={listItemVariants}
               >
                 Fetch & Feast is a delightful reaction game where playful pups chase 
-                after tasty treats. Test your reflexes and see how many treats you can help
-                them catch!
+                after tasty treats.
               </motion.p>
               
               <motion.div 
-                className="space-y-3 xs:space-y-4"
+                className="space-y-1.5 2xs:space-y-2 xs:space-y-3 sm:space-y-4"
                 variants={listItemVariants}
               >
                 <h2 className="
-                  text-lg xs:text-xl
+                  text-sm 2xs:text-base xs:text-lg sm:text-xl
                   font-bold
                 ">
                   How to Play:
                 </h2>
                 <ul className="
                   list-disc 
-                  space-y-2.5
+                  space-y-1 2xs:space-y-1.5 xs:space-y-2
                   text-left 
-                  pl-4 xs:pl-5
-                  text-sm xs:text-base
+                  pl-2 2xs:pl-3 xs:pl-4 sm:pl-5
+                  text-[11px] 2xs:text-xs xs:text-sm sm:text-base
                 ">
                   {[
                     "Click the Start Game button to begin your adventure",
-                    "Watch for the countdown timer",
                     "Click or tap the treats as they appear",
                     "Score points for each successful catch",
                     "Be careful! Missing treats or wrong clicks cost lives!"
@@ -172,9 +170,9 @@ const About = ({ settings }) => {
               {/* Pro Tips Section */}
               <motion.div 
                 className={`
-                  p-3 xs:p-4 
-                  rounded-lg 
-                  mt-4 xs:mt-5
+                  p-1.5 2xs:p-2 xs:p-3 sm:p-4
+                  rounded-md xs:rounded-lg 
+                  mt-2 2xs:mt-3 xs:mt-4 sm:mt-5
                   ${settings?.theme === 'dark' 
                     ? 'bg-gray-600/50'
                     : 'bg-purple-100/80'
@@ -183,9 +181,9 @@ const About = ({ settings }) => {
                 variants={listItemVariants}
               >
                 <h2 className={`
-                  text-lg xs:text-xl
+                  text-sm 2xs:text-base xs:text-lg sm:text-xl
                   font-bold 
-                  mb-2 xs:mb-3
+                  mb-1 2xs:mb-1.5 xs:mb-2 sm:mb-3
                   ${settings?.theme === 'dark'
                     ? 'text-purple-300'
                     : 'text-purple-700'
@@ -195,10 +193,10 @@ const About = ({ settings }) => {
                 </h2>
                 <ul className={`
                   list-disc
-                  space-y-2
+                  space-y-1 2xs:space-y-1.5 xs:space-y-2
                   text-left
-                  pl-4 xs:pl-5
-                  text-sm xs:text-base
+                  pl-2 2xs:pl-3 xs:pl-4 sm:pl-5
+                  text-[11px] 2xs:text-xs xs:text-sm sm:text-base
                   ${settings?.theme === 'dark'
                     ? 'text-gray-200'
                     : 'text-gray-700'
@@ -218,11 +216,11 @@ const About = ({ settings }) => {
   
               {/* Footer Section */}
               <motion.div 
-                className="text-center space-y-2 mt-4 xs:mt-5"
+                className="text-center space-y-1 2xs:space-y-1.5 xs:space-y-2 mt-2 2xs:mt-3 xs:mt-4 sm:mt-5"
                 variants={listItemVariants}
               >
                 <p className={`
-                  text-xs xs:text-sm
+                  text-[9px] 2xs:text-[10px] xs:text-xs sm:text-sm
                   ${settings?.theme === 'dark'
                     ? 'text-gray-300'
                     : 'text-gray-600'
@@ -231,15 +229,15 @@ const About = ({ settings }) => {
                   © {new Date().getFullYear()} Dennis Bischoff. All rights reserved.
                 </p>
               <p className={`
-                text-xs xs:text-sm sm:text-base
-                italic flex items-center justify-center gap-2
+                text-[9px] 2xs:text-[10px] xs:text-xs sm:text-base
+                italic flex items-center justify-center gap-1 2xs:gap-1.5 xs:gap-2
                 ${settings?.theme === 'dark'
                   ? 'text-gray-300'
                   : 'text-gray-600'
                 }
               `}>
                 Created with React and 
-                <Heart className="w-4 h-4 text-red-500 animate-pulse" />
+                <Heart className="w-2.5 h-2.5 2xs:w-3 2xs:h-3 xs:w-4 xs:h-4 text-red-500 animate-pulse" />
               </p>
               </motion.div>
             </div>
