@@ -114,9 +114,25 @@ const DailyQuests = ({ onClose, theme }) => {
         updatePlayerData(updatedPlayerData);
         addCoins(totalCoinsEarned); // This should update the coins in the context
         showFloatingCoins(totalCoinsEarned);
-        toast.success(`Congratulations! You earned ${totalCoinsEarned} coins`, {
-            duration: 1000 // Duration in milliseconds (1 seconds in this case)
-        });
+        toast.success(
+          <div className="flex items-center gap-2">
+            <span className="text-lg">🎉</span>
+            <div>
+              <div className="font-bold">Quest Complete!</div>
+              <div className="flex items-center gap-1">
+                Earned <span className="font-medium text-yellow-300">{totalCoinsEarned}</span>
+                <span className="text-yellow-300">🪙</span>
+              </div>
+            </div>
+          </div>,
+          {
+            duration: 1000,
+            style: {
+              background: '#4c1d95',
+              color: '#ffffff',
+            }
+          }
+        );
         // Update last claim date
         const now = new Date();
         setLastClaimDate(now);
