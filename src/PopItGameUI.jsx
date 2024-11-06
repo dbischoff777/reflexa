@@ -159,20 +159,29 @@ const PopItGameUI = ({
               ? 'opacity-0 scale-95 h-0 mb-0 overflow-hidden' 
               : `opacity-100 scale-100 
                 h-16 2xs:h-20 xs:h-24 sm:h-28 md:h-32 lg:h-36 xl:h-40
-                mb-2 2xs:mb-3 xs:mb-4 sm:mb-5 md:mb-6`
+                mb-2 2xs:mb-3 xs:mb-4 sm:mb-5 md:mb-6
+                animate-float`
             }
           `}>
             <motion.div
-              initial={{ scale: 0.9, y: 10 }}
+              initial={{ scale: 0.9, y: 10, rotate: -5 }}
               animate={{ 
-                scale: [1, 1.05, 1],
-                y: [0, -5, 0]
+                scale: [1, 1.08, 1],
+                y: [0, -8, 0],
+                rotate: [-5, 5, -5]
               }}
               transition={{
-                duration: 2,
+                duration: 3,
                 repeat: Infinity,
                 repeatType: "reverse",
                 ease: "easeInOut"
+              }}
+              whileHover={{
+                scale: 1.15,
+                rotate: [-5, 5],
+                transition: {
+                  duration: 0.3
+                }
               }}
             >
               <img
@@ -181,19 +190,20 @@ const PopItGameUI = ({
                 className={`
                   w-32 h-32 
                   object-contain 
-                  drop-shadow-lg
+                  drop-shadow-xl
                   transition-all duration-300
                   hover:scale-110
+                  hover:rotate-6
                   ${settings.theme === 'dark' 
                     ? 'filter-none' 
-                    : 'brightness-95'
+                    : 'brightness-100 contrast-105'
                   }
                 `}
                 style={{ 
                   filter: `
                     ${settings.theme === 'dark' 
-                      ? 'drop-shadow(0 0 8px rgba(147, 51, 234, 0.3))' 
-                      : 'drop-shadow(0 0 5px rgba(107, 33, 168, 0.2))'
+                      ? 'drop-shadow(0 0 12px rgba(147, 51, 234, 0.4)) brightness(1.1)' 
+                      : 'drop-shadow(0 0 8px rgba(107, 33, 168, 0.3))'
                     }
                   `
                 }}
