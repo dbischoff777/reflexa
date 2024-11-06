@@ -167,40 +167,52 @@ const DailyQuests = ({ onClose, theme }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-        <div className={`${bgColor} ${textColor} p-6 rounded-lg shadow-xl max-w-md w-full relative`}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 backdrop-blur-sm">
+        <div className={`${bgColor} ${textColor} p-6 rounded-xl shadow-2xl max-w-md w-full relative transition-all duration-300 hover:shadow-purple-500/20`}>
             {isAnimating && (
                 <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-yellow-400 text-4xl animate-bounce flex items-center">
-                        <span className="mr-2">🪙</span>
-                        <span className="font-bold">+{animationAmount}</span>
+                    <div className="text-yellow-400 text-5xl animate-bounce flex items-center">
+                        <span className="mr-2 drop-shadow-lg">🪙</span>
+                        <span className="font-bold drop-shadow-lg">+{animationAmount}</span>
                     </div>
                 </div>
             )}
-            <h2 className="text-2xl font-bold mb-4">Daily Quests</h2>
-            <p className="mb-4">Current Coins: {playerData.coins}</p>
-            {quests.map(quest => (
-                <div key={quest.id} className="border-b pb-4 last:border-b-0">
-                    <p className="font-semibold mb-2">{quest.description}</p>
-                    {renderProgressBar(quest.progress, quest.total)}
-                    <div className="flex justify-between text-sm">
-                        <span>Progress: {quest.progress}/{quest.total}</span>
-                        <span>Reward: {quest.reward}</span>
+            <h2 className="text-2xl font-bold mb-6 text-center bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Daily Quests</h2>
+            <div className="flex items-center justify-center gap-2 mb-6 bg-purple-100/10 p-3 rounded-lg">
+                <span className="text-xl">🪙</span>
+                <p className="font-medium">Current Coins: {playerData.coins}</p>
+            </div>
+            <div className="space-y-6">
+                {quests.map(quest => (
+                    <div key={quest.id} className="border-b border-purple-200/20 pb-4 last:border-b-0 hover:bg-purple-100/5 p-3 rounded-lg transition-colors">
+                        <p className="font-semibold mb-3 text-lg">{quest.description}</p>
+                        {renderProgressBar(quest.progress, quest.total)}
+                        <div className="flex justify-between text-sm text-purple-800/80 dark:text-purple-400/80">
+                            <span>Progress: {quest.progress}/{quest.total}</span>
+                            <div className="flex items-center gap-1">
+                                <span>Reward:</span>
+                                <span className="font-bold text-yellow-400">{quest.reward}</span>
+                                <span className="text-yellow-400">🪙</span>
+                            </div>
+                        </div>
+                        {claimedRewards.includes(quest.id) && (
+                            <div className="flex items-center gap-2 text-green-400 mt-3 bg-green-400/10 p-2 rounded-md">
+                                <span>✓</span>
+                                <p className="font-medium">Claimed</p>
+                            </div>
+                        )}
                     </div>
-                    {claimedRewards.includes(quest.id) && (
-                        <p className="text-green-500 mt-2">Claimed</p>
-                    )}
-                </div>
-            ))}
-            <div className="flex justify-between mt-4">
+                ))}
+            </div>
+            <div className="flex justify-between mt-6 gap-4">
                 <button 
                     onClick={onClose}
-                    className={buttonClass}
+                    className={`${buttonClass} hover:bg-purple-700 transition-colors duration-200`}
                 >
                     Close
                 </button>
                 <button 
-                    className={`${buttonClass} ${!canClaimRewards ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`${buttonClass} ${!canClaimRewards ? 'opacity-50 cursor-not-allowed' : 'hover:bg-purple-700 hover:scale-105'} transition-all duration-200`}
                     disabled={!canClaimRewards}
                     onClick={handleClaimRewards}
                 >
