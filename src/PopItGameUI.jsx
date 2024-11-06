@@ -8,6 +8,7 @@ import { FacebookIcon, TwitterIcon, WhatsAppIcon } from './Icons';
 import ScreenProtectionStatus from './components/ScreenProtectionStatus';
 import DailyQuests from './DailyQuests';
 import WeeklyQuests from './WeeklyQuests';
+import Shop from './components/Shop';
 
 const PopItGameUI = ({
   settings,
@@ -827,6 +828,18 @@ const PopItGameUI = ({
               >
                 Start Game
               </button>
+
+              {/* Shop Button */}
+              <Link
+                to="/shop"
+                className={`w-full max-w-xs py-2 px-4 rounded-lg font-semibold text-center ${
+                  settings.theme === 'dark'
+                    ? 'bg-green-600 hover:bg-green-700 text-white'
+                    : 'bg-green-600 hover:bg-green-700 text-white'
+                }`}
+              >
+                Shop
+              </Link>
 
               {/* Header for Quests */}
               <h3 className={`text-lg font-semibold mt-4 ${

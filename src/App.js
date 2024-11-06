@@ -9,6 +9,7 @@ import PlayerProfile from './PlayerProfile';
 import { PlayerProvider } from './utils/PlayerContext';
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer } from 'react-toastify';
+import Shop from './components/Shop';
 
 // Create a wrapper component to access the context
 const AppRoutes = () => {
@@ -21,6 +22,7 @@ const AppRoutes = () => {
       <Route path="/settings" element={<Settings />} />
       <Route path="/leaderboard" element={<Leaderboard />} />
       <Route path="/profile" element={<PlayerProfile />} />
+      <Route path="/shop" element={<Shop />} />
     </Routes>
   );
 };
