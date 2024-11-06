@@ -820,24 +820,37 @@ const PopItGameUI = ({
               <div className="flex flex-col items-center gap-4 mt-6">
               <button
                 onClick={startGame}
-                className={`w-full max-w-xs py-2 px-4 rounded-lg font-semibold ${
-                  settings.theme === 'dark'
-                    ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                    : 'bg-purple-600 hover:bg-purple-700 text-white'
-                }`}
+                className={`w-full max-w-xs py-3 px-6 rounded-lg font-bold
+                  transition-all duration-200 transform hover:scale-105
+                  flex items-center justify-center gap-2
+                  shadow-lg hover:shadow-xl
+                  ${settings.theme === 'dark'
+                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white'
+                    : 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white'
+                  }`}
               >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
                 Start Game
               </button>
 
               {/* Shop Button */}
               <Link
                 to="/shop"
-                className={`w-full max-w-xs py-2 px-4 rounded-lg font-semibold text-center ${
-                  settings.theme === 'dark'
-                    ? 'bg-green-600 hover:bg-green-700 text-white'
-                    : 'bg-green-600 hover:bg-green-700 text-white'
-                }`}
+                className={`w-full max-w-xs py-3 px-6 rounded-lg font-semibold text-center 
+                  transition-all duration-200 transform hover:scale-105
+                  flex items-center justify-center gap-2
+                  shadow-lg hover:shadow-xl
+                  ${settings.theme === 'dark'
+                    ? 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white'
+                    : 'bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white'
+                  }`}
               >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+                </svg>
                 Shop
               </Link>
 
@@ -852,24 +865,40 @@ const PopItGameUI = ({
                 {/* Daily Quests Button */}
                 <button
                   onClick={() => setShowDailyQuests(true)}
-                  className={`flex-1 py-2 px-4 rounded-lg font-semibold ${
-                    settings.theme === 'dark'
-                      ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                    : 'bg-purple-600 hover:bg-purple-700 text-white'
-                  }`}
+                  className={`
+                    flex-1 py-3 px-4 rounded-lg font-bold
+                    transition-all duration-200 transform hover:scale-105
+                    flex items-center justify-center gap-2
+                    shadow-lg hover:shadow-xl
+                    ${settings.theme === 'dark'
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white'
+                      : 'bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-500 hover:to-orange-500 text-white'
+                    }
+                  `}
                 >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"/>
+                  </svg>
                   Daily
                 </button>
 
                 {/* Weekly Quests Button */}
                 <button
                   onClick={() => setShowWeeklyQuests(true)}
-                  className={`flex-1 py-2 px-4 rounded-lg font-semibold ${
-                    settings.theme === 'dark'
-                      ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                    : 'bg-purple-600 hover:bg-purple-700 text-white'
-                  }`}
+                  className={`
+                    flex-1 py-3 px-4 rounded-lg font-bold
+                    transition-all duration-200 transform hover:scale-105 
+                    flex items-center justify-center gap-2
+                    shadow-lg hover:shadow-xl
+                    ${settings.theme === 'dark'
+                      ? 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white'
+                      : 'bg-gradient-to-r from-blue-400 to-indigo-400 hover:from-blue-500 hover:to-indigo-500 text-white'
+                    }
+                  `}
                 >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd"/>
+                  </svg>
                   Weekly
                 </button>
               </div>
