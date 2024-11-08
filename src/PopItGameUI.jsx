@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import livesIcon from './images/lives.png';
@@ -8,7 +8,7 @@ import { FacebookIcon, TwitterIcon, WhatsAppIcon } from './Icons';
 import ScreenProtectionStatus from './components/ScreenProtectionStatus';
 import DailyQuests from './DailyQuests';
 import WeeklyQuests from './WeeklyQuests';
-import { LucideUser, LucideSettings, LucideBarChart2, LucideInfo, LucidePlay, LucideCalendar, ShoppingCart, Clock, Trophy } from 'lucide-react';
+import { LucideUser, LucideSettings, LucideInfo, LucidePlay, LucideCalendar, ShoppingCart, Clock, Trophy } from 'lucide-react';
 import floorBackground from './images/gameBackgrounds/floor1.png';
 
 const PopItGameUI = ({
@@ -123,7 +123,7 @@ const PopItGameUI = ({
       />
     </svg>
   );
-  
+
   return (
     <div className={`min-h-screen w-full fixed inset-0 ${
       settings.theme === 'dark'

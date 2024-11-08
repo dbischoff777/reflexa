@@ -8,14 +8,21 @@ import Particles from "react-tsparticles";
 import { loadFull } from "tsparticles";
 import './PopItGame.css';
 import mascotImage from './images/cute-mascot.png';
-import blueBowl from './images/blueBowlT.png';
-import foodBowl from './images/foodBowlT.png';
 import bowlAnimation from './assets/animations/Try.mp4';
 import successAnimation from './assets/animations/Luck.mp4';
 //import successAnimation from './animations/successAnimation-unscreen.gif';
 import { useAvatar } from './hooks/useAvatar';
 import { useScreenProtection } from './hooks/useScreenProtection';
 import { usePlayer } from './utils/PlayerContext';
+import MusicGenerator from './services/MusicGenerator';
+
+// Add game state constants at the top of the file
+const GAME_STATES = {
+  MENU: 'menu',
+  COUNTDOWN: 'countdown',
+  PLAYING: 'playing',
+  OVER: 'over'
+};
 
 const PopItGame = () => {
 
@@ -77,7 +84,7 @@ const PopItGame = () => {
   const [isAnimationPlaying, setIsAnimationPlaying] = useState(false);
 
   // Game state
-  const [gameState, setGameState] = useState('menu'); // menu, countdown, playing, over
+  const [gameState, setGameState] = useState(GAME_STATES.MENU); // menu, countdown, playing, over
   const [gameStarted, setGameStarted] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [showGameOver, setShowGameOver] = useState(false);
@@ -617,12 +624,34 @@ const PopItGame = () => {
     return getRandomMessage(failureMessages);
   }, [consecutiveFailures]); // Add consecutiveFailures as dependency
 
-  // Start game
+  // Add music effect
+  useEffect(() => {
+    const initMusic = async () => {
+      await MusicGenerator.generateMusic();
+      
+      // Play music if we're in menu state
+      if (gameState === GAME_STATES.MENU) {
+        MusicGenerator.play();
+      }
+    };
+
+    initMusic();
+
+    // Cleanup function
+    return () => {
+      MusicGenerator.pause();
+    };
+  }, [gameState]);
+
+  // Modify startGame to handle music
   const startGame = useCallback(() => {
     if (!username) {
       setShowUsernameInput(true);
       return;
     }
+    
+    // Fade out music when game starts
+    MusicGenerator.pause();
     
     // Increment games played in achievement progress
     const currentProgress = JSON.parse(localStorage.getItem('achievementProgress') || '{}');
@@ -632,7 +661,7 @@ const PopItGame = () => {
     };
 
     localStorage.setItem('achievementProgress', JSON.stringify(updatedProgress));
-    setGameState('countdown');
+    setGameState(GAME_STATES.COUNTDOWN);
     setGameStarted(true);
     setGameOver(false);
     setShowGameOver(false);
@@ -663,14 +692,18 @@ const PopItGame = () => {
   
     playSound('countdown');
   }, [username, playSound]);
-  
+
+  // Modify handleExit to resume music
   const handleExit = useCallback(() => {
+    // Resume music when returning to menu
+    MusicGenerator.play();
+    
     // Remove highlight from buttons
     setTargetButton(null);
     // Reset all game states
     setGameOver(false);
     setShowGameOver(false);
-    setGameState('menu');
+    setGameState(GAME_STATES.MENU);
     setScore(0);
     setLives(5);
     setMultiplier(1);
@@ -760,7 +793,7 @@ const PopItGame = () => {
     playSound('gameOver');
     setGameOver(true);
     setShowGameOver(true);
-    setGameState('over');
+    setGameState(GAME_STATES.OVER);
 }, [
     calculateFinalStats,
     updatePlayerStats,
@@ -832,14 +865,14 @@ const PopItGame = () => {
 
   // Call checkAndUpdateAchievements when relevant game events occur
   useEffect(() => {
-    if (gameState === 'playing') {
+    if (gameState === GAME_STATES.PLAYING) {
         checkAndUpdateAchievements();
     }
   }, [score, multiplier, gameState, checkAndUpdateAchievements]);
 
   // Handle button click
   const handleButtonClick = useCallback((index) => {
-    if (gameOver || !gameStarted || gameState !== 'playing') return;
+    if (gameOver || !gameStarted || gameState !== GAME_STATES.PLAYING) return;
   
     const now = Date.now();
     setGameStats(prev => ({
@@ -894,7 +927,7 @@ const PopItGame = () => {
       // Handle animation end and new target with a delay
       setTimeout(() => {
         setShowAnimation(false);
-        if (gameState === 'playing') {
+        if (gameState === GAME_STATES.PLAYING) {
           setTargetButton(getRandomButton());  // This will trigger a new timeout in the game loop
         }
       }, 2000);
@@ -976,7 +1009,7 @@ const PopItGame = () => {
   
   // Game loop effects
   useEffect(() => {
-    if (gameState === 'countdown' && countdown > 0) {
+    if (gameState === GAME_STATES.COUNTDOWN && countdown > 0) {
       const timer = setTimeout(() => {
         setCountdown(prev => prev - 1);
         playSound('countdown');
@@ -984,8 +1017,8 @@ const PopItGame = () => {
       return () => clearTimeout(timer);
     }
     
-    if (gameState === 'countdown' && countdown === 0) {
-      setGameState('playing');
+    if (gameState === GAME_STATES.COUNTDOWN && countdown === 0) {
+      setGameState(GAME_STATES.PLAYING);
       setTargetButton(getRandomButton());
       setStartTime(Date.now());
     }
@@ -993,7 +1026,7 @@ const PopItGame = () => {
 
   // Game loop effects
   useEffect(() => {
-    if (gameState !== 'playing') return;
+    if (gameState !== GAME_STATES.PLAYING) return;
 
     let timeoutId = null;
     
@@ -1002,7 +1035,7 @@ const PopItGame = () => {
       
       timeoutId = setTimeout(() => {
         // Only proceed if we're still in playing state and have a target
-        if (gameState === 'playing' && targetButton !== null) {
+        if (gameState === GAME_STATES.PLAYING && targetButton !== null) {
           setTargetButton(getRandomButton());
           
           setLives(prev => {
@@ -1035,6 +1068,42 @@ const PopItGame = () => {
       handleGameOver();
     }
   }, [lives, gameOver, handleGameOver]);
+
+  const [musicInitialized, setMusicInitialized] = useState(false);
+
+  // Initialize music
+  useEffect(() => {
+    const initMusic = async () => {
+      try {
+        if (!musicInitialized) {
+          console.log('Initializing music...');
+          await MusicGenerator.generateMusic();
+          setMusicInitialized(true);
+          console.log('Music initialized successfully');
+        }
+      } catch (error) {
+        console.error('Failed to initialize music:', error);
+      }
+    };
+
+    initMusic();
+  }, [musicInitialized]);
+
+  // Play music when in menu state
+  useEffect(() => {
+    if (musicInitialized && gameState === GAME_STATES.MENU) {
+      console.log('Attempting to play music in menu state');
+      MusicGenerator.play();
+    }
+  }, [musicInitialized, gameState]);
+
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      console.log('Cleaning up music');
+      MusicGenerator.pause();
+    };
+  }, []);
 
   return (
     <PopItGameUI
