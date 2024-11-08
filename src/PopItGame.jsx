@@ -562,7 +562,7 @@ const PopItGame = () => {
       "You're improving! 📈",
   
       // Humorous failures
-      "Butterfingers! ���",
+      "Butterfingers! 🍳",
       "Oops-a-doodle! 🐣",
       "That was sneaky! 🦊",
       "Tricky one! 🎲",
@@ -821,38 +821,26 @@ const PopItGame = () => {
     }));
     
     if (navigator.vibrate) {
-      navigator.vibrate(150); // 150ms vibration
+      navigator.vibrate(150);
     }
 
     if (index === targetButton) {
       setIsAnimationPlaying(true);
       playSound('success');
 
-      // Calculate grid position based on index and current grid dimensions
+      // Calculate grid position
       const col = index % settings.gridColumns;
-      let row;
-
-      // Special handling for 2x1 and 3x1 grids
-      if (settings.gridRows === 1) {
-        row = 0;
-      } else {
-        // For all other grid sizes
-        row = settings.gridRows - Math.floor(index / settings.gridColumns) - 1;
-      }
+      const row = settings.gridRows === 1 ? 0 : 
+        settings.gridRows - Math.floor(index / settings.gridColumns) - 1;
       
       // Clear the current target immediately
-      setTargetButton(null);  // Add this line to remove current target
+      setTargetButton(null);
 
       // Set animation position
       setAnimationPosition({ row, col });
       setShowAnimation(true);
 
-      /* // Hide animation after it completes
-      setTimeout(() => {
-        setShowAnimation(false);
-      }, 2000); // Adjust timing based on your animation length */
-
-      // Update score immediately
+      // Update score and multiplier
       const newMultiplier = Math.min(multiplier + 1, 10);
       const newScore = score + Math.round(200 * multiplier);
       setScore(newScore);
@@ -866,10 +854,6 @@ const PopItGame = () => {
         }]);
       }
   
-     /*  // Increase game speed with successful clicks
-      const newGameSpeed = Math.min(gameSpeed + 0.15, 3.0);
-      setGameSpeed(newGameSpeed); */
-  
       setGameStats(prev => ({
         ...prev,
         successfulClicks: prev.successfulClicks + 1,
@@ -877,18 +861,16 @@ const PopItGame = () => {
         reactionTimes: [...prev.reactionTimes, now - prev.lastClickTime]
       }));
       
-      //setScore(newScore);
-      //setMultiplier(newMultiplier);
       setMascotMessage(getMascotMessage(newMultiplier));
-      //setTargetButton(getRandomButton());
       
-      // Handle animation end and new target
+      // Handle animation end and new target with a delay
       setTimeout(() => {
         setShowAnimation(false);
         if (gameState === 'playing') {
-          setTargetButton(getRandomButton());
+          setTargetButton(getRandomButton());  // This will trigger a new timeout in the game loop
         }
-      }, 2000, setIsAnimationPlaying(false));
+      }, 2000);
+      setIsAnimationPlaying(false);
 
     } else {
 
@@ -946,17 +928,6 @@ const PopItGame = () => {
       >
         {!showAnimation && (
           <>
-            {/* Background Button - only visible when it's the target */}
-            {isTarget && (
-              <button
-                className={`absolute inset-0 rounded-full transition-all duration-200 
-                  ${settings.theme === 'dark' 
-                    ? 'bg-gray-700 hover:bg-gray-600' 
-                    : 'bg-gray-200 hover:bg-gray-300'
-                  }`}
-              />
-            )}
-            
             {/* Image Overlay - only show foodBowl when it's the target */}
             {isTarget && (
               <div className="absolute inset-0 flex items-center justify-center filter drop-shadow-lg">
@@ -992,25 +963,40 @@ const PopItGame = () => {
 
   // Game loop effects
   useEffect(() => {
-    if (gameState !== 'playing') return; // Add this line to prevent interval during animation
+    if (gameState !== 'playing') return;
 
-    const interval = setInterval(() => {
-      // Move target to new position if not clicked in time
-      setTargetButton(getRandomButton());
+    let timeoutId = null;
+    
+    const startNewTimeout = () => {
+      if (timeoutId) clearTimeout(timeoutId);
       
-      // Reduce lives and reset multiplier on timeout
-      setLives(prev => {
-        if (prev <= 1) {
-          handleGameOver();
-          return prev;
+      timeoutId = setTimeout(() => {
+        // Only proceed if we're still in playing state and have a target
+        if (gameState === 'playing' && targetButton !== null) {
+          setTargetButton(getRandomButton());
+          
+          setLives(prev => {
+            if (prev <= 1) {
+              handleGameOver();
+              return prev;
+            }
+            return prev - 1;
+          });
+          
+          setMultiplier(1);
+          setGameSpeed(1);
         }
-        return prev - 1;
-      });
-      
-      setMultiplier(1);
-      setGameSpeed(1); // Reset speed on timeout
-    }, BASE_INTERVAL / gameSpeed); // Adjust interval based on game speed
-    return () => clearInterval(interval);
+      }, BASE_INTERVAL / gameSpeed);
+    };
+
+    // Only start a new timeout if we have a target button
+    if (targetButton !== null) {
+      startNewTimeout();
+    }
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [gameState, gameSpeed, handleGameOver, getRandomButton, targetButton]);
 
 

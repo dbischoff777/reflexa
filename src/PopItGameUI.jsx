@@ -9,6 +9,7 @@ import ScreenProtectionStatus from './components/ScreenProtectionStatus';
 import DailyQuests from './DailyQuests';
 import WeeklyQuests from './WeeklyQuests';
 import { LucideUser, LucideSettings, LucideBarChart2, LucideInfo, LucidePlay, LucideCalendar, ShoppingCart, Clock, Trophy } from 'lucide-react';
+import floorBackground from './images/gameBackgrounds/floor1.png';
 
 const PopItGameUI = ({
   settings,
@@ -848,8 +849,24 @@ const PopItGameUI = ({
                     gridTemplateRows: `repeat(${settings.gridRows}, 1fr)`,
                     gap: '2%',
                     padding: '2%',
+                    backgroundImage: `url(${floorBackground})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat',
+                    position: 'relative',
                   }}
                 >
+                  {/* Add background div */}
+                  <div 
+                    className="absolute inset-0 -z-10 pointer-events-none"
+                    style={{
+                      backgroundImage: `url(${floorBackground})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      backgroundRepeat: 'no-repeat',
+                    }}
+                  />
+                  {/* Grid buttons */}
                   {Array.from({ length: settings.gridColumns * settings.gridRows }).map((_, index) => (
                     <div key={index} className="relative w-full h-full">
                       {renderButton(index)}
