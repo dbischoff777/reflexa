@@ -837,7 +837,7 @@ const PopItGameUI = ({
                   )}
                   
                   {/* Game Elements Container */}
-                  <div className="absolute inset-0 z-10 border-2 border-red-500 grid gap-4 p-4"
+                  <div className="absolute inset-0 z-10 grid gap-4 p-4"
                        style={{
                          gridTemplateColumns: `repeat(${settings.gridColumns}, 1fr)`,
                          gridTemplateRows: `repeat(${settings.gridRows}, 1fr)`
@@ -845,7 +845,7 @@ const PopItGameUI = ({
                     {Array.from({ length: settings.gridColumns * settings.gridRows }).map((_, index) => (
                       <div 
                         key={index} 
-                        className="relative w-full h-full border-2 border-red-500 flex items-center justify-center"
+                        className="relative w-full h-full flex items-center justify-center"
                       >
                         {renderButton(index)}
                       </div>

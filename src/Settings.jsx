@@ -406,7 +406,7 @@ const Settings = () => {
           </div>
 
           {/* Grid Size Setting */}
-          <div className="mb-3 xs:mb-4">
+          {/* <div className="mb-3 xs:mb-4">
             <label className="
               block 
               text-sm xs:text-base 
@@ -442,7 +442,7 @@ const Settings = () => {
               <option value="4">4x4</option>
               <option value="5">5x5</option>
             </select>
-          </div>
+          </div> */}
 
           {/* Theme Toggle */}
           <div className="mb-3 xs:mb-4">
