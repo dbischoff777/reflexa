@@ -8,9 +8,8 @@ import Particles from "react-tsparticles";
 import { loadFull } from "tsparticles";
 import './PopItGame.css';
 import mascotImage from './images/cute-mascot.png';
-import bowlAnimation from './assets/animations/Try.mp4';
-import successAnimation from './assets/animations/Luck.mp4';
-//import successAnimation from './animations/successAnimation-unscreen.gif';
+import bowlAnimation from './assets/animations/Try.gif';
+import successAnimation from './assets/animations/Luck.gif';
 import { useAvatar } from './hooks/useAvatar';
 import { useScreenProtection } from './hooks/useScreenProtection';
 import { usePlayer } from './utils/PlayerContext';
@@ -995,12 +994,15 @@ const PopItGame = () => {
             {/* Video Overlay - only show bowl animation when it's the target */}
             {isTarget && (
               <div className="absolute inset-0 flex items-center justify-center filter drop-shadow-lg">
-                <video
+                <img
                   src={bowlAnimation}
-                  autoPlay
-                  loop
-                  playsInline
-                  className="w-3/4 h-3/4 object-contain pointer-events-none transition-transform duration-200 hover:scale-110"
+                  alt="Bowl Animation"
+                  className="w-2/3 2xs:w-[70%] xs:w-[72%] sm:w-3/4 object-contain pointer-events-none mix-blend-screen"
+                  style={{
+                    imageRendering: 'pixelated',  // Optional: helps with GIF quality
+                    WebkitMaskImage: '-webkit-radial-gradient(white, black)'  // Helps with Safari transparency
+                  }}
+                  draggable="false"
                 />
               </div>
             )}
@@ -1008,7 +1010,7 @@ const PopItGame = () => {
         )}
       </div>
     );
-  }, [targetButton, settings.theme, handleButtonClick]);
+  }, [targetButton, settings.theme, handleButtonClick, gameState, gameOver, showAnimation]);
   
   // Game loop effects
   useEffect(() => {
@@ -1039,7 +1041,9 @@ const PopItGame = () => {
       timeoutId = setTimeout(() => {
         // Only proceed if we're still in playing state and have a target
         if (gameState === GAME_STATES.PLAYING && targetButton !== null) {
-          setTargetButton(getRandomButton());
+          const newTarget = getRandomButton();
+          setTargetButton(newTarget);
+          playSound('trySound'); // Play sound when new target is set
           
           setLives(prev => {
             if (prev <= 1) {
@@ -1063,7 +1067,7 @@ const PopItGame = () => {
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [gameState, gameSpeed, handleGameOver, getRandomButton, targetButton]);
+  }, [gameState, gameSpeed, handleGameOver, getRandomButton, targetButton, playSound]);
 
 
   useEffect(() => {

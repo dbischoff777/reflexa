@@ -821,14 +821,14 @@ const PopItGameUI = ({
                       }}
                     >
                       <div className="absolute inset-0 flex items-center justify-center rounded-lg">
-                        <video
-                          //key={Date.now()}
+                        <img
                           src={successAnimation}
-                          autoPlay
-                          loop
-                          playsInline
-                          //alt="Success Animation"
-                          className="w-2/3 2xs:w-[70%] xs:w-[72%] sm:w-3/4 object-contain pointer-events-none"
+                          alt="Success Animation"
+                          className="w-2/3 2xs:w-[70%] xs:w-[72%] sm:w-3/4 object-contain pointer-events-none mix-blend-screen"
+                          style={{
+                            imageRendering: 'pixelated',  // Optional: helps with GIF quality
+                            WebkitMaskImage: '-webkit-radial-gradient(white, black)'  // Helps with Safari transparency
+                          }}
                           draggable="false"
                         />
                       </div>

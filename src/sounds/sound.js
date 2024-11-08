@@ -2,6 +2,7 @@ import achievementSound from '../sounds/achievement.mp3';
 import success from '../sounds/success.mp3';
 import miss from '../sounds/miss.mp3';
 import countdown from '../sounds/countdown.mp3';
+import trySound from '../assets/sounds/Try.mp3';
 
 class SoundManager {
     constructor() {
@@ -12,6 +13,7 @@ class SoundManager {
       this.loadSound('achievement', achievementSound);
       this.loadSound('countdown', countdown);
       this.loadSound('success', success);
+      this.loadSound('try', success);
       this.loadSound('miss', miss);
     }
   
