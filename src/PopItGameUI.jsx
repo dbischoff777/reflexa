@@ -836,10 +836,10 @@ const PopItGameUI = ({
                   )}
                   
                   {/* Game Elements Container */}
-                  <div className="absolute inset-0 z-10 grid gap-4 p-4"
+                  <div className="absolute inset-0 z-10 grid gap-1 sm:gap-2 md:gap-3 p-2 sm:p-3 md:p-4"
                        style={{
                          gridTemplateColumns: `repeat(${settings.gridColumns}, 1fr)`,
-                         gridTemplateRows: `repeat(${settings.gridRows}, 1fr)`
+                         gridTemplateRows: `repeat(${settings.gridRows}, 1fr)`,
                        }}>
                     {Array.from({ length: settings.gridColumns * settings.gridRows }).map((_, index) => (
                       <div 

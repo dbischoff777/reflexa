@@ -889,7 +889,7 @@ const PopItGame = () => {
 
     if (index === targetButton) {
       setIsAnimationPlaying(true);
-      //playSound('success');
+      playSound('success');
 
       // Calculate grid position
       const col = index % settings.gridColumns;
@@ -931,6 +931,7 @@ const PopItGame = () => {
         setShowAnimation(false);
         if (gameState === GAME_STATES.PLAYING) {
           setTargetButton(getRandomButton());  // This will trigger a new timeout in the game loop
+          playSound('trySound');
         }
       }, 2000);
       setIsAnimationPlaying(false);
@@ -993,18 +994,14 @@ const PopItGame = () => {
           <>
             {/* Video Overlay - only show bowl animation when it's the target */}
             {isTarget && (
-              <div className="absolute inset-0 flex items-center justify-center filter drop-shadow-lg">
+             <div className="absolute inset-0 flex items-center justify-center filter drop-shadow-lg">
                 <img
                   src={bowlAnimation}
                   alt="Bowl Animation"
-                  className="w-2/3 2xs:w-[70%] xs:w-[72%] sm:w-3/4 object-contain pointer-events-none mix-blend-screen"
-                  style={{
-                    imageRendering: 'pixelated',  // Optional: helps with GIF quality
-                    WebkitMaskImage: '-webkit-radial-gradient(white, black)'  // Helps with Safari transparency
-                  }}
+                  className="w-4/5 2xs:w-[85%] xs:w-[87%] sm:w-[90%] object-contain pointer-events-none mix-blend-screen"
                   draggable="false"
                 />
-              </div>
+              </div> 
             )}
           </>
         )}
@@ -1043,7 +1040,6 @@ const PopItGame = () => {
         if (gameState === GAME_STATES.PLAYING && targetButton !== null) {
           const newTarget = getRandomButton();
           setTargetButton(newTarget);
-          playSound('trySound'); // Play sound when new target is set
           
           setLives(prev => {
             if (prev <= 1) {

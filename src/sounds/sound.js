@@ -13,7 +13,7 @@ class SoundManager {
       this.loadSound('achievement', achievementSound);
       this.loadSound('countdown', countdown);
       this.loadSound('success', success);
-      this.loadSound('try', success);
+      this.loadSound('trySound', trySound);
       this.loadSound('miss', miss);
     }
   
