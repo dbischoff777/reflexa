@@ -1,7 +1,7 @@
 // PlayerProfile.jsx
 import React, { useCallback, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Trophy, Star, Clock, Target, ArrowLeft, Zap, 
+import { Trophy, Star, Coins, Clock, Target, ArrowLeft, Zap, 
          Crosshair, Flame, Crown, Medal, BarChart, History } from 'lucide-react';
 import { useSettings } from './Settings';
 import { getPlayerStats } from './utils/playerStats';
@@ -203,24 +203,6 @@ const PlayerProfile = () => {
     };
   }, [checkProgress]);
 
-  // Add storage event listener
-  useEffect(() => {
-    const handleStorageChange = (e) => {
-      if (e.key === 'achievementProgress') {
-        const newProgress = JSON.parse(e.newValue || '{}');
-        setAchievementProgress(newProgress);
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    const intervalId = setInterval(checkProgress, 1000);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      clearInterval(intervalId);
-    };
-  }, [checkProgress]);
-
   // Load data on mount
   useEffect(() => {
     const savedGames = JSON.parse(localStorage.getItem('recentGames') || '[]');
@@ -255,6 +237,32 @@ const PlayerProfile = () => {
     localStorage.setItem('playerAvatar', newAvatar);
     setIsAvatarSelectorOpen(false);
   };
+
+  // Add useEffect to listen for stats changes
+  useEffect(() => {
+    const updateStats = () => {
+      setStats(getPlayerStats());
+    };
+
+    // Update stats immediately and set up interval
+    updateStats();
+    const statsInterval = setInterval(updateStats, 1000);
+
+    // Clean up interval
+    return () => clearInterval(statsInterval);
+  }, []); // Empty dependency array since we want this to run once on mount
+
+  // Add useEffect to listen for username changes
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'playerStats' || e.key === 'username') {
+        setStats(getPlayerStats());
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   return (
     <div className={`
@@ -321,18 +329,9 @@ const PlayerProfile = () => {
                   </div>
                 </div>
               </div>
-              <div className={`
-                inline-flex items-center px-3 py-1.5 rounded-full
-                text-sm sm:text-base font-medium
-                ${settings.theme === 'dark' 
-                  ? 'bg-yellow-900/20 text-yellow-300' 
-                  : 'bg-yellow-50 text-yellow-600'
-                }
-              `}>
-                <div className="flex items-center">
-                  <span className="mr-1.5" role="img" aria-label="Coin">🪙</span>
-                  <span>{playerData.coins || 0}</span>
-                </div>
+              <div className="flex items-center gap-2 bg-purple-500 px-4 py-2 rounded-full shadow-lg">
+                <Coins className="w-5 h-5 text-white" />
+                <span className="font-bold text-white">{playerData.coins}</span>
               </div>
             </div>
           </div>
