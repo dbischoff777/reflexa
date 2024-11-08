@@ -32,10 +32,52 @@ const PopItGame = () => {
   // Add state for wake lock status
   const [wakeLockActive, setWakeLockActive] = useState(false);
 
+  // Initialize screen protection
+  useEffect(() => {
+    let wakeLock = null;
+
+    const requestWakeLock = async () => {
+        try {
+            wakeLock = await navigator.wakeLock.request('screen');
+            setWakeLockActive(true);
+            console.log('Wake Lock is active');
+        } catch (err) {
+            setWakeLockActive(false);
+            console.log('Wake Lock request failed:', err.message);
+        }
+    };
+
+    const handleVisibilityChange = () => {
+        if (document.visibilityState === 'visible') {
+            requestWakeLock();
+        }
+    };
+
+    // Initial wake lock request
+    requestWakeLock();
+
+    // Re-request wake lock if page visibility changes
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Cleanup
+    return () => {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+        if (wakeLock) {
+            wakeLock.release()
+                .then(() => {
+                    setWakeLockActive(false);
+                    console.log('Wake Lock released');
+                })
+                .catch((err) => console.log('Error releasing Wake Lock:', err));
+        }
+    };
+  }, []);
+  
   // Music state declarations (keep these at the top)
   const [isMusicPlaying, setIsMusicPlaying] = useState(
     JSON.parse(localStorage.getItem('isMusicPlaying') || 'false')
   );
+
   const [musicInitialized, setMusicInitialized] = useState(false);
 
   const { settings } = useSettings();
@@ -167,14 +209,6 @@ const PopItGame = () => {
   const particlesInit = useCallback(async (engine) => {
     await loadFull(engine);
   }, []);
-
-  const calculateHeight = () => {
-    if (settings.gridRows === 1) {
-      if (settings.gridColumns === 2) return '150%';
-      if (settings.gridColumns === 3) return '165%';
-    }
-    return `${100 / settings.gridRows}%`;
-  };
 
   // Update the PopEffect component
   const PopEffect = ({ row, col, theme, gridRows, gridColumns, onComplete }) => {
@@ -1043,37 +1077,34 @@ const PopItGame = () => {
     localStorage.setItem('isMusicPlaying', JSON.stringify(isMusicPlaying));
   }, [isMusicPlaying]);
 
+  // Modify the music initialization effect
   useEffect(() => {
-    const initializeMusic = async () => {
-      try {
-        if (!musicInitialized) {
-          console.log('Initializing music...');
-          await MusicGenerator.generateMusic();
-          setMusicInitialized(true);
-          console.log('Music initialized successfully');
-          
-          if (isMusicPlaying && gameState === GAME_STATES.MENU) {
-            MusicGenerator.play();
-          }
+    const initMusic = async () => {
+      if (!musicInitialized) {
+        await MusicGenerator.generateMusic();
+        setMusicInitialized(true);
+        
+        // Only play if we're in menu state and music should be playing
+        if (gameState === GAME_STATES.MENU && isMusicPlaying) {
+          MusicGenerator.play();
         }
-      } catch (error) {
-        console.error('Failed to initialize music:', error);
       }
     };
 
-    initializeMusic();
+    initMusic();
 
-    return () => {
-      if (isMusicPlaying) {
-        MusicGenerator.fadeOut().then(() => MusicGenerator.pause());
-      }
-    };
-  }, [musicInitialized, gameState, isMusicPlaying]);
+    // Don't include cleanup here as it will stop music on every re-render
+    // return () => {
+    //   MusicGenerator.pause();
+    // };
+  }, [gameState, isMusicPlaying, musicInitialized]);
 
+  // Modify the music state effect
   useEffect(() => {
     if (gameState === GAME_STATES.MENU && isMusicPlaying) {
       MusicGenerator.play();
-    } else {
+    } else if (gameState !== GAME_STATES.MENU) {
+      // Only pause music when leaving menu state
       MusicGenerator.fadeOut().then(() => MusicGenerator.pause());
     }
   }, [gameState, isMusicPlaying]);
