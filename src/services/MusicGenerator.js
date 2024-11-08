@@ -2,7 +2,7 @@ class MusicGenerator {
   constructor() {
     this.audio = null;
     this.isPlaying = false;
-    this.audioPath = './assets/music/QuietMoments.mp3';
+    this.audioPath = '/assets/music/QuietMoments.mp3';
   }
 
   async generateMusic() {
