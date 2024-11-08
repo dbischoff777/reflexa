@@ -32,7 +32,6 @@ const PopItGameUI = ({
   startGame,
   exitGame,
   renderButton,
-  PopEffect,
   newAchievement,
   showAnimation,
   animationPosition,
@@ -798,97 +797,68 @@ const PopItGameUI = ({
               </div>
             </div>
               {/* Square Aspect Ratio Container */}
-              <div className="relative w-[95vw] 2xs:w-[90vw] xs:w-[85vw] sm:w-[80vw] md:w-[60vw] lg:w-[50vw] max-w-[500px] mx-auto">
-                <div className="relative aspect-square">
-                  {/* Animation Overlay */}
-                  {showAnimation && (
-                  <div 
-                    className="absolute pointer-events-none"
-                    style={{
-                      bottom: `${animationPosition.row * (100 / settings.gridRows)}%`,
-                      left: `${animationPosition.col * (100 / settings.gridColumns)}%`,
-                      width: `${100 / settings.gridColumns}%`,
-                      height: calculateHeight(),
-                      pointerEvents: 'none',
-                      zIndex: 50,
-                    }}
-                  >
-                    <div className={`
-                      absolute 
-                      inset-0 
-                      flex 
-                      items-center 
-                      justify-center 
-                      rounded-lg
-                      ${settings.theme === 'dark' ? 'transparent' : 'transparent'}
-                    `}>
-                      <img
-                        key={Date.now()}
-                        src={successAnimation}
-                        alt="Success Animation"
-                        className="w-2/3 2xs:w-[70%] xs:w-[72%] sm:w-3/4 object-contain pointer-events-none"
-                        draggable="false"
-                      />
-                    </div>
-                  </div>
-                )}
-                {/* Absolute Position Grid */}
+              <div className="relative w-[98vw] 2xs:w-[95vw] xs:w-[90vw] sm:w-[85vw] md:w-[75vw] lg:w-[65vw] max-w-[800px] mx-auto">
                 <div 
-                  className={`
-                    absolute 
-                    inset-0 
-                    rounded-lg
-                    overflow-hidden
-                    ${gridShake ? 'animate-shake-and-flash' : ''} 
-                    ${settings.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}
-                  `}
+                  className="relative aspect-square rounded-lg overflow-hidden"
                   style={{
-                    '--grid-aspect-ratio': `${settings.gridColumns} / ${settings.gridRows}`,
-                    display: 'grid',
-                    gridTemplateColumns: `repeat(${settings.gridColumns}, 1fr)`,
-                    gridTemplateRows: `repeat(${settings.gridRows}, 1fr)`,
-                    gap: '2%',
-                    padding: '2%',
                     backgroundImage: `url(${floorBackground})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     backgroundRepeat: 'no-repeat',
-                    position: 'relative',
                   }}
                 >
-                  {/* Add background div */}
-                  <div 
-                    className="absolute inset-0 -z-10 pointer-events-none"
-                    style={{
-                      backgroundImage: `url(${floorBackground})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                      backgroundRepeat: 'no-repeat',
-                    }}
-                  />
-                  {/* Grid buttons */}
-                  {Array.from({ length: settings.gridColumns * settings.gridRows }).map((_, index) => (
-                    <div key={index} className="relative w-full h-full">
-                      {renderButton(index)}
+                  {/* Animation Overlay */}
+                  {showAnimation && (
+                    <div 
+                      className="absolute pointer-events-none"
+                      style={{
+                        left: '50%',
+                        top: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: '300px',
+                        height: '300px',
+                        pointerEvents: 'none',
+                        zIndex: 50,
+                      }}
+                    >
+                      <div className="absolute inset-0 flex items-center justify-center rounded-lg">
+                        <video
+                          //key={Date.now()}
+                          src={successAnimation}
+                          autoPlay
+                          loop
+                          playsInline
+                          //alt="Success Animation"
+                          className="w-2/3 2xs:w-[70%] xs:w-[72%] sm:w-3/4 object-contain pointer-events-none"
+                          draggable="false"
+                        />
+                      </div>
                     </div>
-                  ))}
-                </div>
-                {/* Particle Effects */}
-                {particleEffects.map(effect => (
-                  <PopEffect
-                    key={effect.id}
-                    row={effect.row}
-                    col={effect.col}
-                    theme={settings.theme}
-                    gridRows={settings.gridRows}
-                    gridColumns={settings.gridColumns}
-                    onComplete={() => {
-                      setParticleEffects(prev => 
-                        prev.filter(e => e.id !== effect.id)
+                  )}
+                  
+                  {/* Game Elements Container */}
+                  <div className="absolute inset-0 z-10">
+                    {Array.from({ length: settings.gridColumns * settings.gridRows }).map((_, index) => {
+                      const margin = 15;
+                      const left = Math.random() * (100 - 2 * margin) + margin;
+                      const top = Math.random() * (100 - 2 * margin) + margin;
+                      
+                      return (
+                        <div 
+                          key={index} 
+                          className="absolute transform -translate-x-1/2 -translate-y-1/2"
+                          style={{
+                            left: `${left}%`,
+                            top: `${top}%`,
+                            width: '200px',
+                            height: '200px',
+                          }}
+                        >
+                          {renderButton(index)}
+                        </div>
                       );
-                    }}
-                  />
-                ))}
+                    })}
+                  </div>
                 </div>
               </div>
             </div>

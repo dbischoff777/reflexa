@@ -10,7 +10,9 @@ import './PopItGame.css';
 import mascotImage from './images/cute-mascot.png';
 import blueBowl from './images/blueBowlT.png';
 import foodBowl from './images/foodBowlT.png';
-import successAnimation from './animations/successAnimation-unscreen.gif';
+import bowlAnimation from './assets/animations/Try.mp4';
+import successAnimation from './assets/animations/Luck.mp4';
+//import successAnimation from './animations/successAnimation-unscreen.gif';
 import { useAvatar } from './hooks/useAvatar';
 import { useScreenProtection } from './hooks/useScreenProtection';
 import { usePlayer } from './utils/PlayerContext';
@@ -287,12 +289,13 @@ const PopItGame = () => {
     <div
       className="absolute pointer-events-none"
       style={{
-        bottom: `${row * (100 / gridRows)}%`,
-        left: `${col * (100 / gridColumns)}%`,
+        top: `${row * (100 / gridRows) + (50 / gridRows)}%`,  // Center vertically
+        left: `${col * (100 / gridColumns) + (50 / gridColumns)}%`,  // Center horizontally
         width: `${100 / gridColumns}%`,
         height: `${100 / gridRows}%`,
         pointerEvents: 'none',
-        zIndex: 1000
+        zIndex: 1000,
+        transform: 'translate(-50%, -50%) translateZ(0)' // Center the div and maintain performance
       }}
     >
       <Particles
@@ -304,7 +307,32 @@ const PopItGame = () => {
             ...options.particles,
             size: {
               ...options.particles.size,
-              value: Math.min(100 / gridColumns, 100 / gridRows) / 10
+              value: {
+                min: Math.min(100 / gridColumns, 100 / gridRows) / 15,
+                max: Math.min(100 / gridColumns, 100 / gridRows) / 8
+              },
+              animation: {
+                enable: true,
+                speed: 3,
+                minimumValue: 0.1,
+                sync: false,
+                startValue: "max",
+                destroy: "min"
+              }
+            },
+            number: {
+              value: Math.min(Math.max(15, (100 / gridColumns) * 2), 30) // Adaptive particle count
+            },
+            move: {
+              ...options.particles.move,
+              speed: Math.min(Math.max(15, (100 / gridColumns) * 1.5), 25) // Adaptive speed
+            }
+          },
+          emitters: {
+            ...options.emitters,
+            rate: {
+              ...options.emitters.rate,
+              quantity: Math.min(Math.max(10, (100 / gridColumns) * 1.5), 20) // Adaptive emission rate
             }
           }
         }}
@@ -826,7 +854,7 @@ const PopItGame = () => {
 
     if (index === targetButton) {
       setIsAnimationPlaying(true);
-      playSound('success');
+      //playSound('success');
 
       // Calculate grid position
       const col = index % settings.gridColumns;
@@ -926,14 +954,16 @@ const PopItGame = () => {
           handleButtonClick(index);
         }}
       >
-        {!showAnimation && (
+        {!showAnimation && !gameOver && (
           <>
-            {/* Image Overlay - only show foodBowl when it's the target */}
+            {/* Video Overlay - only show bowl animation when it's the target */}
             {isTarget && (
               <div className="absolute inset-0 flex items-center justify-center filter drop-shadow-lg">
-                <img
-                  src={foodBowl}
-                  alt="Food Bowl"
+                <video
+                  src={bowlAnimation}
+                  autoPlay
+                  loop
+                  playsInline
                   className="w-3/4 h-3/4 object-contain pointer-events-none transition-transform duration-200 hover:scale-110"
                 />
               </div>
@@ -986,7 +1016,7 @@ const PopItGame = () => {
           setMultiplier(1);
           setGameSpeed(1);
         }
-      }, BASE_INTERVAL / gameSpeed);
+      }, 5000 / gameSpeed);
     };
 
     // Only start a new timeout if we have a target button
