@@ -562,7 +562,7 @@ const PopItGame = () => {
       "You're improving! 📈",
   
       // Humorous failures
-      "Butterfingers! 🦋",
+      "Butterfingers! ���",
       "Oops-a-doodle! 🐣",
       "That was sneaky! 🦊",
       "Tricky one! 🎲",
@@ -946,28 +946,27 @@ const PopItGame = () => {
       >
         {!showAnimation && (
           <>
-            {/* Background Button */}
-            <button
-              className={`absolute inset-0 rounded-full transition-all duration-200 
-                ${settings.theme === 'dark' 
-                  ? 'bg-gray-700 hover:bg-gray-600' 
-                  : 'bg-gray-200 hover:bg-gray-300'
-                }`}
-            />
-            
-            {/* Image Overlay */}
-            <div 
-              className={`absolute inset-0 flex items-center justify-center
-                ${isTarget ? 'filter drop-shadow-lg' : ''}`}
-            >
-              <img
-                src={isTarget ? foodBowl : blueBowl}
-                alt={isTarget ? "Food Bowl" : "Blue Bowl"}
-                className={`w-3/4 h-3/4 object-contain pointer-events-none
-                  transition-transform duration-200
-                  ${isTarget ? 'hover:scale-110' : ''}`}
+            {/* Background Button - only visible when it's the target */}
+            {isTarget && (
+              <button
+                className={`absolute inset-0 rounded-full transition-all duration-200 
+                  ${settings.theme === 'dark' 
+                    ? 'bg-gray-700 hover:bg-gray-600' 
+                    : 'bg-gray-200 hover:bg-gray-300'
+                  }`}
               />
-            </div>
+            )}
+            
+            {/* Image Overlay - only show foodBowl when it's the target */}
+            {isTarget && (
+              <div className="absolute inset-0 flex items-center justify-center filter drop-shadow-lg">
+                <img
+                  src={foodBowl}
+                  alt="Food Bowl"
+                  className="w-3/4 h-3/4 object-contain pointer-events-none transition-transform duration-200 hover:scale-110"
+                />
+              </div>
+            )}
           </>
         )}
       </div>
@@ -993,8 +992,7 @@ const PopItGame = () => {
 
   // Game loop effects
   useEffect(() => {
-    if (gameState !== 'playing') return;
-    if (!targetButton) return; // Add this line to prevent interval during animation
+    if (gameState !== 'playing') return; // Add this line to prevent interval during animation
 
     const interval = setInterval(() => {
       // Move target to new position if not clicked in time
