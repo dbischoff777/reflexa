@@ -9,6 +9,7 @@ import PlayerProfile from './PlayerProfile';
 import { PlayerProvider } from './utils/PlayerContext';
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer } from 'react-toastify';
+import { Toaster } from 'react-hot-toast';
 import Shop from './components/Shop';
 
 // Create a wrapper component to access the context
@@ -33,6 +34,7 @@ function App() {
       <SettingsProvider>
         <PlayerProvider>
           <ToastContainer />
+          <Toaster position="top-center" />
           <div className="App">
             <AppRoutes />
           </div>

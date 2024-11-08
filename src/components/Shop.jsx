@@ -1,58 +1,88 @@
 import React, { useState } from 'react';
 import { usePlayer } from '../utils/PlayerContext';
 import { useSettings } from '../Settings';
-import { Coins, ArrowLeft } from 'lucide-react';
+import { Coins, ArrowLeft, Filter } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 const Shop = () => {
   const navigate = useNavigate();
   const { playerData, updatePlayerData } = usePlayer();
   const { settings } = useSettings();
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+
   const [items, setItems] = useState([
     { 
       id: 1, 
-      name: 'Item 1', 
+      name: 'Premium Puppy Food', 
+      description: 'High-quality nutrition for growing puppies',
+      category: 'food',
       cost: 1500, 
       unlocked: false,
       image: 'https://placehold.co/400x400/png'
     },
     { 
       id: 2, 
-      name: 'Item 2', 
+      name: 'Cozy Bed', 
+      description: 'Soft and comfortable bed for sweet dreams',
+      category: 'furniture',
       cost: 900, 
       unlocked: false,
-      image: 'https://placehold.co/400x400/png'    },
+      image: 'https://placehold.co/400x400/png'
+    },
     { 
       id: 3, 
-      name: 'Item 3', 
+      name: 'Super Toy', 
+      description: 'What toy that is',
+      category: 'toys',
       cost: 400, 
       unlocked: false,
-      image: 'https://placehold.co/400x400/png'    },
+      image: 'https://placehold.co/400x400/png'
+    },
     {
       id: 4,
-      name: 'Item 4',
+      name: 'Avocado',
+      description: 'Super Tasty',
+      category: 'food',
       cost: 200,
       unlocked: false,
-      image: 'https://placehold.co/400x400/png'    }
+      image: 'https://placehold.co/400x400/png'
+    }
   ]);
+
+  const categories = ['all', 'food', 'furniture', 'toys'];
 
   const handlePurchase = (itemId) => {
     const item = items.find(i => i.id === itemId);
-    if (playerData.coins >= item.cost && !item.unlocked) {
-      // Subtract coins from player data
+    setSelectedItem(item);
+    setShowConfirmation(true);
+  };
+
+  const confirmPurchase = () => {
+    if (playerData.coins >= selectedItem.cost && !selectedItem.unlocked) {
       updatePlayerData({
         ...playerData,
-        coins: playerData.coins - item.cost
+        coins: playerData.coins - selectedItem.cost
       });
 
-      // Update items state to mark as unlocked
       setItems(prevItems =>
         prevItems.map(i =>
-          i.id === itemId ? { ...i, unlocked: true } : i
+          i.id === selectedItem.id ? { ...i, unlocked: true } : i
         )
       );
+
+      toast.success('Purchase successful!');
+    } else {
+      toast.error('Not enough coins!');
     }
+    setShowConfirmation(false);
   };
+
+  const filteredItems = items.filter(item => 
+    selectedCategory === 'all' || item.category === selectedCategory
+  );
 
   const handleBack = () => {
     navigate(-1);
@@ -90,11 +120,32 @@ const Shop = () => {
         </div>
       </div>
 
+      {/* Category Filter */}
+      <div className="px-4 py-2">
+        <div className="max-w-7xl mx-auto flex gap-2 overflow-x-auto">
+          {categories.map(category => (
+            <button
+              key={category}
+              onClick={() => setSelectedCategory(category)}
+              className={`px-4 py-2 rounded-full capitalize whitespace-nowrap ${
+                selectedCategory === category
+                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                  : isDark
+                    ? 'bg-gray-800 text-gray-200'
+                    : 'bg-white text-gray-600'
+              }`}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Main Content */}
       <div className="flex-grow p-4 sm:p-6">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 gap-4">
-            {items.map(item => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {filteredItems.map(item => (
               <div
                 key={item.id}
                 className={`relative p-4 rounded-2xl shadow-lg transition-all duration-200 ${
@@ -114,6 +165,9 @@ const Shop = () => {
                       <p className="font-medium text-white">{item.cost}</p>
                     </div>
                   </div>
+                  <p className="text-sm text-gray-500 mb-4 text-center">
+                    {item.description}
+                  </p>
                   <button
                     className={`w-full px-4 py-2 rounded-full transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl ${
                       item.unlocked
@@ -135,6 +189,30 @@ const Shop = () => {
           </div>
         </div>
       </div>
+
+      {/* Purchase Confirmation Modal */}
+      {showConfirmation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className={`p-6 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-white'} max-w-sm w-full`}>
+            <h3 className="text-lg font-bold mb-4">Confirm Purchase</h3>
+            <p className="mb-4">Are you sure you want to purchase {selectedItem.name} for {selectedItem.cost} coins?</p>
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => setShowConfirmation(false)}
+                className="px-4 py-2 rounded-full bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmPurchase}
+                className="px-4 py-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
