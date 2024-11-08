@@ -837,27 +837,19 @@ const PopItGameUI = ({
                   )}
                   
                   {/* Game Elements Container */}
-                  <div className="absolute inset-0 z-10">
-                    {Array.from({ length: settings.gridColumns * settings.gridRows }).map((_, index) => {
-                      const margin = 15;
-                      const left = Math.random() * (100 - 2 * margin) + margin;
-                      const top = Math.random() * (100 - 2 * margin) + margin;
-                      
-                      return (
-                        <div 
-                          key={index} 
-                          className="absolute transform -translate-x-1/2 -translate-y-1/2"
-                          style={{
-                            left: `${left}%`,
-                            top: `${top}%`,
-                            width: '200px',
-                            height: '200px',
-                          }}
-                        >
-                          {renderButton(index)}
-                        </div>
-                      );
-                    })}
+                  <div className="absolute inset-0 z-10 border-2 border-red-500 grid gap-4 p-4"
+                       style={{
+                         gridTemplateColumns: `repeat(${settings.gridColumns}, 1fr)`,
+                         gridTemplateRows: `repeat(${settings.gridRows}, 1fr)`
+                       }}>
+                    {Array.from({ length: settings.gridColumns * settings.gridRows }).map((_, index) => (
+                      <div 
+                        key={index} 
+                        className="relative w-full h-full border-2 border-red-500 flex items-center justify-center"
+                      >
+                        {renderButton(index)}
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
