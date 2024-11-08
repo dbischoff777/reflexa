@@ -32,46 +32,11 @@ const PopItGame = () => {
   // Add state for wake lock status
   const [wakeLockActive, setWakeLockActive] = useState(false);
 
-  // Initialize screen protection
-  useEffect(() => {
-    let wakeLock = null;
-
-    const requestWakeLock = async () => {
-        try {
-            wakeLock = await navigator.wakeLock.request('screen');
-            setWakeLockActive(true);
-            console.log('Wake Lock is active');
-        } catch (err) {
-            setWakeLockActive(false);
-            console.log('Wake Lock request failed:', err.message);
-        }
-    };
-
-    const handleVisibilityChange = () => {
-        if (document.visibilityState === 'visible') {
-            requestWakeLock();
-        }
-    };
-
-    // Initial wake lock request
-    requestWakeLock();
-
-    // Re-request wake lock if page visibility changes
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    // Cleanup
-    return () => {
-        document.removeEventListener('visibilitychange', handleVisibilityChange);
-        if (wakeLock) {
-            wakeLock.release()
-                .then(() => {
-                    setWakeLockActive(false);
-                    console.log('Wake Lock released');
-                })
-                .catch((err) => console.log('Error releasing Wake Lock:', err));
-        }
-    };
-  }, []);
+  // Music state declarations (keep these at the top)
+  const [isMusicPlaying, setIsMusicPlaying] = useState(
+    JSON.parse(localStorage.getItem('isMusicPlaying') || 'false')
+  );
+  const [musicInitialized, setMusicInitialized] = useState(false);
 
   const { settings } = useSettings();
   
@@ -650,8 +615,10 @@ const PopItGame = () => {
       return;
     }
     
-    // Fade out music when game starts
-    MusicGenerator.pause();
+    // Fade out and pause music when game starts
+    if (isMusicPlaying) {
+      MusicGenerator.fadeOut().then(() => MusicGenerator.pause());
+    }
     
     // Increment games played in achievement progress
     const currentProgress = JSON.parse(localStorage.getItem('achievementProgress') || '{}');
@@ -691,12 +658,14 @@ const PopItGame = () => {
     });
   
     playSound('countdown');
-  }, [username, playSound]);
+  }, [username, isMusicPlaying, playSound]);
 
-  // Modify handleExit to resume music
+  // Modify handleExit to handle music
   const handleExit = useCallback(() => {
-    // Resume music when returning to menu
-    MusicGenerator.play();
+    // Resume music when returning to menu if it was playing
+    if (isMusicPlaying) {
+      MusicGenerator.play();
+    }
     
     // Remove highlight from buttons
     setTargetButton(null);
@@ -709,7 +678,7 @@ const PopItGame = () => {
     setMultiplier(1);
     setGameSpeed(1);
     setParticleEffects([]);
-  }, []);
+  }, [isMusicPlaying]);
 
   // Handle game over
   const handleGameOver = useCallback(() => {
@@ -1069,41 +1038,45 @@ const PopItGame = () => {
     }
   }, [lives, gameOver, handleGameOver]);
 
-  const [musicInitialized, setMusicInitialized] = useState(false);
-
-  // Initialize music
+  // Now we can add the effects that depend on isMusicPlaying
   useEffect(() => {
-    const initMusic = async () => {
+    localStorage.setItem('isMusicPlaying', JSON.stringify(isMusicPlaying));
+  }, [isMusicPlaying]);
+
+  useEffect(() => {
+    const initializeMusic = async () => {
       try {
         if (!musicInitialized) {
           console.log('Initializing music...');
           await MusicGenerator.generateMusic();
           setMusicInitialized(true);
           console.log('Music initialized successfully');
+          
+          if (isMusicPlaying && gameState === GAME_STATES.MENU) {
+            MusicGenerator.play();
+          }
         }
       } catch (error) {
         console.error('Failed to initialize music:', error);
       }
     };
 
-    initMusic();
-  }, [musicInitialized]);
+    initializeMusic();
 
-  // Play music when in menu state
-  useEffect(() => {
-    if (musicInitialized && gameState === GAME_STATES.MENU) {
-      console.log('Attempting to play music in menu state');
-      MusicGenerator.play();
-    }
-  }, [musicInitialized, gameState]);
-
-  // Cleanup
-  useEffect(() => {
     return () => {
-      console.log('Cleaning up music');
-      MusicGenerator.pause();
+      if (isMusicPlaying) {
+        MusicGenerator.fadeOut().then(() => MusicGenerator.pause());
+      }
     };
-  }, []);
+  }, [musicInitialized, gameState, isMusicPlaying]);
+
+  useEffect(() => {
+    if (gameState === GAME_STATES.MENU && isMusicPlaying) {
+      MusicGenerator.play();
+    } else {
+      MusicGenerator.fadeOut().then(() => MusicGenerator.pause());
+    }
+  }, [gameState, isMusicPlaying]);
 
   return (
     <PopItGameUI
