@@ -53,12 +53,11 @@ const PopItGameUI = ({
     }
   };
 
-  const calculateHeight = () => {
-    if (settings.gridRows === 1) {
-      if (settings.gridColumns === 2) return '150%';
-      if (settings.gridColumns === 3) return '165%';
+  const handleStartGame = () => {
+    if (username.trim() && username !== localStorage.getItem('username')) {
+      localStorage.setItem('username', username.trim());
     }
-    return `${100 / settings.gridRows}%`;
+    startGame();
   };
 
   const StatBox = ({ theme, children, extraClasses = '' }) => (
@@ -859,8 +858,7 @@ const PopItGameUI = ({
           <div className={`flex flex-col items-center justify-center gap-6 my-8 p-6 rounded-lg ${
             settings.theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'
           }`}>
-           
-            {showUsernameInput ? (
+            {showUsernameInput && !localStorage.getItem('username') ? (
               <form onSubmit={handleUsernameSubmit} className="w-full max-w-xs">
                 <input
                   type="text"
@@ -888,7 +886,7 @@ const PopItGameUI = ({
             ) : (
               <div className="flex flex-col items-center gap-4 mt-6">
               <button
-                onClick={startGame}
+                onClick={handleStartGame}
                 className={`w-full max-w-xs py-3 px-6 rounded-lg font-bold
                   transition-all duration-200 transform hover:scale-105
                   flex items-center justify-center gap-2
