@@ -136,6 +136,21 @@ class MusicGenerator {
       this.audio.volume = Math.max(0, Math.min(1, level));
     }
   }
+
+  async stop() {
+    if (!this.audio) return;
+    
+    try {
+      console.log('Stopping music');
+      this.isPlaying = false;
+      await this.fadeOut();
+      this.audio.pause();
+      this.audio.currentTime = 0; // Reset playback position to beginning
+      console.log('Music stopped successfully');
+    } catch (error) {
+      console.error('Error stopping music:', error);
+    }
+  }
 }
 
 export default new MusicGenerator(); 

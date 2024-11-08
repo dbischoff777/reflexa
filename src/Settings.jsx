@@ -121,7 +121,7 @@ const Settings = () => {
         MusicGenerator.play();
       } else {
         await MusicGenerator.fadeOut();
-        MusicGenerator.pause();
+        MusicGenerator.stop();
       }
 
       setIsMusicPlaying(newMusicState);
@@ -135,7 +135,7 @@ const Settings = () => {
   useEffect(() => {
     return () => {
       if (isMusicPlaying) {
-        MusicGenerator.fadeOut().then(() => MusicGenerator.pause());
+        MusicGenerator.fadeOut().then(() => MusicGenerator.stop());
       }
     };
   }, [isMusicPlaying]);
