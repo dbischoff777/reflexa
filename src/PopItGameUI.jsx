@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import livesIcon from './images/lives.png';
@@ -182,16 +182,76 @@ const GameContent = ({
     </button>
   );
 
+  // Add mobile optimization logic
+  useEffect(() => {
+    const handleResize = () => {
+      // Prevent zoom on double tap for iOS
+      const meta = document.querySelector('meta[name="viewport"]');
+      if (meta) {
+        meta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+      }
+    };
+
+    // Prevent pull-to-refresh
+    const preventPullToRefresh = (e) => {
+      if (gameState === GAME_STATES.PLAYING) {
+        e.preventDefault();
+      }
+    };
+
+    // Prevent context menu
+    const preventContextMenu = (e) => {
+      if (gameState === GAME_STATES.PLAYING) {
+        e.preventDefault();
+      }
+    };
+
+    // Add event listeners
+    window.addEventListener('resize', handleResize);
+    document.addEventListener('touchmove', preventPullToRefresh, { passive: false });
+    document.addEventListener('contextmenu', preventContextMenu);
+    handleResize(); // Initial call
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      document.removeEventListener('touchmove', preventPullToRefresh);
+      document.removeEventListener('contextmenu', preventContextMenu);
+      
+      // Reset viewport meta on cleanup
+      const meta = document.querySelector('meta[name="viewport"]');
+      if (meta) {
+        meta.setAttribute('content', 'width=device-width, initial-scale=1.0');
+      }
+    };
+  }, [gameState]);
+
   return (
-    <div className={`min-h-screen w-full fixed inset-0 ${
-      settings.theme === 'dark'
-        ? gridShake 
-          ? 'animate-shake-and-flash bg-gray-800 text-white'
-          : 'bg-gray-800 text-white'
-        : gridShake
-          ? 'animate-shake-and-flash bg-gray-100 text-gray-900'
-          : 'bg-gray-100 text-gray-900'
-    }`}>
+    <div 
+      className={`min-h-screen w-full fixed inset-0 ${
+        settings.theme === 'dark'
+          ? gridShake 
+            ? 'animate-shake-and-flash bg-gray-800 text-white'
+            : 'bg-gray-800 text-white'
+          : gridShake
+            ? 'animate-shake-and-flash bg-gray-100 text-gray-900'
+            : 'bg-gray-100 text-gray-900'
+      }`}
+      onTouchStart={(e) => {
+        if (gameState === GAME_STATES.PLAYING) {
+          e.preventDefault();
+        }
+      }}
+      style={{
+        WebkitTouchCallout: 'none', // Disable touch callout
+        WebkitUserSelect: 'none', // Disable text selection
+        KhtmlUserSelect: 'none',
+        MozUserSelect: 'none',
+        msUserSelect: 'none',
+        userSelect: 'none',
+        overscrollBehavior: 'none', // Prevent overscroll bounce
+      }}
+    >
       {gameState !== GAME_STATES.PLAYING && (
         <NavigationBar 
           theme={settings.theme} 
@@ -833,11 +893,15 @@ const GameContent = ({
                        style={{
                          gridTemplateColumns: `repeat(${settings.gridColumns}, 1fr)`,
                          gridTemplateRows: `repeat(${settings.gridRows}, 1fr)`,
+                         touchAction: 'none', // Prevent default touch behaviors
                        }}>
                     {Array.from({ length: settings.gridColumns * settings.gridRows }).map((_, index) => (
                       <div 
                         key={index} 
                         className="relative w-full h-full flex items-center justify-center"
+                        style={{
+                          touchAction: 'none',
+                        }}
                       >
                         {renderButton(index)}
                       </div>
