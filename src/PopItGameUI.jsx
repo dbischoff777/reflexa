@@ -48,6 +48,7 @@ const GameContent = ({
   onMusicToggle,
 }) => {
   const { hasCompletedTutorial, startTutorial } = useTutorial();
+  const { updateSettings } = useSettings();
   
   //quest buttons
   const [showDailyQuests, setShowDailyQuests] = useState(false);
@@ -55,6 +56,10 @@ const GameContent = ({
 
   const handleMusicToggle = () => {
     onMusicToggle();
+  };
+
+  const handleSoundToggle = () => {
+    updateSettings({ soundEnabled: !settings.soundEnabled });
   };
 
   const handleUsernameSubmit = (e) => {
@@ -74,9 +79,9 @@ const GameContent = ({
 
   const StatBox = ({ theme, children, extraClasses = '' }) => (
     <div className={`
-      flex items-center gap-1 sm:gap-2 
-      p-2 sm:p-3 
-      rounded-lg
+      flex items-center gap-1.5 xs:gap-2 
+      p-2.5 xs:p-3 
+      rounded-xl
       transform transition-all duration-300
       ${theme === 'dark' ? 'bg-purple-900/80 text-purple-200' : 'bg-purple-100/80 text-purple-600'}
       shadow-lg backdrop-blur-sm
@@ -150,13 +155,12 @@ const GameContent = ({
           onClick={handleMusicToggle}
           className={`
             group relative 
-            px-4 xs:px-5 
-            py-2.5 xs:py-3
+            p-2 xs:p-2.5
             rounded-xl
             font-medium 
             transition-all duration-300 ease-out
             hover:scale-105
-            flex items-center gap-2
+            flex items-center
             ${settings.theme === 'dark'
               ? 'bg-purple-900/40 text-purple-300 hover:text-purple-200'
               : 'bg-purple-100/40 text-purple-600 hover:text-purple-500'
@@ -165,7 +169,6 @@ const GameContent = ({
           aria-label={isMusicPlaying ? "Turn music off" : "Turn music on"}
         >
           {isMusicPlaying ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
-          <span className="text-sm font-medium">Music</span>
           
           {/* Link Glow Effect */}
           <div className={`
@@ -185,13 +188,12 @@ const GameContent = ({
           onClick={handleSoundToggle}
           className={`
             group relative 
-            px-4 xs:px-5 
-            py-2.5 xs:py-3
+            p-2 xs:p-2.5
             rounded-xl
             font-medium 
             transition-all duration-300 ease-out
             hover:scale-105
-            flex items-center gap-2
+            flex items-center
             ${settings.theme === 'dark'
               ? 'bg-purple-900/40 text-purple-300 hover:text-purple-200'
               : 'bg-purple-100/40 text-purple-600 hover:text-purple-500'
@@ -200,7 +202,6 @@ const GameContent = ({
           aria-label={settings.soundEnabled ? "Turn sound effects off" : "Turn sound effects on"}
         >
           {settings.soundEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
-          <span className="text-sm font-medium">Sound</span>
           
           {/* Link Glow Effect */}
           <div className={`
@@ -546,13 +547,81 @@ const GameContent = ({
           </div>
         </div>
         {/* Navigation Links */}
-        <div className={`flex flex-wrap justify-center gap-2 2xs:gap-3 xs:gap-4 sm:gap-6 
+        <div className={`
+          absolute top-2 right-2 xs:top-3 xs:right-3 sm:top-4 sm:right-4
+          flex flex-col gap-2 
           transition-all duration-300 ease-in-out ${
             gameState !== 'menu' 
-              ? 'opacity-0 scale-95 h-0 mt-0 overflow-hidden' 
-              : 'opacity-100 scale-100 mt-4 2xs:mt-5 xs:mt-6 sm:mt-8'
-        }`}>
-          <MusicToggleButton />
+              ? 'opacity-0 scale-95 pointer-events-none' 
+              : 'opacity-100 scale-100'
+          }`}>
+          {/* Music Toggle */}
+          <button
+            onClick={handleMusicToggle}
+            className={`
+              group relative 
+              px-3 py-2 xs:px-4 xs:py-2.5
+              rounded-xl
+              font-medium 
+              transition-all duration-300 ease-out
+              hover:scale-105
+              flex items-center gap-2
+              ${settings.theme === 'dark'
+                ? 'bg-purple-900/40 text-purple-300 hover:text-purple-200'
+                : 'bg-purple-100/40 text-purple-600 hover:text-purple-500'
+              }
+            `}
+            aria-label={isMusicPlaying ? "Turn music off" : "Turn music on"}
+          >
+            {isMusicPlaying ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+            <span className="text-sm font-medium">Music</span>
+            
+            {/* Link Glow Effect */}
+            <div className={`
+              absolute inset-0
+              rounded-xl
+              transition-all duration-300
+              opacity-0 group-hover:opacity-100
+              ${settings.theme === 'dark'
+                ? 'bg-purple-500/15 shadow-[0_0_25px_rgba(168,85,247,0.6)] border border-purple-400/20' 
+                : 'bg-purple-500/10 shadow-[0_0_25px_rgba(147,51,234,0.4)] border border-purple-500/20'
+              }
+            `} />
+          </button>
+
+          {/* Sound Effects Toggle */}
+          <button
+            onClick={handleSoundToggle}
+            className={`
+              group relative 
+              px-3 py-2 xs:px-4 xs:py-2.5
+              rounded-xl
+              font-medium 
+              transition-all duration-300 ease-out
+              hover:scale-105
+              flex items-center gap-2
+              ${settings.theme === 'dark'
+                ? 'bg-purple-900/40 text-purple-300 hover:text-purple-200'
+                : 'bg-purple-100/40 text-purple-600 hover:text-purple-500'
+              }
+            `}
+            aria-label={settings.soundEnabled ? "Turn sound effects off" : "Turn sound effects on"}
+          >
+            {settings.soundEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+            <span className="text-sm font-medium">Sound</span>
+            
+            {/* Link Glow Effect */}
+            <div className={`
+              absolute inset-0
+              rounded-xl
+              transition-all duration-300
+              opacity-0 group-hover:opacity-100
+              ${settings.theme === 'dark'
+                ? 'bg-purple-500/15 shadow-[0_0_25px_rgba(168,85,247,0.6)] border border-purple-400/20' 
+                : 'bg-purple-500/10 shadow-[0_0_25px_rgba(147,51,234,0.4)] border border-purple-500/20'
+              }
+            `} />
+          </button>
         </div>
 
         {/* Achievement Notification */}
@@ -666,10 +735,14 @@ const GameContent = ({
             {showGameOver && (
               <div className="fixed inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-[1000]">
                 <div className={`
-                  p-4 xs:p-6 sm:p-8 rounded-xl text-center shadow-2xl
+                  p-4 xs:p-5 sm:p-6 
+                  rounded-xl 
+                  text-center 
+                  shadow-2xl
                   transform transition-all duration-300 ease-out
                   animate-fadeIn scale-100 
-                  max-w-[95%] xs:max-w-md w-full mx-2 xs:mx-4
+                  max-w-[320px] xs:max-w-[360px] w-full 
+                  mx-auto
                   ${settings.theme === 'dark' 
                     ? 'bg-gray-800/95 border border-purple-500/20' 
                     : 'bg-white/95 border border-purple-200'
@@ -925,7 +998,7 @@ const GameContent = ({
                   )}
                   
                   {/* Game Elements Container */}
-                  <div className="absolute inset-0 z-10 grid gap-0.5 xs:gap-1 sm:gap-2 p-1 xs:p-2 sm:p-3"
+                  <div className="absolute inset-0 z-10 grid gap-[2px] xs:gap-1 sm:gap-1.5 p-1.5 xs:p-2 sm:p-2.5"
                        style={{
                          gridTemplateColumns: `repeat(${settings.gridColumns}, 1fr)`,
                          gridTemplateRows: `repeat(${settings.gridRows}, 1fr)`,
@@ -976,17 +1049,22 @@ const GameContent = ({
                   </button>
                 </form>
               ) : (
-                <div className="flex flex-col items-center gap-2 xs:gap-3">
+                <div className="flex flex-col gap-2 xs:gap-3 items-center">
                 <button
                   onClick={handleStartGame}
-                  className={`w-full max-w-xs py-2 xs:py-3 px-4 xs:px-6 rounded-lg font-bold
-                    transition-all duration-200 transform hover:scale-105
+                  className={`
+                    w-full max-w-[280px] py-3 xs:py-3.5 px-4 xs:px-6 
+                    rounded-xl
+                    font-bold text-base xs:text-lg
+                    transition-all duration-200 transform 
+                    hover:scale-[1.02] active:scale-[0.98]
                     flex items-center justify-center gap-2
                     shadow-lg hover:shadow-xl
                     ${settings.theme === 'dark'
                       ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white'
                       : 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white'
-                    }`}
+                    }
+                  `}
                 >
                   <LucidePlay className="h-5 w-5" />
                   Start Game
