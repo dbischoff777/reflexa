@@ -779,7 +779,6 @@ const PopItGame = () => {
             setNewAchievement(achievementDetails);
         }
     }
-    
     playSound('gameOver');
     setGameOver(true);
     setShowGameOver(true);

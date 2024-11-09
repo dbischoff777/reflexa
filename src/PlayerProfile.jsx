@@ -149,7 +149,7 @@ const PlayerProfile = () => {
   
   switch (achievement.type) {
     case 'GAMES_PLAYED':
-      return Math.min(100, ((progress.gamesPlayed || 0) / achievement.requirement) * 100);
+      return Math.min(100, ((stats.basic.gamesPlayed || 0) / achievement.requirement) * 100);
     case 'HIGH_SCORE':
       return Math.min(100, ((progress.highestScore || 0) / achievement.requirement) * 100);
     case 'ACCURACY':
