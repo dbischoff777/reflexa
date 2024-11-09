@@ -43,9 +43,9 @@ const AppRoutes = () => {
 function App() {
   return (
     <Router>
+      <MobileOptimizer />
       <SettingsProvider>
         <PlayerProvider>
-          <MobileOptimizer />
           <ToastContainer />
           <Toaster position="top-center" />
           <div className="App">
