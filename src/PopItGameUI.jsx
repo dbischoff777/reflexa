@@ -1,17 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import livesIcon from './images/lives.png';
 import frenchieIcon from './images/frenchie.png';
 import scoreIcon from './images/score.png';
 import { FacebookIcon, TwitterIcon, WhatsAppIcon } from './Icons';
-import ScreenProtectionStatus from './components/ScreenProtectionStatus';
 import DailyQuests from './DailyQuests';
 import WeeklyQuests from './WeeklyQuests';
-import { LucideUser, LucideSettings, LucideInfo, LucidePlay, LucideCalendar, ShoppingCart, Clock, Trophy, Volume2, VolumeX } from 'lucide-react';
+import { LucidePlay, LucideCalendar, ShoppingCart, Clock, Trophy, Volume2, VolumeX } from 'lucide-react';
 import floorBackground from './images/gameBackgrounds/floor1.png';
+import NavigationBar from './components/NavigationBar';
+import { GAME_STATES } from './PopItGame';
+import { TutorialProvider, useTutorial } from './contexts/TutorialContext';
+import Tutorial from './components/Tutorial';
 
-const PopItGameUI = ({
+const GameContent = ({
   settings,
   username,
   showUsernameInput,
@@ -42,8 +45,8 @@ const PopItGameUI = ({
   stopMusic,
   isMusicPlaying,
   onMusicToggle,
-  //onAnimationEnd
 }) => {
+  const { hasCompletedTutorial, startTutorial } = useTutorial();
   
   //quest buttons
   const [showDailyQuests, setShowDailyQuests] = useState(false);
@@ -189,225 +192,219 @@ const PopItGameUI = ({
           ? 'animate-shake-and-flash bg-gray-100 text-gray-900'
           : 'bg-gray-100 text-gray-900'
     }`}>
-      <ScreenProtectionStatus 
-        theme={settings.theme} 
-        wakeLockActive={wakeLockActive}
-        brightnessAdjusted={brightnessAdjusted}
-        gameState={gameState}
-      />
+      {gameState !== GAME_STATES.PLAYING && (
+        <NavigationBar 
+          theme={settings.theme} 
+          gameState={gameState}
+        />
+      )}
       
-      {/* Main Container */}
-      <div className="container mx-auto 
-                      px-2 2xs:px-3 xs:px-4 sm:px-6 lg:px-8 
-                      py-2 2xs:py-3 xs:py-4 sm:py-6 lg:py-8 
-                      max-w-7xl">
-  
-      {/* Frenchie Image Container */}
-      <div className="flex justify-center 
-                      mb-2 2xs:mb-3 xs:mb-4 sm:mb-5 md:mb-6 
-                      pointer-events-none">
-          <div className={`
-            relative
-            transition-all duration-300 ease-in-out
-            ${gameState !== 'menu' 
-              ? 'opacity-0 scale-95 h-0 mb-0 overflow-hidden' 
-              : `opacity-100 scale-100 
-                h-16 2xs:h-20 xs:h-24 sm:h-28 md:h-32 lg:h-36 xl:h-40
-                mb-2 2xs:mb-3 xs:mb-4 sm:mb-5 md:mb-6
-                animate-float`
-            }
-          `}>
-            <motion.div
-              initial={{ scale: 0.9, y: 10, rotate: -5 }}
-              animate={{ 
-                scale: [1, 1.08, 1],
-                y: [0, -8, 0],
-                rotate: [-5, 5, -5]
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                repeatType: "reverse",
-                ease: "easeInOut"
-              }}
-              whileHover={{
-                scale: 1.15,
-                rotate: [-5, 5],
-                transition: {
-                  duration: 0.3
-                }
-              }}
-            >
-              <img
-                src={frenchieIcon}
-                alt="Frenchie"
-                className={`
-                  w-32 h-32 
-                  object-contain 
-                  drop-shadow-xl
-                  transition-all duration-300
-                  hover:scale-110
-                  hover:rotate-6
-                  ${settings.theme === 'dark' 
-                    ? 'filter-none' 
-                    : 'brightness-100 contrast-105'
-                  }
-                `}
-                style={{ 
-                  filter: `
-                    ${settings.theme === 'dark' 
-                      ? 'drop-shadow(0 0 12px rgba(147, 51, 234, 0.4)) brightness(1.1)' 
-                      : 'drop-shadow(0 0 8px rgba(107, 33, 168, 0.3))'
-                    }
-                  `
-                }}
-              />
-            </motion.div>
-            
-            {/* Add decorative elements */}
-            <div className="absolute -z-10 inset-0 flex items-center justify-center">
-              <div className={`
-                absolute 
-                w-40 h-40 
-                rounded-full 
-                blur-2xl 
-                opacity-20
-                transition-all duration-300
-                ${settings.theme === 'dark' 
-                  ? 'bg-purple-500' 
-                  : 'bg-purple-300'
-                }
-              `} />
-            </div>
-            
-            {/* Enhanced decorative elements */}
-            <div className="absolute -z-10 inset-0 flex items-center justify-center">
-              <div className={`
-                absolute 
-                w-48 h-48 
-                rounded-full 
-                blur-2xl 
-                opacity-20
-                transition-all duration-300
-                ${settings.theme === 'dark' 
-                  ? 'bg-purple-500' 
-                  : 'bg-purple-300'
-                }
-              `} />
-              <div className={`
-                absolute 
-                w-40 h-40 
-                rounded-full 
-                blur-xl
-                opacity-15
-                animate-pulse-slow
-                ${settings.theme === 'dark' 
-                  ? 'bg-purple-400' 
-                  : 'bg-purple-200'
-                }
-              `} />
-            </div>
-            
-            {/* Enhanced floating particles */}
-            <motion.div
-              className="absolute inset-0"
-              initial="hidden"
-              animate="visible"
-            >
-              {[...Array(12)].map((_, i) => (
+      <div className="container mx-auto px-1 xs:px-2 sm:px-4 lg:px-6 py-1 xs:py-2 sm:py-4 lg:py-6 max-w-7xl mb-8 xs:mb-12 pt-16 xs:pt-20">
+        {/* Main Container */}
+        <div className="container mx-auto px-1 xs:px-2 sm:px-4 lg:px-6 py-1 xs:py-2 sm:py-4 lg:py-6 max-w-7xl">
+          {/* Frenchie Image Container */}
+          <div className="flex justify-center mb-1 xs:mb-2 sm:mb-4 pointer-events-none">
+            <div className={`
+              relative
+              transition-all duration-300 ease-in-out
+              ${gameState !== 'menu' 
+                ? 'opacity-0 scale-95 h-0 mb-0 overflow-hidden' 
+                : `opacity-100 scale-100 
+                  h-16 2xs:h-20 xs:h-24 sm:h-28 md:h-32 lg:h-36 xl:h-40
+                  mb-2 2xs:mb-3 xs:mb-4 sm:mb-5 md:mb-6
+                  animate-float`
+              }
+            `}>
                 <motion.div
-                  key={i}
-                  className={`
+                  initial={{ scale: 0.9, y: 10, rotate: -5 }}
+                  animate={{ 
+                    scale: [1, 1.08, 1],
+                    y: [0, -8, 0],
+                    rotate: [-5, 5, -5]
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    repeatType: "reverse",
+                    ease: "easeInOut"
+                  }}
+                  whileHover={{
+                    scale: 1.15,
+                    rotate: [-5, 5],
+                    transition: {
+                      duration: 0.3
+                    }
+                  }}
+                >
+                  <img
+                    src={frenchieIcon}
+                    alt="Frenchie"
+                    className={`
+                      w-32 h-32 
+                      object-contain 
+                      drop-shadow-xl
+                      transition-all duration-300
+                      hover:scale-110
+                      hover:rotate-6
+                      ${settings.theme === 'dark' 
+                        ? 'filter-none' 
+                        : 'brightness-100 contrast-105'
+                      }
+                    `}
+                    style={{ 
+                      filter: `
+                        ${settings.theme === 'dark' 
+                          ? 'drop-shadow(0 0 12px rgba(147, 51, 234, 0.4)) brightness(1.1)' 
+                          : 'drop-shadow(0 0 8px rgba(107, 33, 168, 0.3))'
+                        }
+                      `
+                    }}
+                  />
+                </motion.div>
+                
+                {/* Add decorative elements */}
+                <div className="absolute -z-10 inset-0 flex items-center justify-center">
+                  <div className={`
                     absolute 
-                    rounded-full
+                    w-40 h-40 
+                    rounded-full 
+                    blur-2xl 
+                    opacity-20
+                    transition-all duration-300
+                    ${settings.theme === 'dark' 
+                      ? 'bg-purple-500' 
+                      : 'bg-purple-300'
+                    }
+                  `} />
+                </div>
+                
+                {/* Enhanced decorative elements */}
+                <div className="absolute -z-10 inset-0 flex items-center justify-center">
+                  <div className={`
+                    absolute 
+                    w-48 h-48 
+                    rounded-full 
+                    blur-2xl 
+                    opacity-20
+                    transition-all duration-300
+                    ${settings.theme === 'dark' 
+                      ? 'bg-purple-500' 
+                      : 'bg-purple-300'
+                    }
+                  `} />
+                  <div className={`
+                    absolute 
+                    w-40 h-40 
+                    rounded-full 
+                    blur-xl
+                    opacity-15
+                    animate-pulse-slow
                     ${settings.theme === 'dark' 
                       ? 'bg-purple-400' 
-                      : 'bg-purple-500'
+                      : 'bg-purple-200'
                     }
-                  `}
-                  style={{
-                    width: Math.random() * 4 + 2 + 'px',
-                    height: Math.random() * 4 + 2 + 'px',
-                    opacity: Math.random() * 0.5 + 0.2
-                  }}
-                  initial={{ 
-                    opacity: 0,
-                    x: Math.random() * 100 - 50,
-                    y: Math.random() * 100 - 50
-                  }}
-                  animate={{ 
-                    opacity: [0, 0.5, 0],
-                    x: Math.random() * 100 - 50,
-                    y: Math.random() * 100 - 50,
-                    scale: [0.8, 1.2, 0.8]
-                  }}
-                  transition={{
-                    duration: 2 + Math.random() * 2,
-                    repeat: Infinity,
-                    delay: i * 0.2,
-                    ease: "easeInOut"
-                  }}
-                />
-              ))}
-            </motion.div>
-
-            {/* Add sparkles */}
-            <motion.div
-              className="absolute inset-0"
-              initial="hidden"
-              animate="visible"
-            >
-              {[...Array(6)].map((_, i) => (
+                  `} />
+                </div>
+                
+                {/* Enhanced floating particles */}
                 <motion.div
-                  key={`sparkle-${i}`}
-                  className={`
-                    absolute 
-                    w-1 h-1
-                    rotate-45
-                    ${settings.theme === 'dark' 
-                      ? 'bg-purple-300' 
-                      : 'bg-purple-400'
-                    }
-                  `}
-                  initial={{ 
-                    opacity: 0,
-                    scale: 0
-                  }}
-                  animate={{ 
-                    opacity: [0, 1, 0],
-                    scale: [0, 1, 0],
-                    rotate: [0, 90, 180]
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    delay: i * 0.3,
-                    ease: "easeInOut"
-                  }}
-                  style={{
-                    left: `${Math.random() * 100}%`,
-                    top: `${Math.random() * 100}%`,
-                  }}
-                />
-              ))}
-            </motion.div>
+                  className="absolute inset-0"
+                  initial="hidden"
+                  animate="visible"
+                >
+                  {[...Array(12)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className={`
+                        absolute 
+                        rounded-full
+                        ${settings.theme === 'dark' 
+                          ? 'bg-purple-400' 
+                          : 'bg-purple-500'
+                        }
+                      `}
+                      style={{
+                        width: Math.random() * 4 + 2 + 'px',
+                        height: Math.random() * 4 + 2 + 'px',
+                        opacity: Math.random() * 0.5 + 0.2
+                      }}
+                      initial={{ 
+                        opacity: 0,
+                        x: Math.random() * 100 - 50,
+                        y: Math.random() * 100 - 50
+                      }}
+                      animate={{ 
+                        opacity: [0, 0.5, 0],
+                        x: Math.random() * 100 - 50,
+                        y: Math.random() * 100 - 50,
+                        scale: [0.8, 1.2, 0.8]
+                      }}
+                      transition={{
+                        duration: 2 + Math.random() * 2,
+                        repeat: Infinity,
+                        delay: i * 0.2,
+                        ease: "easeInOut"
+                      }}
+                    />
+                  ))}
+                </motion.div>
+
+                {/* Add sparkles */}
+                <motion.div
+                  className="absolute inset-0"
+                  initial="hidden"
+                  animate="visible"
+                >
+                  {[...Array(6)].map((_, i) => (
+                    <motion.div
+                      key={`sparkle-${i}`}
+                      className={`
+                        absolute 
+                        w-1 h-1
+                        rotate-45
+                        ${settings.theme === 'dark' 
+                          ? 'bg-purple-300' 
+                          : 'bg-purple-400'
+                        }
+                      `}
+                      initial={{ 
+                        opacity: 0,
+                        scale: 0
+                      }}
+                      animate={{ 
+                        opacity: [0, 1, 0],
+                        scale: [0, 1, 0],
+                        rotate: [0, 90, 180]
+                      }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        delay: i * 0.3,
+                        ease: "easeInOut"
+                      }}
+                      style={{
+                        left: `${Math.random() * 100}%`,
+                        top: `${Math.random() * 100}%`,
+                      }}
+                    />
+                  ))}
+                </motion.div>
+              </div>
+            </div>
           </div>
         </div>
       {/* Game Header */}
-        <div className={`
-          text-center
-          transition-all duration-300 ease-in-out
-          ${gameState !== 'menu' 
+        <div className={`text-center transition-all duration-300 ease-in-out ${
+          gameState !== 'menu' 
             ? 'opacity-0 h-0 overflow-hidden' 
-            : 'opacity-100 h-auto mb-4 2xs:mb-5 xs:mb-6 sm:mb-7 md:mb-8'
-          }
-        `}>
-          <div className="text-center mb-3 2xs:mb-4 xs:mb-6 sm:mb-7 md:mb-8">
+            : 'opacity-100 h-auto mb-2 xs:mb-4 sm:mb-6'
+        }`}>
+          <div className="text-center mb-2 xs:mb-3 sm:mb-4">
             <h1 className={`
               relative inline-block 
-              text-2xl 2xs:text-3xl xs:text-4xl sm:text-5xl md:text-6xl
+              text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl
               font-extrabold 
-              mb-2 2xs:mb-3 xs:mb-4 
+              mb-1 xs:mb-2 sm:mb-3 
               ${settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'}
               transition-all duration-300 
               hover:scale-[1.02] xs:hover:scale-[1.03] sm:hover:scale-105 
@@ -431,11 +428,11 @@ const PopItGameUI = ({
             
             <p className={`
               relative 
-              text-sm 2xs:text-base xs:text-lg sm:text-xl md:text-2xl
+              text-xs xs:text-sm sm:text-base md:text-lg
               font-medium 
-              mb-3 2xs:mb-4 xs:mb-5 sm:mb-6 
+              mb-2 xs:mb-3 sm:mb-4
               mx-auto 
-              max-w-[90%] xs:max-w-md sm:max-w-lg
+              max-w-[95%] xs:max-w-md sm:max-w-lg
               ${settings.theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}
               after:content-[''] 
               after:block 
@@ -453,72 +450,12 @@ const PopItGameUI = ({
           </div>
         </div>
         {/* Navigation Links */}
-        <div className={`
-          flex flex-wrap justify-center 
-          gap-2 2xs:gap-3 xs:gap-4 sm:gap-6
-          transition-all duration-300 ease-in-out
-          ${gameState !== 'menu' 
-            ? 'opacity-0 scale-95 h-0 mt-0 overflow-hidden' 
-            : 'opacity-100 scale-100 mt-4 2xs:mt-5 xs:mt-6 sm:mt-8'
-          }
-        `}>
-          {['Profile', 'Leaderboard', 'Settings', 'About'].map((item) => (
-            <Link
-              key={item}
-              to={`/${item.toLowerCase()}`}
-              className={`
-                group relative 
-                px-3 2xs:px-4 xs:px-5 
-                py-2 2xs:py-2.5 
-                rounded-lg xs:rounded-xl 
-                font-medium 
-                transition-all duration-300 ease-out
-                hover:scale-105
-                ${settings.theme === 'dark'
-                  ? 'text-purple-300 hover:text-purple-200'
-                  : 'text-purple-600 hover:text-purple-500'
-                }
-              `}
-            >
-              {/* Icons for each nav item */}
-              {item === 'Profile' && (
-                <LucideUser className="h-6 w-6" />
-              )}
-              {item === 'Leaderboard' && (
-                <Trophy className="h-6 w-6" />
-              )}
-              {item === 'Settings' && (
-                <LucideSettings className="h-6 w-6" />
-              )}
-              {item === 'About' && (
-                <LucideInfo className="h-6 w-6" />
-              )}
-              
-              {/* Link Glow Effect */}
-              <div className={`
-                absolute inset-0
-                rounded-lg xs:rounded-xl
-                transition-all duration-300
-                opacity-0 group-hover:opacity-100
-                transform group-hover:scale-105
-                ${settings.theme === 'dark'
-                  ? 'bg-purple-500/15 shadow-[0_0_25px_rgba(168,85,247,0.6)] border border-purple-400/20' 
-                  : 'bg-purple-500/10 shadow-[0_0_25px_rgba(147,51,234,0.4)] border border-purple-500/20'
-                }
-              `} />
-              {/* Subtle Gradient Overlay */}
-              <div className={`
-                absolute inset-0 
-                rounded-lg xs:rounded-xl
-                opacity-0 group-hover:opacity-100
-                transition-opacity duration-300
-                ${settings.theme === 'dark'
-                  ? 'bg-gradient-to-br from-purple-400/5 to-purple-600/5'
-                  : 'bg-gradient-to-br from-purple-300/5 to-purple-500/5'
-                }
-              `} />
-            </Link>
-          ))}
+        <div className={`flex flex-wrap justify-center gap-2 2xs:gap-3 xs:gap-4 sm:gap-6 
+          transition-all duration-300 ease-in-out ${
+            gameState !== 'menu' 
+              ? 'opacity-0 scale-95 h-0 mt-0 overflow-hidden' 
+              : 'opacity-100 scale-100 mt-4 2xs:mt-5 xs:mt-6 sm:mt-8'
+        }`}>
           <MusicToggleButton />
         </div>
 
@@ -633,10 +570,10 @@ const PopItGameUI = ({
             {showGameOver && (
               <div className="fixed inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-[1000]">
                 <div className={`
-                  p-8 rounded-2xl text-center shadow-2xl
+                  p-4 xs:p-6 sm:p-8 rounded-xl text-center shadow-2xl
                   transform transition-all duration-300 ease-out
                   animate-fadeIn scale-100 
-                  max-w-md w-full mx-4
+                  max-w-[95%] xs:max-w-md w-full mx-2 xs:mx-4
                   ${settings.theme === 'dark' 
                     ? 'bg-gray-800/95 border border-purple-500/20' 
                     : 'bg-white/95 border border-purple-200'
@@ -772,7 +709,7 @@ const PopItGameUI = ({
                     <button
                       onClick={startGame}
                       className={`
-                        w-full px-6 py-3 rounded-xl font-bold text-lg
+                        w-full px-4 xs:px-6 py-2 xs:py-3 rounded-lg xs:rounded-xl font-bold text-base xs:text-lg
                         transform transition-all duration-200
                         hover:scale-105 active:scale-95
                         ${settings.theme === 'dark'
@@ -822,9 +759,9 @@ const PopItGameUI = ({
               <div className="w-full max-w-[95vw] sm:max-w-[80vw] md:max-w-[60vw] lg:max-w-[50vw] xl:max-w-[800px]">
                 <div className="flex justify-between items-center mb-4 sm:mb-6 flex-wrap gap-2 sm:gap-4">
                   <StatBox theme={settings.theme} extraClasses="hover:scale-105 transition-transform">
-                    <div className="flex items-center gap-1 sm:gap-2">
+                    <div className="flex items-center gap-0.5 xs:gap-1 sm:gap-2">
                       <LivesIcons lives={1} theme={settings.theme} />
-                      <span className="text-lg sm:text-xl font-bold tracking-tight">×{lives}</span>
+                      <span className="text-base xs:text-lg sm:text-xl font-bold tracking-tight">×{lives}</span>
                     </div>
                   </StatBox>
                   <StatBox theme={settings.theme} extraClasses="hover:scale-105 transition-transform">
@@ -852,7 +789,7 @@ const PopItGameUI = ({
               </div>
             </div>
               {/* Square Aspect Ratio Container */}
-              <div className="relative w-[98vw] 2xs:w-[95vw] xs:w-[90vw] sm:w-[85vw] md:w-[75vw] lg:w-[65vw] max-w-[800px] mx-auto">
+              <div className="relative w-[95vw] xs:w-[90vw] sm:w-[85vw] md:w-[75vw] lg:w-[65vw] max-w-[800px] mx-auto">
                 <div 
                   className="relative aspect-square rounded-lg overflow-hidden"
                   style={{
@@ -892,7 +829,7 @@ const PopItGameUI = ({
                   )}
                   
                   {/* Game Elements Container */}
-                  <div className="absolute inset-0 z-10 grid gap-1 sm:gap-2 md:gap-3 p-2 sm:p-3 md:p-4"
+                  <div className="absolute inset-0 z-10 grid gap-0.5 xs:gap-1 sm:gap-2 p-1 xs:p-2 sm:p-3"
                        style={{
                          gridTemplateColumns: `repeat(${settings.gridColumns}, 1fr)`,
                          gridTemplateRows: `repeat(${settings.gridRows}, 1fr)`,
@@ -910,153 +847,168 @@ const PopItGameUI = ({
               </div>
             </div>
           ) : (
-          // Menu State Content
-          <div className={`flex flex-col items-center justify-center gap-6 my-8 p-6 rounded-lg ${
-            settings.theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'
-          }`}>
-            {showUsernameInput && !localStorage.getItem('username') ? (
-              <form onSubmit={handleUsernameSubmit} className="w-full max-w-xs">
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Enter your username"
-                  className={`w-full px-4 py-2 rounded-lg mb-4 ${
-                    settings.theme === 'dark'
-                      ? 'bg-gray-600 text-white border-gray-500'
-                      : 'bg-white text-gray-900 border-purple-300'
-                  }`}
-                  maxLength={15}
-                />
+            <div className={`flex flex-col items-center justify-center gap-2 xs:gap-3 sm:gap-4 my-2 xs:my-4 p-2 xs:p-4 rounded-lg ${
+              settings.theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'
+            }`}>
+              {showUsernameInput && !localStorage.getItem('username') ? (
+                <form onSubmit={handleUsernameSubmit} className="w-full max-w-xs">
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Enter your username"
+                    className={`w-full px-4 py-2 rounded-lg mb-4 ${
+                      settings.theme === 'dark'
+                        ? 'bg-gray-600 text-white border-gray-500'
+                        : 'bg-white text-gray-900 border-purple-300'
+                    }`}
+                    maxLength={15}
+                  />
+                  <button
+                    type="submit"
+                    className={`w-full py-2 px-4 rounded-lg font-semibold ${
+                      settings.theme === 'dark'
+                        ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                        : 'bg-purple-600 hover:bg-purple-700 text-white'
+                    }`}
+                  >
+                    Start Game
+                  </button>
+                </form>
+              ) : (
+                <div className="flex flex-col items-center gap-2 xs:gap-3">
                 <button
-                  type="submit"
-                  className={`w-full py-2 px-4 rounded-lg font-semibold ${
-                    settings.theme === 'dark'
-                      ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                      : 'bg-purple-600 hover:bg-purple-700 text-white'
-                  }`}
-                >
-                  Start Game
-                </button>
-              </form>
-            ) : (
-              <div className="flex flex-col items-center gap-4 mt-6">
-              <button
-                onClick={handleStartGame}
-                className={`w-full max-w-xs py-3 px-6 rounded-lg font-bold
-                  transition-all duration-200 transform hover:scale-105
-                  flex items-center justify-center gap-2
-                  shadow-lg hover:shadow-xl
-                  ${settings.theme === 'dark'
-                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white'
-                    : 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white'
-                  }`}
-              >
-                <LucidePlay className="h-6 w-6" />
-                Start Game
-              </button>
-
-              {/* Shop Button */}
-              <Link
-                to="/shop"
-                className={`w-full max-w-xs py-3 px-6 rounded-lg font-semibold text-center 
-                  transition-all duration-200 transform hover:scale-105
-                  flex items-center justify-center gap-2
-                  shadow-lg hover:shadow-xl
-                  ${settings.theme === 'dark'
-                    ? 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white'
-                    : 'bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white'
-                  }`}
-              >
-                <ShoppingCart className="h-5 w-5" />
-                Shop
-              </Link>
-
-              {/* Header for Quests */}
-              <h3 className={`
-                text-lg sm:text-xl md:text-2xl
-                font-bold
-                mt-4 mb-2
-                text-center
-                relative
-                ${settings.theme === 'dark' ? 'text-purple-200' : 'text-purple-700'}
-                after:content-['']
-                after:block
-                after:w-16 sm:after:w-20
-                after:h-0.5
-                after:mx-auto
-                after:mt-2
-                after:rounded-full
-                ${settings.theme === 'dark' 
-                  ? 'after:bg-gradient-to-r after:from-purple-400/30 after:to-transparent'
-                  : 'after:bg-gradient-to-r after:from-purple-500/30 after:to-transparent'
-                }
-                transition-all
-                duration-300
-                transform
-                hover:scale-[1.02]
-              `}>
-                Your Puppies Quests
-              </h3>
-
-              <div className="flex w-full max-w-xs gap-2">
-                {/* Daily Quests Button */}
-                <button
-                  onClick={() => setShowDailyQuests(true)}
-                  className={`
-                    flex-1 py-3 px-4 rounded-lg font-bold
+                  onClick={handleStartGame}
+                  className={`w-full max-w-xs py-2 xs:py-3 px-4 xs:px-6 rounded-lg font-bold
                     transition-all duration-200 transform hover:scale-105
                     flex items-center justify-center gap-2
                     shadow-lg hover:shadow-xl
-                    min-w-[120px] w-1/2
                     ${settings.theme === 'dark'
-                      ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white'
-                      : 'bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-500 hover:to-orange-500 text-white'
-                    }
-                  `}
+                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white'
+                      : 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white'
+                    }`}
                 >
-                  <Clock className="h-5 w-5" />
-                  Daily
+                  <LucidePlay className="h-5 w-5" />
+                  Start Game
                 </button>
 
-                {/* Weekly Quests Button */}
-                <button
-                  onClick={() => setShowWeeklyQuests(true)}
-                  className={`
-                    flex-1 py-3 px-4 rounded-lg font-bold
-                    transition-all duration-200 transform hover:scale-105 
+                {/* Shop Button */}
+                <Link
+                  to="/shop"
+                  className={`w-full max-w-xs py-2 xs:py-3 px-4 xs:px-6 rounded-lg font-semibold text-center 
+                    transition-all duration-200 transform hover:scale-105
                     flex items-center justify-center gap-2
                     shadow-lg hover:shadow-xl
-                    min-w-[120px] w-1/2
                     ${settings.theme === 'dark'
-                      ? 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white'
-                      : 'bg-gradient-to-r from-blue-400 to-indigo-400 hover:from-blue-500 hover:to-indigo-500 text-white'
-                    }
-                  `}
+                      ? 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white'
+                      : 'bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white'
+                    }`}
                 >
-                  <LucideCalendar className="h-5 w-5" />
-                  Weekly
-                </button>
-              </div>
+                  <ShoppingCart className="h-5 w-5" />
+                  Shop
+                </Link>
 
-              {showDailyQuests && (
-                <DailyQuests 
-                  onClose={() => setShowDailyQuests(false)} 
-                  theme={settings.theme}
-                />
-              )}
-              {showWeeklyQuests && (
-                <WeeklyQuests 
-                  onClose={() => setShowWeeklyQuests(false)} 
-                  theme={settings.theme}
-                />
+                {/* Header for Quests */}
+                <h3 className={`
+                  text-base xs:text-lg sm:text-xl
+                  font-bold
+                  mt-2 xs:mt-3 mb-1 xs:mb-2
+                  text-center
+                  ${settings.theme === 'dark' ? 'text-purple-200' : 'text-purple-700'}
+                `}>
+                  Your Puppies Quests
+                </h3>
+
+                <div className="flex w-full max-w-xs gap-2">
+                  {/* Daily Quests Button */}
+                  <button
+                    onClick={() => setShowDailyQuests(true)}
+                    className={`
+                      flex-1 py-2 px-3 rounded-lg font-bold
+                      text-sm xs:text-base
+                      transition-all duration-200 transform hover:scale-105
+                      flex items-center justify-center gap-1 xs:gap-2
+                      shadow-lg hover:shadow-xl
+                      min-w-[100px] w-1/2
+                      ${settings.theme === 'dark'
+                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white'
+                        : 'bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-500 hover:to-orange-500 text-white'
+                      }
+                    `}
+                  >
+                    <Clock className="h-4 w-4 xs:h-5 xs:w-5" />
+                    Daily
+                  </button>
+
+                  {/* Weekly Quests Button */}
+                  <button
+                    onClick={() => setShowWeeklyQuests(true)}
+                    className={`
+                      flex-1 py-2 px-3 rounded-lg font-bold
+                      text-sm xs:text-base
+                      transition-all duration-200 transform hover:scale-105
+                      flex items-center justify-center gap-1 xs:gap-2
+                      shadow-lg hover:shadow-xl
+                      min-w-[100px] w-1/2
+                      ${settings.theme === 'dark'
+                        ? 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white'
+                        : 'bg-gradient-to-r from-blue-400 to-indigo-400 hover:from-blue-500 hover:to-indigo-500 text-white'
+                      }
+                    `}
+                  >
+                    <LucideCalendar className="h-4 w-4 xs:h-5 xs:w-5" />
+                    Weekly
+                  </button>
+                </div>
+
+                {showDailyQuests && (
+                  <DailyQuests 
+                    onClose={() => setShowDailyQuests(false)} 
+                    theme={settings.theme}
+                  />
+                )}
+                {showWeeklyQuests && (
+                  <WeeklyQuests 
+                    onClose={() => setShowWeeklyQuests(false)} 
+                    theme={settings.theme}
+                  />
+                )}
+
+                {/* Tutorial trigger button */}
+                {!hasCompletedTutorial && (
+                  <button
+                    onClick={startTutorial}
+                    className={`
+                      w-full max-w-xs py-2 px-4
+                      text-sm xs:text-base
+                      rounded-lg font-bold
+                      transition-all duration-200 
+                      transform hover:scale-105
+                      mt-1 xs:mt-2
+                      ${settings.theme === 'dark'
+                        ? 'bg-purple-600 hover:bg-purple-500 text-white'
+                        : 'bg-purple-500 hover:bg-purple-400 text-white'
+                      }
+                    `}
+                  >
+                    Start Tutorial
+                  </button>
+                )}
+              </div>
               )}
             </div>
-            )}
-          </div>
           )}
-        </div>
+          {/* Tutorial component */}
+          <Tutorial theme={settings.theme} />
       </div>
+  );
+};
+
+const PopItGameUI = (props) => {
+  return (
+    <TutorialProvider>
+      <GameContent {...props} />
+    </TutorialProvider>
   );
 };
 

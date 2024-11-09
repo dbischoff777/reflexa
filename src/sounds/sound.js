@@ -56,6 +56,18 @@ class SoundManager {
       }
     }
   
+    stop(name) {
+      if (this.sounds[name]) {
+        try {
+          this.sounds[name].pause();
+          this.sounds[name].currentTime = 0;
+          console.log(`Sound ${name} stopped`);
+        } catch (error) {
+          console.error(`Error stopping sound ${name}:`, error);
+        }
+      }
+    }
+  
     toggleMute() {
       this.muted = !this.muted;
       localStorage.setItem('soundMuted', this.muted);

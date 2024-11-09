@@ -16,7 +16,7 @@ import { usePlayer } from './utils/PlayerContext';
 import MusicGenerator from './services/MusicGenerator';
 
 // Add game state constants at the top of the file
-const GAME_STATES = {
+export const GAME_STATES = {
   MENU: 'menu',
   COUNTDOWN: 'countdown',
   PLAYING: 'playing',
@@ -877,6 +877,7 @@ const PopItGame = () => {
 
     if (index === targetButton) {
       setIsAnimationPlaying(true);
+      soundManager.stop('trySound');  // Add this line
       playSound('success');
 
       // Calculate grid position
@@ -919,7 +920,10 @@ const PopItGame = () => {
         setShowAnimation(false);
         if (gameState === GAME_STATES.PLAYING) {
           setTargetButton(getRandomButton());  // This will trigger a new timeout in the game loop
-          playSound('trySound');
+          // Add a small delay before playing the sound
+          setTimeout(() => {
+            playSound('trySound');
+          }, 100); // 100ms delay for the sound
         }
       }, 2000);
       setIsAnimationPlaying(false);
@@ -1011,6 +1015,8 @@ const PopItGame = () => {
       setGameState(GAME_STATES.PLAYING);
       setTargetButton(getRandomButton());
       setStartTime(Date.now());
+      // Add initial try sound
+      playSound('trySound');
     }
   }, [gameState, countdown, playSound, getRandomButton]);
 
