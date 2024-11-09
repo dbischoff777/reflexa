@@ -8,7 +8,7 @@ import { FacebookIcon, TwitterIcon, WhatsAppIcon } from './Icons';
 import ScreenProtectionStatus from './components/ScreenProtectionStatus';
 import DailyQuests from './DailyQuests';
 import WeeklyQuests from './WeeklyQuests';
-import { LucideUser, LucideSettings, LucideInfo, LucidePlay, LucideCalendar, ShoppingCart, Clock, Trophy } from 'lucide-react';
+import { LucideUser, LucideSettings, LucideInfo, LucidePlay, LucideCalendar, ShoppingCart, Clock, Trophy, Volume2, VolumeX } from 'lucide-react';
 import floorBackground from './images/gameBackgrounds/floor1.png';
 
 const PopItGameUI = ({
@@ -38,12 +38,20 @@ const PopItGameUI = ({
   successAnimation,
   wakeLockActive,
   brightnessAdjusted,
+  startMusic,
+  stopMusic,
+  isMusicPlaying,
+  onMusicToggle,
   //onAnimationEnd
 }) => {
   
   //quest buttons
   const [showDailyQuests, setShowDailyQuests] = useState(false);
   const [showWeeklyQuests, setShowWeeklyQuests] = useState(false);
+
+  const handleMusicToggle = () => {
+    onMusicToggle();
+  };
 
   const handleUsernameSubmit = (e) => {
     e.preventDefault();
@@ -122,6 +130,53 @@ const PopItGameUI = ({
         d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
       />
     </svg>
+  );
+
+  const MusicToggleButton = () => (
+    <button
+      onClick={handleMusicToggle}
+      className={`
+        group relative 
+        px-3 2xs:px-4 xs:px-5 
+        py-2 2xs:py-2.5 
+        rounded-lg xs:rounded-xl 
+        font-medium 
+        transition-all duration-300 ease-out
+        hover:scale-105
+        ${settings.theme === 'dark'
+          ? 'text-purple-300 hover:text-purple-200'
+          : 'text-purple-600 hover:text-purple-500'
+        }
+      `}
+      aria-label={isMusicPlaying ? "Turn music off" : "Turn music on"}
+    >
+      {isMusicPlaying ? <Volume2 className="h-6 w-6" /> : <VolumeX className="h-6 w-6" />}
+      
+      {/* Link Glow Effect */}
+      <div className={`
+        absolute inset-0
+        rounded-lg xs:rounded-xl
+        transition-all duration-300
+        opacity-0 group-hover:opacity-100
+        transform group-hover:scale-105
+        ${settings.theme === 'dark'
+          ? 'bg-purple-500/15 shadow-[0_0_25px_rgba(168,85,247,0.6)] border border-purple-400/20' 
+          : 'bg-purple-500/10 shadow-[0_0_25px_rgba(147,51,234,0.4)] border border-purple-500/20'
+        }
+      `} />
+      
+      {/* Subtle Gradient Overlay */}
+      <div className={`
+        absolute inset-0 
+        rounded-lg xs:rounded-xl
+        opacity-0 group-hover:opacity-100
+        transition-opacity duration-300
+        ${settings.theme === 'dark'
+          ? 'bg-gradient-to-br from-purple-400/5 to-purple-600/5'
+          : 'bg-gradient-to-br from-purple-300/5 to-purple-500/5'
+        }
+      `} />
+    </button>
   );
 
   return (
@@ -464,6 +519,7 @@ const PopItGameUI = ({
               `} />
             </Link>
           ))}
+          <MusicToggleButton />
         </div>
 
         {/* Achievement Notification */}

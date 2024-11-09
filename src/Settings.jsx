@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Sun, Moon, ArrowLeftIcon } from 'lucide-react';
 import { useScreenProtection } from './hooks/useScreenProtection';
-import MusicGenerator from './services/MusicGenerator';
 
 const SettingsContext = createContext();
 
@@ -80,65 +79,6 @@ export const useSettings = () => {
 const Settings = () => {
   const { settings, updateSettings, screenProtection, setScreenProtection } = useSettings();
   const { adjustBrightness, adjustColorTemperature } = useScreenProtection();
-  const [isMusicPlaying, setIsMusicPlaying] = useState(false);
-  const [musicInitialized, setMusicInitialized] = useState(false);
-
-  // Combine music initialization and state restoration
-  useEffect(() => {
-    const initializeMusic = async () => {
-      try {
-        const savedMusicState = localStorage.getItem('isMusicPlaying');
-        const shouldPlay = savedMusicState ? JSON.parse(savedMusicState) : false;
-        
-        // Initialize music only once
-        if (!musicInitialized) {
-          await MusicGenerator.generateMusic();
-          setMusicInitialized(true);
-        }
-
-        // Restore previous state
-        if (shouldPlay) {
-          MusicGenerator.play();
-          setIsMusicPlaying(true);
-        }
-      } catch (error) {
-        console.error('Failed to initialize music:', error);
-      }
-    };
-
-    initializeMusic();
-  }, [musicInitialized]);
-
-  const toggleMusic = async () => {
-    try {
-      const newMusicState = !isMusicPlaying;
-      
-      if (newMusicState) {
-        if (!musicInitialized) {
-          await MusicGenerator.generateMusic();
-          setMusicInitialized(true);
-        }
-        MusicGenerator.play();
-      } else {
-        await MusicGenerator.fadeOut();
-        MusicGenerator.stop();
-      }
-
-      setIsMusicPlaying(newMusicState);
-      localStorage.setItem('isMusicPlaying', JSON.stringify(newMusicState));
-    } catch (error) {
-      console.error('Failed to toggle music:', error);
-    }
-  };
-
-  // Clean up music when component unmounts
-  useEffect(() => {
-    return () => {
-      if (isMusicPlaying) {
-        MusicGenerator.fadeOut().then(() => MusicGenerator.stop());
-      }
-    };
-  }, [isMusicPlaying]);
 
   const handleToggleSound = () => {
     updateSettings({ soundEnabled: !settings.soundEnabled });
@@ -147,34 +87,6 @@ const Settings = () => {
   const handleDifficultyChange = (e) => {
     updateSettings({ difficulty: e.target.value });
   };
-
-  /* const handleGridSizeChange = (e) => {
-    const value = e.target.value;
-    switch (value) {
-      case "2x1":
-        updateSettings({
-          gridSize: value,
-          gridColumns: 2,
-          gridRows: 1
-        });
-        break;
-      case "3x1":
-        updateSettings({
-          gridSize: value,
-          gridColumns: 3,
-          gridRows: 1
-        });
-        break;
-      default:
-        const size = parseInt(value, 10);
-        updateSettings({
-          gridSize: size,
-          gridColumns: size,
-          gridRows: size
-        });
-        break;
-    }
-  }   */
 
   const handleThemeChange = () => {
     updateSettings({ theme: settings.theme === 'light' ? 'dark' : 'light' });
@@ -621,46 +533,6 @@ const Settings = () => {
               >
                 <span className={`
                   ${settings.soundEnabled ? 'translate-x-5 xs:translate-x-6' : 'translate-x-1'} 
-                  inline-block 
-                  h-3 xs:h-4 
-                  w-3 xs:w-4 
-                  transform 
-                  rounded-full 
-                  bg-white 
-                  transition-transform
-                `} />
-              </Switch>
-            </div>
-          </div>
-
-          {/* Background Music Toggle */}
-          <div className="mb-3 xs:mb-4">
-            <div className="
-              flex items-center justify-between
-              mb-2 xs:mb-3
-            ">
-              <label className="text-sm xs:text-base">
-                Background Music
-              </label>
-              <Switch
-                checked={isMusicPlaying}
-                onChange={toggleMusic}
-                className={`
-                  ${isMusicPlaying ? 'bg-purple-600' : 'bg-gray-400'} 
-                  relative inline-flex 
-                  h-5 xs:h-6 
-                  w-9 xs:w-11 
-                  items-center 
-                  rounded-full 
-                  transition-colors
-                  focus:outline-none 
-                  focus:ring-2 
-                  focus:ring-purple-500 
-                  focus:ring-offset-2
-                `}
-              >
-                <span className={`
-                  ${isMusicPlaying ? 'translate-x-5 xs:translate-x-6' : 'translate-x-1'} 
                   inline-block 
                   h-3 xs:h-4 
                   w-3 xs:w-4 

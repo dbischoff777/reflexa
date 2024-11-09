@@ -72,12 +72,8 @@ const PopItGame = () => {
     };
   }, []);
   
-  // Music state declarations (keep these at the top)
-  const [isMusicPlaying, setIsMusicPlaying] = useState(
-    JSON.parse(localStorage.getItem('isMusicPlaying') || 'false')
-  );
-
-  const [musicInitialized, setMusicInitialized] = useState(false);
+  // Simplify music state to just track if it's enabled
+  const [isMusicPlaying, setIsMusicPlaying] = useState(false);
 
   const { settings } = useSettings();
   
@@ -622,35 +618,32 @@ const PopItGame = () => {
     return getRandomMessage(failureMessages);
   }, [consecutiveFailures]); // Add consecutiveFailures as dependency
 
-  // Add music effect
+  // Simplify music controls to just handle toggle
+  const toggleMusic = useCallback(() => {
+    if (!isMusicPlaying) {
+      MusicGenerator.play();
+      setIsMusicPlaying(true);
+    } else {
+      MusicGenerator.pause();
+      setIsMusicPlaying(false);
+    }
+  }, [isMusicPlaying]);
+
+  // Initialize music generator once
   useEffect(() => {
-    const initMusic = async () => {
-      await MusicGenerator.generateMusic();
-      
-      // Play music if we're in menu state
-      if (gameState === GAME_STATES.MENU) {
-        MusicGenerator.play();
-      }
-    };
-
-    initMusic();
-
-    // Cleanup function
+    MusicGenerator.generateMusic();
+    
+    // Cleanup
     return () => {
       MusicGenerator.pause();
     };
-  }, [gameState]);
+  }, []); // Only run once on mount
 
   // Modify startGame to handle music
   const startGame = useCallback(() => {
     if (!username) {
       setShowUsernameInput(true);
       return;
-    }
-    
-    // Fade out and pause music when game starts
-    if (isMusicPlaying) {
-      MusicGenerator.fadeOut().then(() => MusicGenerator.pause());
     }
     
     // Increment games played in achievement progress
@@ -691,18 +684,13 @@ const PopItGame = () => {
     });
   
     playSound('countdown');
-  }, [username, isMusicPlaying, playSound]);
+  }, [username, playSound]);
 
   // Modify handleExit to handle music
   const handleExit = useCallback(() => {
-    // Resume music when returning to menu if it was playing
-    if (isMusicPlaying) {
-      MusicGenerator.play();
-    }
+    // Remove music resume since music is now only controlled by toggle
     
-    // Remove highlight from buttons
     setTargetButton(null);
-    // Reset all game states
     setGameOver(false);
     setShowGameOver(false);
     setGameState(GAME_STATES.MENU);
@@ -711,7 +699,7 @@ const PopItGame = () => {
     setMultiplier(1);
     setGameSpeed(1);
     setParticleEffects([]);
-  }, [isMusicPlaying]);
+  }, []);
 
   // Handle game over
   const handleGameOver = useCallback(() => {
@@ -1077,38 +1065,6 @@ const PopItGame = () => {
     localStorage.setItem('isMusicPlaying', JSON.stringify(isMusicPlaying));
   }, [isMusicPlaying]);
 
-  // Modify the music initialization effect
-  useEffect(() => {
-    const initMusic = async () => {
-      if (!musicInitialized) {
-        await MusicGenerator.generateMusic();
-        setMusicInitialized(true);
-        
-        // Only play if we're in menu state and music should be playing
-        if (gameState === GAME_STATES.MENU && isMusicPlaying) {
-          MusicGenerator.play();
-        }
-      }
-    };
-
-    initMusic();
-
-    // Don't include cleanup here as it will stop music on every re-render
-    // return () => {
-    //   MusicGenerator.pause();
-    // };
-  }, [gameState, isMusicPlaying, musicInitialized]);
-
-  // Modify the music state effect
-  useEffect(() => {
-    if (gameState === GAME_STATES.MENU && isMusicPlaying) {
-      MusicGenerator.play();
-    } else if (gameState !== GAME_STATES.MENU) {
-      // Only pause music when leaving menu state
-      MusicGenerator.fadeOut().then(() => MusicGenerator.pause());
-    }
-  }, [gameState, isMusicPlaying]);
-
   return (
     <PopItGameUI
       settings={settings}
@@ -1145,6 +1101,10 @@ const PopItGame = () => {
       successAnimation={successAnimation}
       setShowAnimation={setShowAnimation}
       wakeLockActive={wakeLockActive}
+      startMusic={() => MusicGenerator.play()}
+      stopMusic={() => MusicGenerator.pause()}
+      isMusicPlaying={isMusicPlaying}
+      onMusicToggle={toggleMusic}
     />
   );
 };
