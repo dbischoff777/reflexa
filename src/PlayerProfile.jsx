@@ -265,17 +265,12 @@ const PlayerProfile = () => {
   }, []);
 
   return (
-    <div className={`
-      min-h-screen w-full
-      ${settings.theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'}
-    `}>
-      <div className="
-        px-3 xs:px-4 sm:px-6
-        py-4 xs:py-6 sm:py-8
-        mx-auto
-        w-full
-        max-w-screen-lg
-      ">
+    <div className={`min-h-screen w-full fixed inset-0 ${
+      settings.theme === 'dark'
+        ? 'bg-gray-800 text-white'
+        : 'bg-gray-100 text-gray-900'
+    }`}>
+      <div className="px-2 2xs:px-3 xs:px-4 py-4 2xs:py-6 xs:py-8" style={{ marginTop: 0 }}>
         {/* Back Button */}
         <div className="mb-4 xs:mb-6">
           <Link 

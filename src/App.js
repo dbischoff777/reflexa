@@ -12,6 +12,7 @@ import { ToastContainer } from 'react-toastify';
 import { Toaster } from 'react-hot-toast';
 import Shop from './components/Shop';
 import NavigationBar from './components/NavigationBar';
+import MobileOptimizer from './components/MobileOptimizer';
 
 // Create a wrapper component to access the context
 const AppRoutes = () => {
@@ -44,6 +45,7 @@ function App() {
     <Router>
       <SettingsProvider>
         <PlayerProvider>
+          <MobileOptimizer />
           <ToastContainer />
           <Toaster position="top-center" />
           <div className="App">
