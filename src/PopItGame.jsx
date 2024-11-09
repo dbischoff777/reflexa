@@ -12,7 +12,7 @@ import { useAvatar } from './hooks/useAvatar';
 import { useScreenProtection } from './hooks/useScreenProtection';
 import { usePlayer } from './utils/PlayerContext';
 import MusicGenerator from './services/MusicGenerator';
-import Particles from "react-particles";
+import Particles from "react-tsparticles";
 
 // Add game state constants at the top of the file
 export const GAME_STATES = {
