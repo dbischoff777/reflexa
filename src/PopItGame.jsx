@@ -968,7 +968,7 @@ const PopItGame = () => {
       <div
         key={index}
         className="relative aspect-square w-full"
-        onClick={() => handleButtonClick(index)}
+        //onClick={() => handleButtonClick(index)}
         onTouchStart={(e) => {
           e.preventDefault(); // Prevent double-firing on some devices
           handleButtonClick(index);
