@@ -4,8 +4,6 @@ import soundManager from './sounds/sound';
 import { useSettings } from './Settings';
 import { updatePlayerStats } from './utils/playerStats';
 import { checkAchievementsUnlocked, ACHIEVEMENTS} from './utils/achievements';
-import Particles from "react-tsparticles";
-import { loadFull } from "tsparticles";
 import './PopItGame.css';
 import mascotImage from './images/cute-mascot.png';
 import bowlAnimation from './assets/animations/Try.gif';
@@ -14,6 +12,7 @@ import { useAvatar } from './hooks/useAvatar';
 import { useScreenProtection } from './hooks/useScreenProtection';
 import { usePlayer } from './utils/PlayerContext';
 import MusicGenerator from './services/MusicGenerator';
+import Particles from "react-particles";
 
 // Add game state constants at the top of the file
 export const GAME_STATES = {
@@ -200,11 +199,6 @@ const PopItGame = () => {
     }
   }, [screenProtection.autoBrightness, screenProtection.brightness, adjustBrightness]);
 
-  // Add this initialization for tsParticles
-  const particlesInit = useCallback(async (engine) => {
-    await loadFull(engine);
-  }, []);
-
   // Update the PopEffect component
   const PopEffect = ({ row, col, theme, gridRows, gridColumns, onComplete }) => {
     // Array of vibrant colors for particles
@@ -301,7 +295,6 @@ const PopItGame = () => {
     >
       <Particles
         id={`pop-effect-${Date.now()}`}
-        init={particlesInit}
         options={{
           ...options,
           particles: {
