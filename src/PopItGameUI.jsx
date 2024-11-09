@@ -13,6 +13,7 @@ import NavigationBar from './components/NavigationBar';
 import { GAME_STATES } from './PopItGame';
 import { TutorialProvider, useTutorial } from './contexts/TutorialContext';
 import Tutorial from './components/Tutorial';
+import { useSettings } from './Settings';
 
 const GameContent = ({
   settings,
@@ -135,52 +136,87 @@ const GameContent = ({
     </svg>
   );
 
-  const MusicToggleButton = () => (
-    <button
-      onClick={handleMusicToggle}
-      className={`
-        group relative 
-        px-3 2xs:px-4 xs:px-5 
-        py-2 2xs:py-2.5 
-        rounded-lg xs:rounded-xl 
-        font-medium 
-        transition-all duration-300 ease-out
-        hover:scale-105
-        ${settings.theme === 'dark'
-          ? 'text-purple-300 hover:text-purple-200'
-          : 'text-purple-600 hover:text-purple-500'
-        }
-      `}
-      aria-label={isMusicPlaying ? "Turn music off" : "Turn music on"}
-    >
-      {isMusicPlaying ? <Volume2 className="h-6 w-6" /> : <VolumeX className="h-6 w-6" />}
-      
-      {/* Link Glow Effect */}
-      <div className={`
-        absolute inset-0
-        rounded-lg xs:rounded-xl
-        transition-all duration-300
-        opacity-0 group-hover:opacity-100
-        transform group-hover:scale-105
-        ${settings.theme === 'dark'
-          ? 'bg-purple-500/15 shadow-[0_0_25px_rgba(168,85,247,0.6)] border border-purple-400/20' 
-          : 'bg-purple-500/10 shadow-[0_0_25px_rgba(147,51,234,0.4)] border border-purple-500/20'
-        }
-      `} />
-      
-      {/* Subtle Gradient Overlay */}
-      <div className={`
-        absolute inset-0 
-        rounded-lg xs:rounded-xl
-        opacity-0 group-hover:opacity-100
-        transition-opacity duration-300
-        ${settings.theme === 'dark'
-          ? 'bg-gradient-to-br from-purple-400/5 to-purple-600/5'
-          : 'bg-gradient-to-br from-purple-300/5 to-purple-500/5'
-        }
-      `} />
-    </button>
-  );
+  const MusicToggleButton = () => {
+    const { settings, updateSettings } = useSettings();
+
+    const handleSoundToggle = () => {
+      updateSettings({ soundEnabled: !settings.soundEnabled });
+    };
+
+    return (
+      <div className="flex gap-2">
+        {/* Music Toggle */}
+        <button
+          onClick={handleMusicToggle}
+          className={`
+            group relative 
+            px-4 xs:px-5 
+            py-2.5 xs:py-3
+            rounded-xl
+            font-medium 
+            transition-all duration-300 ease-out
+            hover:scale-105
+            flex items-center gap-2
+            ${settings.theme === 'dark'
+              ? 'bg-purple-900/40 text-purple-300 hover:text-purple-200'
+              : 'bg-purple-100/40 text-purple-600 hover:text-purple-500'
+            }
+          `}
+          aria-label={isMusicPlaying ? "Turn music off" : "Turn music on"}
+        >
+          {isMusicPlaying ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+          <span className="text-sm font-medium">Music</span>
+          
+          {/* Link Glow Effect */}
+          <div className={`
+            absolute inset-0
+            rounded-xl
+            transition-all duration-300
+            opacity-0 group-hover:opacity-100
+            ${settings.theme === 'dark'
+              ? 'bg-purple-500/15 shadow-[0_0_25px_rgba(168,85,247,0.6)] border border-purple-400/20' 
+              : 'bg-purple-500/10 shadow-[0_0_25px_rgba(147,51,234,0.4)] border border-purple-500/20'
+            }
+          `} />
+        </button>
+
+        {/* Sound Effects Toggle */}
+        <button
+          onClick={handleSoundToggle}
+          className={`
+            group relative 
+            px-4 xs:px-5 
+            py-2.5 xs:py-3
+            rounded-xl
+            font-medium 
+            transition-all duration-300 ease-out
+            hover:scale-105
+            flex items-center gap-2
+            ${settings.theme === 'dark'
+              ? 'bg-purple-900/40 text-purple-300 hover:text-purple-200'
+              : 'bg-purple-100/40 text-purple-600 hover:text-purple-500'
+            }
+          `}
+          aria-label={settings.soundEnabled ? "Turn sound effects off" : "Turn sound effects on"}
+        >
+          {settings.soundEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+          <span className="text-sm font-medium">Sound</span>
+          
+          {/* Link Glow Effect */}
+          <div className={`
+            absolute inset-0
+            rounded-xl
+            transition-all duration-300
+            opacity-0 group-hover:opacity-100
+            ${settings.theme === 'dark'
+              ? 'bg-purple-500/15 shadow-[0_0_25px_rgba(168,85,247,0.6)] border border-purple-400/20' 
+              : 'bg-purple-500/10 shadow-[0_0_25px_rgba(147,51,234,0.4)] border border-purple-500/20'
+            }
+          `} />
+        </button>
+      </div>
+    );
+  };
 
   // Add mobile optimization logic
   useEffect(() => {

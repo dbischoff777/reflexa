@@ -505,46 +505,6 @@ const Settings = () => {
             </div>
           </div>
 
-          {/* Sound Toggle */}
-          <div className="mb-3 xs:mb-4">
-            <div className="
-              flex items-center justify-between
-              mb-2 xs:mb-3
-            ">
-              <label className="text-sm xs:text-base">
-                Sound Effects
-              </label>
-              <Switch
-                checked={settings.soundEnabled}
-                onChange={handleToggleSound}
-                className={`
-                  ${settings.soundEnabled ? 'bg-purple-600' : 'bg-gray-400'} 
-                  relative inline-flex 
-                  h-5 xs:h-6 
-                  w-9 xs:w-11 
-                  items-center 
-                  rounded-full 
-                  transition-colors
-                  focus:outline-none 
-                  focus:ring-2 
-                  focus:ring-purple-500 
-                  focus:ring-offset-2
-                `}
-              >
-                <span className={`
-                  ${settings.soundEnabled ? 'translate-x-5 xs:translate-x-6' : 'translate-x-1'} 
-                  inline-block 
-                  h-3 xs:h-4 
-                  w-3 xs:w-4 
-                  transform 
-                  rounded-full 
-                  bg-white 
-                  transition-transform
-                `} />
-              </Switch>
-            </div>
-          </div>
-
           {/* Vibration Toggle */}
           <div className="mb-3 xs:mb-4">
             <div className="
