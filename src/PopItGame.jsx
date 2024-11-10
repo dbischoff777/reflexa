@@ -635,19 +635,31 @@ const PopItGame = () => {
   // Modify startGame to handle music
   const startGame = useCallback(() => {
     if (!username) {
-      setShowUsernameInput(true);
-      return;
+        setShowUsernameInput(true);
+        return;
     }
     
     // Increment games played in achievement progress
     const currentProgress = JSON.parse(localStorage.getItem('achievementProgress') || '{}');
     const updatedProgress = {
-      ...currentProgress,
-      gamesPlayed: (currentProgress.gamesPlayed || 0) + 1
+        ...currentProgress,
+        gamesPlayed: (currentProgress.gamesPlayed || 0) + 1
     };
 
     localStorage.setItem('achievementProgress', JSON.stringify(updatedProgress));
-    setGameState(GAME_STATES.COUNTDOWN);
+    
+    // Check countdown setting and set appropriate game state
+    if (settings.countdownTimer) {
+        setGameState(GAME_STATES.COUNTDOWN);
+        setCountdown(3);
+        playSound('countdown');
+    } else {
+        setGameState(GAME_STATES.PLAYING);
+        setTargetButton(getRandomButton());
+        setStartTime(Date.now());
+        playSound('trySound');
+    }
+
     setGameStarted(true);
     setGameOver(false);
     setShowGameOver(false);
@@ -655,29 +667,26 @@ const PopItGame = () => {
     setLives(5);
     setMultiplier(1);
     setGameSpeed(1); // Reset game speed
-    setCountdown(3);
     
     // Reset game stats
     setGameStats({
-      score: 0,
-      duration: 0,
-      successfulClicks: 0,
-      missedClicks: 0,
-      totalClicks: 0,
-      longestStreak: 0,
-      currentStreak: 0,
-      highestCombo: 0,
-      combos: [],
-      reactionTimes: [],
-      maxMultiplier: 1,
-      lives: 5,
-      maxLives: 5,
-      startTime: Date.now(),
-      lastClickTime: null,
+        score: 0,
+        duration: 0,
+        successfulClicks: 0,
+        missedClicks: 0,
+        totalClicks: 0,
+        longestStreak: 0,
+        currentStreak: 0,
+        highestCombo: 0,
+        combos: [],
+        reactionTimes: [],
+        maxMultiplier: 1,
+        lives: 5,
+        maxLives: 5,
+        startTime: Date.now(),
+        lastClickTime: null,
     });
-  
-    playSound('countdown');
-  }, [username, playSound]);
+}, [username, playSound, settings.countdownTimer, getRandomButton]);
 
   // Modify handleExit to handle music
   const handleExit = useCallback(() => {
@@ -996,21 +1005,21 @@ const PopItGame = () => {
   // Game loop effects
   useEffect(() => {
     if (gameState === GAME_STATES.COUNTDOWN && countdown > 0) {
-      const timer = setTimeout(() => {
-        setCountdown(prev => prev - 1);
-        playSound('countdown');
-      }, 1000);
-      return () => clearTimeout(timer);
+        const timer = setTimeout(() => {
+            setCountdown(prev => prev - 1);
+            playSound('countdown');
+        }, 1000);
+        return () => clearTimeout(timer);
     }
     
     if (gameState === GAME_STATES.COUNTDOWN && countdown === 0) {
-      setGameState(GAME_STATES.PLAYING);
-      setTargetButton(getRandomButton());
-      setStartTime(Date.now());
-      // Add initial try sound
-      playSound('trySound');
+        setGameState(GAME_STATES.PLAYING);
+        setTargetButton(getRandomButton());
+        setStartTime(Date.now());
+        // Add initial try sound
+        playSound('trySound');
     }
-  }, [gameState, countdown, playSound, getRandomButton]);
+}, [gameState, countdown, playSound, getRandomButton]);
 
   // Game loop effects
   useEffect(() => {
