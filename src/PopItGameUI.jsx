@@ -14,7 +14,6 @@ import { GAME_STATES } from './PopItGame';
 import { TutorialProvider, useTutorial } from './contexts/TutorialContext';
 import Tutorial from './components/Tutorial';
 import { useSettings } from './Settings';
-import soundManager from './sounds/sound';
 
 const GameContent = ({
   settings,
