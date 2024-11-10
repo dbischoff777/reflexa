@@ -76,6 +76,8 @@ export const useSettings = () => {
   return context;
 };
 
+const APP_VERSION = '0.0.1'; // update this version number as needed
+
 const Settings = () => {
   const { settings, updateSettings, screenProtection, setScreenProtection } = useSettings();
   const { adjustBrightness, adjustColorTemperature } = useScreenProtection();
@@ -544,6 +546,17 @@ const Settings = () => {
               </Switch>
             </div>
           </div>
+        </div>
+        
+        {/* Version Display */}
+        <div className={`
+          text-center
+          text-xs xs:text-sm
+          text-gray-500 dark:text-gray-400
+          mt-2 xs:mt-3
+          mb-4 xs:mb-6
+        `}>
+          Version {APP_VERSION}
         </div>
       </div>
     </div>
