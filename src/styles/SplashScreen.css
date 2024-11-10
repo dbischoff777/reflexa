@@ -1,0 +1,147 @@
+.splash-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.logo-container {
+  position: relative;
+  animation: logoAnimation 2.5s ease-out;
+}
+
+.logo {
+  max-width: 250px;
+  height: auto;
+  filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.3));
+}
+
+/* Glowing effect behind logo */
+.logo-container::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 70%);
+  animation: glowPulse 2s ease-in-out infinite;
+}
+
+.skip-button {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 24px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(5px);
+  text-transform: uppercase;
+}
+
+.skip-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateX(-50%) translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.skip-button:active {
+  transform: translateX(-50%) translateY(0);
+}
+
+@keyframes logoAnimation {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) rotate(-10deg);
+  }
+  20% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2) rotate(5deg);
+  }
+  70% {
+    transform: scale(0.9) rotate(0deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes glowPulse {
+  0% {
+    opacity: 0.5;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  100% {
+    opacity: 0.5;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+}
+
+.splash-screen.fade-out {
+  animation: fadeOut 0.8s ease-in-out forwards;
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.2);
+  }
+}
+
+/* Optional: Add particles in the background */
+.particles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  opacity: 0;
+  animation: particleFloat 3s infinite;
+}
+
+@keyframes particleFloat {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0);
+  }
+  50% {
+    opacity: 0.5;
+    transform: translateY(-100px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-200px) scale(0);
+  }
+}
