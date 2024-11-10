@@ -4,6 +4,34 @@ class AssetLoader {
     this.isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     this.assetsLoaded = false;
     this.loadingPromise = null;
+    this.batchSizes = {
+      images: this.isMobile ? 5 : 10,
+      sounds: this.isMobile ? 3 : 6,
+      videos: this.isMobile ? 2 : 4,
+      animations: this.isMobile ? 3 : 6
+    };
+    this.loadingMessages = {
+      images: [
+        "Loading those pretty pictures... 🎨",
+        "Downloading pixels... 📸",
+        "Making things look beautiful... ✨",
+      ],
+      sounds: [
+        "Getting the tunes ready... 🎵",
+        "Warming up the speakers... 🔊",
+        "Loading awesome sound effects... 🎶",
+      ],
+      videos: [
+        "Buffering cool videos... 🎬",
+        "Preparing moving pictures... 📽️",
+        "Loading cinematic content... 🎥",
+      ],
+      animations: [
+        "Making things move... 💫",
+        "Preparing smooth animations... 🎭",
+        "Loading the fancy moves... 💃",
+      ]
+    };
   }
 
   async scanProjectAssets() {
@@ -120,6 +148,12 @@ class AssetLoader {
     const total = Object.values(assets).flat().length;
     let loaded = 0;
 
+    const getRandomMessage = (type) => {
+      const messages = this.loadingMessages[type];
+      return messages[Math.floor(Math.random() * messages.length)];
+    };
+
+    console.log('🚀 Starting asset loading journey!');
     console.log('Assets to load:', {
       images: assets.images?.length || 0,
       sounds: assets.sounds?.length || 0,
@@ -127,18 +161,16 @@ class AssetLoader {
       animations: assets.animations?.length || 0
     });
 
-    const batchSize = this.isMobile ? 3 : 5;
-
     const loadBatch = async (items, loader, type) => {
       if (!items?.length) return;
       
-      console.log(`Starting to load ${type}:`, items.length);
+      const batchSize = this.batchSizes[type] || (this.isMobile ? 3 : 5);
+      const currentMessage = getRandomMessage(type);
+      console.log(`\n${currentMessage}`);
       
       for (let i = 0; i < items.length; i += batchSize) {
         const batch = items.slice(i, i + batchSize);
         
-        console.log(`Loading ${type} batch ${i/batchSize + 1}:`, batch);
-
         try {
           const results = await Promise.allSettled(
             batch.map(async (src) => {
@@ -146,14 +178,15 @@ class AssetLoader {
                 await loader.call(this, src);
                 loaded++;
                 const progress = Math.round((loaded / total) * 100);
-                console.log(`✅ Loaded ${type}:`, src, `(${loaded}/${total}) - ${progress}%`);
-                onProgress(progress);
+                const fileName = src.split('/').pop();
+                console.log(`✅ Loaded: ${fileName} (${loaded}/${total}) - ${progress}%`);
+                onProgress(progress, currentMessage);
                 return true;
               } catch (error) {
-                console.warn(`❌ Failed to load ${type}:`, src, error);
+                console.warn(`❌ Failed: ${src.split('/').pop()}`);
                 loaded++;
                 const progress = Math.round((loaded / total) * 100);
-                onProgress(progress);
+                onProgress(progress, currentMessage);
                 return false;
               }
             })
@@ -171,19 +204,24 @@ class AssetLoader {
           batch.forEach(() => {
             loaded++;
             const progress = Math.round((loaded / total) * 100);
-            onProgress(progress);
+            onProgress(progress, currentMessage);
           });
         }
 
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 50));
       }
     };
 
     try {
-      await loadBatch(assets.images, this.preloadImage, 'images');
-      await loadBatch(assets.sounds, this.preloadAudio, 'sounds');
-      await loadBatch(assets.videos, this.preloadVideo, 'videos');
-      await loadBatch(assets.animations, this.preloadImage, 'animations');
+      await Promise.all([
+        loadBatch(assets.images, this.preloadImage, 'images'),
+        loadBatch(assets.animations, this.preloadImage, 'animations')
+      ]);
+
+      await Promise.all([
+        loadBatch(assets.sounds, this.preloadAudio, 'sounds'),
+        loadBatch(assets.videos, this.preloadVideo, 'videos')
+      ]);
 
       console.log('✅ All assets loaded. Final count:', loaded);
       return true;
@@ -205,6 +243,8 @@ class AssetLoader {
         if (this.isMobile) {
           console.warn(`Video load timed out: ${src}, resolving anyway`);
           resolve(video);
+        } else {
+          reject(new Error(`Timeout loading video: ${src}`));
         }
       }, 5000);
 

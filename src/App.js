@@ -18,8 +18,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import assetLoader from './utils/assetLoader';
 
 // Update SplashScreen component
-const SplashScreen = ({ onAnimationEnd, loadingProgress }) => {
-  // Auto-trigger skip when loading reaches 100%
+const SplashScreen = ({ onAnimationEnd, loadingProgress, loadingMessage }) => {
   useEffect(() => {
     if (loadingProgress === 100) {
       const splash = document.querySelector('.splash-screen');
@@ -43,13 +42,41 @@ const SplashScreen = ({ onAnimationEnd, loadingProgress }) => {
           alt="Game Logo" 
           className="logo"
           style={{
-            maxWidth: '90vw',
+            maxWidth: '80vw',
+            width: 'auto',
             height: 'auto',
-            maxHeight: '50vh'
+            maxHeight: '40vh',
+            objectFit: 'contain',
+            margin: '0 auto'
           }}
         />
-        <div className="loading-progress">
-          Loading... {loadingProgress}%
+        <div className="loading-container"
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '10px',
+            marginTop: '20px'
+          }}>
+          <div className="loading-message"
+            style={{
+              fontSize: 'clamp(14px, 3vw, 20px)',
+              textAlign: 'center',
+              minHeight: '24px',
+              color: '#ffffff',
+              textShadow: '0 0 10px rgba(255,255,255,0.5)'
+            }}>
+            {loadingMessage || 'Loading...'}
+          </div>
+          <div className="loading-progress"
+            style={{
+              fontSize: 'clamp(16px, 4vw, 24px)',
+              textAlign: 'center',
+              color: '#ffffff',
+              textShadow: '0 0 10px rgba(255,255,255,0.5)'
+            }}>
+            {loadingProgress}%
+          </div>
         </div>
       </div>
     </div>
@@ -57,7 +84,7 @@ const SplashScreen = ({ onAnimationEnd, loadingProgress }) => {
 };
 
 // Update SplashScreenWrapper
-const SplashScreenWrapper = ({ onComplete, loadingProgress }) => {
+const SplashScreenWrapper = ({ onComplete, loadingProgress, loadingMessage }) => {
   const navigate = useNavigate();
 
   const handleAnimationEnd = () => {
@@ -69,6 +96,7 @@ const SplashScreenWrapper = ({ onComplete, loadingProgress }) => {
     <SplashScreen 
       onAnimationEnd={handleAnimationEnd} 
       loadingProgress={loadingProgress}
+      loadingMessage={loadingMessage}
     />
   );
 };
@@ -225,6 +253,7 @@ function App() {
   });
   const [assetsLoaded, setAssetsLoaded] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingMessage, setLoadingMessage] = useState('');
 
   useEffect(() => {
     const loadGameAssets = async () => {
@@ -236,8 +265,9 @@ function App() {
 
       try {
         const assets = await assetLoader.scanProjectAssets();
-        await assetLoader.loadAssetsOnce(assets, (progress) => {
+        await assetLoader.loadAssetsOnce(assets, (progress, message) => {
           setLoadingProgress(Math.round(progress));
+          if (message) setLoadingMessage(message);
         });
         setAssetsLoaded(true);
       } catch (error) {
@@ -263,6 +293,7 @@ function App() {
           <SplashScreenWrapper 
             onComplete={handleSplashComplete} 
             loadingProgress={loadingProgress}
+            loadingMessage={loadingMessage}
           />
         </PlayerProvider>
       </SettingsProvider>
