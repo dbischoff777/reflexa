@@ -7,7 +7,7 @@ import scoreIcon from './images/score.png';
 import { FacebookIcon, TwitterIcon, WhatsAppIcon } from './Icons';
 import DailyQuests from './DailyQuests';
 import WeeklyQuests from './WeeklyQuests';
-import { LucidePlay, LucideCalendar, ShoppingCart, Clock, Trophy, Volume2, VolumeX } from 'lucide-react';
+import { LucidePlay, LucideCalendar, ShoppingCart, Clock, Trophy, Volume2, VolumeX, X } from 'lucide-react';
 import floorBackground from './images/gameBackgrounds/floor1.png';
 import NavigationBar from './components/NavigationBar';
 import { GAME_STATES } from './PopItGame';
@@ -973,6 +973,44 @@ const GameContent = ({
             {/* Responsive Grid Container */}
             <div className="w-full flex justify-center px-2 sm:px-4">
               <div className="w-full max-w-[95vw] sm:max-w-[80vw] md:max-w-[60vw] lg:max-w-[50vw] xl:max-w-[800px]">
+                {/* Add Quit Button */}
+                {gameState === GAME_STATES.PLAYING && (
+                  <div className="absolute top-2 right-2 xs:top-3 xs:right-3 sm:top-4 sm:right-4">
+                    <button
+                      onClick={exitGame}
+                      className={`
+                        group relative 
+                        px-3 py-2 xs:px-4 xs:py-2.5
+                        rounded-xl
+                        font-medium 
+                        transition-all duration-300 ease-out
+                        hover:scale-105
+                        flex items-center gap-2
+                        ${settings.theme === 'dark'
+                          ? 'bg-red-900/40 text-red-300 hover:text-red-200'
+                          : 'bg-red-100/40 text-red-600 hover:text-red-500'
+                        }
+                      `}
+                      aria-label="Quit Game"
+                    >
+                      <X className="h-5 w-5" />
+                      <span className="text-sm font-medium">Quit</span>
+                      
+                      {/* Link Glow Effect */}
+                      <div className={`
+                        absolute inset-0
+                        rounded-xl
+                        transition-all duration-300
+                        opacity-0 group-hover:opacity-100
+                        ${settings.theme === 'dark'
+                          ? 'bg-red-500/15 shadow-[0_0_25px_rgba(239,68,68,0.6)] border border-red-400/20' 
+                          : 'bg-red-500/10 shadow-[0_0_25px_rgba(239,68,68,0.4)] border border-red-500/20'
+                        }
+                      `} />
+                    </button>
+                  </div>
+                )}
+
                 <div className="flex justify-between items-center mb-4 sm:mb-6 flex-wrap gap-2 sm:gap-4">
                   <StatBox theme={settings.theme} extraClasses="hover:scale-105 transition-transform">
                     <div className="flex items-center gap-0.5 xs:gap-1 sm:gap-2">
@@ -986,6 +1024,7 @@ const GameContent = ({
                       <StatIcon src={scoreIcon} alt="Score" theme={settings.theme} />
                     </div>
                   </StatBox>
+                  
                   {gameState === 'playing' && multiplier > 1 && (
                     <StatBox 
                       theme={settings.theme} 
