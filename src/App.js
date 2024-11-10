@@ -71,15 +71,38 @@ const SplashScreen = ({ onAnimationEnd }) => {
   }, [onAnimationEnd]);
 
   return (
-    <div className="splash-screen">
-      <div className="particles"></div>
-      <div className="logo-container">
-        <img src="/assets/logo/debis-high-res-logo-transp.png" alt="Game Logo" className="logo" />
+    <>
+      <MobileOptimizer />
+      <div className="splash-screen">
+        <div className="particles"></div>
+        <div className="logo-container">
+          <img 
+            src="/assets/logo/debis-high-res-logo-transp.png" 
+            alt="Game Logo" 
+            className="logo"
+            style={{
+              maxWidth: '90vw',
+              height: 'auto',
+              maxHeight: '50vh'
+            }}
+          />
+        </div>
+        <button 
+          className="skip-button" 
+          onClick={handleSkip}
+          style={{
+            position: 'absolute',
+            bottom: '10vh',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            padding: '10px 20px',
+            fontSize: 'clamp(14px, 4vw, 18px)'
+          }}
+        >
+          Skip Intro
+        </button>
       </div>
-      <button className="skip-button" onClick={handleSkip}>
-        Skip Intro
-      </button>
-    </div>
+    </>
   );
 };
 
