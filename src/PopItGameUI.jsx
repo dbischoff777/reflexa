@@ -14,6 +14,8 @@ import { GAME_STATES } from './PopItGame';
 import { TutorialProvider, useTutorial } from './contexts/TutorialContext';
 import Tutorial from './components/Tutorial';
 import { useSettings } from './Settings';
+import LoadingScreen from './components/LoadingScreen';
+import assetLoader from './utils/assetLoader';
 
 const GameContent = ({
   settings,
@@ -400,6 +402,56 @@ const GameContent = ({
     setShowQuitConfirm(false);
     exitGame();
   };
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+
+  const assets = useMemo(() => ({
+    images: [
+      livesIcon,
+      frenchieIcon,
+      scoreIcon,
+      floorBackground,
+      // Add other images
+    ],
+    sounds: [
+      '/sounds/pop.mp3',
+      '/sounds/success.mp3',
+      '/sounds/failure.mp3',
+      // Add other sounds
+    ],
+    animations: [
+      successAnimation,
+      // Add other animations
+    ]
+  }), []);
+
+  useEffect(() => {
+    const loadAllAssets = async () => {
+      try {
+        await assetLoader.loadAssets(assets, setLoadingProgress);
+        
+        // Add small delay for smooth transition
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 500);
+      } catch (error) {
+        console.error('Failed to load assets:', error);
+        // Handle loading failure (maybe show retry button)
+      }
+    };
+
+    loadAllAssets();
+
+    // Cleanup
+    return () => {
+      assetLoader.clearCache();
+    };
+  }, [assets]);
+
+  if (isLoading) {
+    return <LoadingScreen theme={settings.theme} progress={loadingProgress} />;
+  }
 
   return (
     <div 
