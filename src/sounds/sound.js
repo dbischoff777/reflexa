@@ -4,6 +4,15 @@ import miss from '../sounds/miss.mp3';
 import countdown from '../sounds/countdown.mp3';
 import trySound from '../assets/sounds/Try.mp3';
 
+// Export the sound files directly
+export {
+  achievementSound,
+  success,
+  miss,
+  countdown,
+  trySound
+};
+
 class SoundManager {
     constructor() {
       this.sounds = {};

@@ -7,7 +7,7 @@ import scoreIcon from './images/score.png';
 import { FacebookIcon, TwitterIcon, WhatsAppIcon } from './Icons';
 import DailyQuests from './DailyQuests';
 import WeeklyQuests from './WeeklyQuests';
-import { LucidePlay, LucideCalendar, ShoppingCart, Clock, Trophy, Volume2, VolumeX, X } from 'lucide-react';
+import { LucidePlay, LucideCalendar, ShoppingCart, Clock, Volume2, VolumeX, X } from 'lucide-react';
 import floorBackground from './images/gameBackgrounds/floor1.png';
 import NavigationBar from './components/NavigationBar';
 import { GAME_STATES } from './PopItGame';
@@ -16,6 +16,7 @@ import Tutorial from './components/Tutorial';
 import { useSettings } from './Settings';
 import LoadingScreen from './components/LoadingScreen';
 import assetLoader from './utils/assetLoader';
+import soundManager from './sounds/sound';
 
 const GameContent = ({
   settings,
@@ -33,19 +34,12 @@ const GameContent = ({
   showGameOver,
   gameStats,
   gridShake,
-  particleEffects,
-  setParticleEffects,
   startGame,
   exitGame,
   renderButton,
   newAchievement,
   showAnimation,
-  animationPosition,
   successAnimation,
-  wakeLockActive,
-  brightnessAdjusted,
-  startMusic,
-  stopMusic,
   isMusicPlaying,
   onMusicToggle,
 }) => {
@@ -405,52 +399,92 @@ const GameContent = ({
 
   const [isLoading, setIsLoading] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingError, setLoadingError] = useState(null);
 
-  const assets = useMemo(() => ({
-    images: [
-      livesIcon,
-      frenchieIcon,
-      scoreIcon,
-      floorBackground,
-      // Add other images
-    ],
-    sounds: [
-      '/sounds/pop.mp3',
-      '/sounds/success.mp3',
-      '/sounds/failure.mp3',
-      // Add other sounds
-    ],
-    animations: [
-      successAnimation,
-      // Add other animations
-    ]
-  }), []);
+  const [discoveredAssets, setDiscoveredAssets] = useState(null);
 
+  // Scan for assets when component mounts
   useEffect(() => {
-    const loadAllAssets = async () => {
+    const scanAssets = async () => {
       try {
-        await assetLoader.loadAssets(assets, setLoadingProgress);
-        
-        // Add small delay for smooth transition
-        setTimeout(() => {
-          setIsLoading(false);
-        }, 500);
+        const assets = await assetLoader.scanProjectAssets();
+        setDiscoveredAssets(assets);
       } catch (error) {
-        console.error('Failed to load assets:', error);
-        // Handle loading failure (maybe show retry button)
+        console.error('Failed to scan assets:', error);
+        // Fallback to manual asset list
+        setDiscoveredAssets({
+          images: [livesIcon, frenchieIcon, scoreIcon, floorBackground],
+          sounds: Object.entries(soundManager.sounds).map(([name, audio]) => audio.src),
+          music: [`${process.env.PUBLIC_URL}/assets/music/QuietMoments.mp3`],
+          animations: [successAnimation],
+        });
       }
     };
 
-    loadAllAssets();
+    scanAssets();
+  }, []);
+
+  // Update the assets memo to use discovered assets
+  const assets = useMemo(() => {
+    if (!discoveredAssets) {
+      return {
+        images: [livesIcon, frenchieIcon, scoreIcon, floorBackground],
+        sounds: Object.entries(soundManager.sounds).map(([name, audio]) => audio.src),
+        music: [`${process.env.PUBLIC_URL}/assets/music/QuietMoments.mp3`],
+        animations: [successAnimation],
+      };
+    }
+
+    return {
+      ...discoveredAssets,
+      // Add any additional runtime assets that might not be discoverable
+      music: [
+        ...discoveredAssets.music || [],
+        `${process.env.PUBLIC_URL}/assets/music/QuietMoments.mp3`
+      ],
+      sounds: [
+        ...discoveredAssets.sounds || [],
+        ...Object.entries(soundManager.sounds).map(([name, audio]) => audio.src)
+      ]
+    };
+  }, [discoveredAssets]);
+
+  const loadAssets = useCallback(async () => {
+    try {
+      setLoadingError(null);
+      setLoadingProgress(0);
+      setIsLoading(true);
+
+      await assetLoader.loadAssets(assets, setLoadingProgress);
+      
+      // Add small delay for smooth transition
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 500);
+    } catch (error) {
+      console.error('Failed to load assets:', error);
+      setLoadingError(error.message);
+    }
+  }, [assets]);
+
+  useEffect(() => {
+    loadAssets();
 
     // Cleanup
     return () => {
       assetLoader.clearCache();
     };
-  }, [assets]);
+  }, [loadAssets]);
 
-  if (isLoading) {
-    return <LoadingScreen theme={settings.theme} progress={loadingProgress} />;
+  if (isLoading || loadingError) {
+    return (
+      <LoadingScreen 
+        theme={settings.theme} 
+        progress={loadingProgress}
+        error={loadingError}
+        onRetry={loadingError ? loadAssets : null}
+      />
+    );
   }
 
   return (
