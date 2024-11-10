@@ -7,7 +7,7 @@ import { checkAchievementsUnlocked, ACHIEVEMENTS} from './utils/achievements';
 import './PopItGame.css';
 import mascotImage from './images/cute-mascot.png';
 import bowlAnimation from './assets/animations/Try.gif';
-import successAnimation from './assets/animations/Luck.gif';
+import { SUCCESS_ANIMATIONS } from './constants/animations';
 import { useAvatar } from './hooks/useAvatar';
 import { useScreenProtection } from './hooks/useScreenProtection';
 import { usePlayer } from './utils/PlayerContext';
@@ -141,6 +141,8 @@ const PopItGame = () => {
   const [showSpeechBubble, setShowSpeechBubble] = useState(false);
   const [mascotMessage, setMascotMessage] = useState('');
 
+  // Add new state for current animation
+  const [currentSuccessAnimation, setCurrentSuccessAnimation] = useState(SUCCESS_ANIMATIONS[0]);
 
   const { screenProtection } = useSettings();
 
@@ -878,7 +880,7 @@ const PopItGame = () => {
 
     if (index === targetButton) {
       setIsAnimationPlaying(true);
-      soundManager.stop('trySound');  // Add this line
+      soundManager.stop('trySound');
       playSound('success');
 
       // Calculate grid position
@@ -888,6 +890,10 @@ const PopItGame = () => {
       
       // Clear the current target immediately
       setTargetButton(null);
+
+      // Randomly select a new success animation
+      const randomAnimation = SUCCESS_ANIMATIONS[Math.floor(Math.random() * SUCCESS_ANIMATIONS.length)];
+      setCurrentSuccessAnimation(randomAnimation);
 
       // Set animation position
       setAnimationPosition({ row, col });
@@ -1105,7 +1111,7 @@ const PopItGame = () => {
       handleButtonClick={handleButtonClick}
       showAnimation={showAnimation}
       animationPosition={animationPosition}
-      successAnimation={successAnimation}
+      successAnimation={currentSuccessAnimation}
       setShowAnimation={setShowAnimation}
       wakeLockActive={wakeLockActive}
       startMusic={() => MusicGenerator.play()}

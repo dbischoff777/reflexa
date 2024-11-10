@@ -2,6 +2,8 @@ class AssetLoader {
   constructor() {
     this.cache = new Map();
     this.isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    this.assetsLoaded = false;
+    this.loadingPromise = null;
   }
 
   async scanProjectAssets() {
@@ -50,26 +52,27 @@ class AssetLoader {
     const promise = new Promise((resolve, reject) => {
       const img = new Image();
       
-      // Add timeout for mobile devices
       const timeout = setTimeout(() => {
         if (this.isMobile) {
-          console.warn(`Image load timed out: ${src}, resolving anyway`);
-          resolve(img); // Resolve anyway on mobile to prevent blocking
+          console.warn(`⚠️ Image load timed out: ${src}, resolving anyway`);
+          resolve(img);
+        } else {
+          reject(new Error(`Timeout loading image: ${src}`));
         }
-      }, 5000);
+      }, 10000);
 
       img.onload = () => {
         clearTimeout(timeout);
         resolve(img);
       };
       
-      img.onerror = () => {
+      img.onerror = (e) => {
         clearTimeout(timeout);
+        console.error(`❌ Image load error for ${src}:`, e);
         reject(new Error(`Failed to load image: ${src}`));
       };
 
-      // Add loading attribute for better performance
-      img.loading = 'lazy';
+      img.loading = 'eager';
       img.src = src;
     });
 
@@ -85,31 +88,27 @@ class AssetLoader {
     const promise = new Promise((resolve, reject) => {
       const audio = new Audio();
       
-      // Add timeout for mobile devices
       const timeout = setTimeout(() => {
         if (this.isMobile) {
-          console.warn(`Audio load timed out: ${src}, resolving anyway`);
-          resolve(audio); // Resolve anyway on mobile to prevent blocking
+          console.warn(`⚠️ Audio load timed out: ${src}, resolving anyway`);
+          resolve(audio);
+        } else {
+          reject(new Error(`Timeout loading audio: ${src}`));
         }
-      }, 5000);
+      }, 10000);
 
       audio.oncanplaythrough = () => {
         clearTimeout(timeout);
         resolve(audio);
       };
 
-      audio.onerror = () => {
+      audio.onerror = (e) => {
         clearTimeout(timeout);
+        console.error(`❌ Audio load error for ${src}:`, e);
         reject(new Error(`Failed to load audio: ${src}`));
       };
 
-      // Mobile-specific optimizations
-      if (this.isMobile) {
-        audio.preload = 'metadata'; // Lighter initial load for mobile
-      } else {
-        audio.preload = 'auto';
-      }
-
+      audio.preload = this.isMobile ? 'metadata' : 'auto';
       audio.src = src;
     });
 
@@ -121,40 +120,151 @@ class AssetLoader {
     const total = Object.values(assets).flat().length;
     let loaded = 0;
 
-    // Batch loading for better mobile performance
-    const batchSize = this.isMobile ? 3 : 10;
-    const loadPromises = [];
+    console.log('Assets to load:', {
+      images: assets.images?.length || 0,
+      sounds: assets.sounds?.length || 0,
+      videos: assets.videos?.length || 0,
+      animations: assets.animations?.length || 0
+    });
 
-    const loadBatch = async (items, loader) => {
+    const batchSize = this.isMobile ? 3 : 5;
+
+    const loadBatch = async (items, loader, type) => {
+      if (!items?.length) return;
+      
+      console.log(`Starting to load ${type}:`, items.length);
+      
       for (let i = 0; i < items.length; i += batchSize) {
         const batch = items.slice(i, i + batchSize);
-        await Promise.allSettled(
-          batch.map(src =>
-            loader.call(this, src)
-              .then(() => {
+        
+        console.log(`Loading ${type} batch ${i/batchSize + 1}:`, batch);
+
+        try {
+          const results = await Promise.allSettled(
+            batch.map(async (src) => {
+              try {
+                await loader.call(this, src);
                 loaded++;
-                onProgress(Math.round((loaded / total) * 100));
-              })
-              .catch(error => console.warn(`Failed to preload: ${src}`, error))
-          )
-        );
+                const progress = Math.round((loaded / total) * 100);
+                console.log(`✅ Loaded ${type}:`, src, `(${loaded}/${total}) - ${progress}%`);
+                onProgress(progress);
+                return true;
+              } catch (error) {
+                console.warn(`❌ Failed to load ${type}:`, src, error);
+                loaded++;
+                const progress = Math.round((loaded / total) * 100);
+                onProgress(progress);
+                return false;
+              }
+            })
+          );
+
+          const batchResults = results.map((result, index) => ({
+            asset: batch[index],
+            status: result.status,
+            success: result.status === 'fulfilled' && result.value
+          }));
+          console.log(`Batch results:`, batchResults);
+
+        } catch (error) {
+          console.error(`Batch error for ${type}:`, error);
+          batch.forEach(() => {
+            loaded++;
+            const progress = Math.round((loaded / total) * 100);
+            onProgress(progress);
+          });
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
     };
 
-    // Load images first (they're usually needed first for UI)
-    if (assets.images?.length) {
-      await loadBatch(assets.images, this.preloadImage);
+    try {
+      await loadBatch(assets.images, this.preloadImage, 'images');
+      await loadBatch(assets.sounds, this.preloadAudio, 'sounds');
+      await loadBatch(assets.videos, this.preloadVideo, 'videos');
+      await loadBatch(assets.animations, this.preloadImage, 'animations');
+
+      console.log('✅ All assets loaded. Final count:', loaded);
+      return true;
+    } catch (error) {
+      console.error('❌ Error in loadAssets:', error);
+      return false;
+    }
+  }
+
+  async preloadVideo(src) {
+    if (this.cache.has(src)) {
+      return this.cache.get(src);
     }
 
-    // Then load audio
-    if (assets.sounds?.length) {
-      await loadBatch(assets.sounds, this.preloadAudio);
+    const promise = new Promise((resolve, reject) => {
+      const video = document.createElement('video');
+      
+      const timeout = setTimeout(() => {
+        if (this.isMobile) {
+          console.warn(`Video load timed out: ${src}, resolving anyway`);
+          resolve(video);
+        }
+      }, 5000);
+
+      video.oncanplaythrough = () => {
+        clearTimeout(timeout);
+        resolve(video);
+      };
+
+      video.onerror = () => {
+        clearTimeout(timeout);
+        reject(new Error(`Failed to load video: ${src}`));
+      };
+
+      if (this.isMobile) {
+        video.preload = 'metadata';
+      } else {
+        video.preload = 'auto';
+      }
+
+      video.src = src;
+    });
+
+    this.cache.set(src, promise);
+    return promise;
+  }
+
+  async loadAssetsOnce(assets, onProgress = () => {}) {
+    if (this.assetsLoaded) {
+      console.log('✅ Assets already loaded, skipping...');
+      onProgress(100);
+      return true;
     }
+
+    if (this.loadingPromise) {
+      console.log('⏳ Asset loading already in progress, waiting...');
+      return this.loadingPromise;
+    }
+
+    this.loadingPromise = this.loadAssets(assets, onProgress)
+      .then(result => {
+        if (result) {
+          this.assetsLoaded = true;
+          console.log('✅ Initial asset load complete');
+        }
+        this.loadingPromise = null;
+        return result;
+      })
+      .catch(error => {
+        this.loadingPromise = null;
+        throw error;
+      });
+
+    return this.loadingPromise;
   }
 
   clearCache() {
     this.cache.clear();
+    this.assetsLoaded = false;
   }
 }
 
-export default new AssetLoader();
+const assetLoader = new AssetLoader();
+export default assetLoader;

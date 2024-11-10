@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, Navigate, useNavigate } from 'react-router-dom';
 import PopItGame from './PopItGame';
 import About from './About';
 import Settings from './Settings';
@@ -15,60 +15,24 @@ import NavigationBar from './components/NavigationBar';
 import MobileOptimizer from './components/MobileOptimizer';
 import './styles/SplashScreen.css';
 import { AnimatePresence, motion } from 'framer-motion';
+import assetLoader from './utils/assetLoader';
 
-// Add the SplashScreen component
-const SplashScreen = ({ onAnimationEnd }) => {
-  const handleSkip = () => {
-    const splash = document.querySelector('.splash-screen');
-    splash.classList.add('fade-out');
-    
-    const handleAnimationEnd = () => {
-      splash.removeEventListener('animationend', handleAnimationEnd);
-      onAnimationEnd();
-    };
-    
-    splash.addEventListener('animationend', handleAnimationEnd);
-  };
-
+// Update SplashScreen component
+const SplashScreen = ({ onAnimationEnd, loadingProgress }) => {
+  // Auto-trigger skip when loading reaches 100%
   useEffect(() => {
-    // Create particles
-    const createParticles = () => {
-      const particlesContainer = document.querySelector('.particles');
-      for (let i = 0; i < 20; i++) {
-        const particle = document.createElement('div');
-        particle.className = 'particle';
-        particle.style.left = Math.random() * 100 + '%';
-        particle.style.width = Math.random() * 4 + 2 + 'px';
-        particle.style.height = particle.style.width;
-        particle.style.animationDelay = Math.random() * 2 + 's';
-        particlesContainer.appendChild(particle);
-      }
-    };
-
-    createParticles();
-
-    const timer = setTimeout(() => {
+    if (loadingProgress === 100) {
       const splash = document.querySelector('.splash-screen');
-      if (splash) {
-        splash.classList.add('fade-out');
-        
-        const handleAnimationEnd = () => {
-          splash.removeEventListener('animationend', handleAnimationEnd);
-          onAnimationEnd();
-        };
-        
-        splash.addEventListener('animationend', handleAnimationEnd);
-      }
-    }, 3000);
-
-    return () => {
-      clearTimeout(timer);
-      const splash = document.querySelector('.splash-screen');
-      if (splash) {
-        splash.removeEventListener('animationend', onAnimationEnd);
-      }
-    };
-  }, [onAnimationEnd]);
+      splash.classList.add('fade-out');
+      
+      const handleAnimationEnd = () => {
+        splash.removeEventListener('animationend', handleAnimationEnd);
+        onAnimationEnd();
+      };
+      
+      splash.addEventListener('animationend', handleAnimationEnd);
+    }
+  }, [loadingProgress, onAnimationEnd]);
 
   return (
     <>
@@ -86,21 +50,10 @@ const SplashScreen = ({ onAnimationEnd }) => {
               maxHeight: '50vh'
             }}
           />
+          <div className="loading-progress">
+            Loading... {loadingProgress}%
+          </div>
         </div>
-        <button 
-          className="skip-button" 
-          onClick={handleSkip}
-          style={{
-            position: 'absolute',
-            bottom: '10vh',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            padding: '10px 20px',
-            fontSize: 'clamp(14px, 4vw, 18px)'
-          }}
-        >
-          Skip Intro
-        </button>
       </div>
     </>
   );
@@ -119,41 +72,60 @@ const MainContent = () => {
       <div className="App">
         <AnimatePresence mode="sync">
           <Routes location={location} key={location.pathname}>
-            <Route path="/" element={
-              <AnimatedPage>
-                <PopItGame />
-              </AnimatedPage>
-            } />
-            <Route path="/about" element={
-              <AnimatedPage>
-                <NavigationBar theme={settings.theme} />
-                <About settings={settings} />
-              </AnimatedPage>
-            } />
-            <Route path="/settings" element={
-              <AnimatedPage>
-                <NavigationBar theme={settings.theme} />
-                <Settings />
-              </AnimatedPage>
-            } />
-            <Route path="/leaderboard" element={
-              <AnimatedPage>
-                <NavigationBar theme={settings.theme} />
-                <Leaderboard />
-              </AnimatedPage>
-            } />
-            <Route path="/profile" element={
-              <AnimatedPage>
-                <NavigationBar theme={settings.theme} />
-                <PlayerProfile />
-              </AnimatedPage>
-            } />
-            <Route path="/shop" element={
-              <AnimatedPage>
-                <NavigationBar theme={settings.theme} />
-                <Shop />
-              </AnimatedPage>
-            } />
+            <Route path="/" element={<Navigate to="/game" replace />} />
+            <Route 
+              path="/game" 
+              element={
+                <AnimatedPage>
+                  <PopItGame />
+                </AnimatedPage>
+              } 
+            />
+            <Route 
+              path="/about" 
+              element={
+                <AnimatedPage>
+                  <NavigationBar theme={settings.theme} />
+                  <About settings={settings} />
+                </AnimatedPage>
+              } 
+            />
+            <Route 
+              path="/settings" 
+              element={
+                <AnimatedPage>
+                  <NavigationBar theme={settings.theme} />
+                  <Settings />
+                </AnimatedPage>
+              } 
+            />
+            <Route 
+              path="/leaderboard" 
+              element={
+                <AnimatedPage>
+                  <NavigationBar theme={settings.theme} />
+                  <Leaderboard />
+                </AnimatedPage>
+              } 
+            />
+            <Route 
+              path="/profile" 
+              element={
+                <AnimatedPage>
+                  <NavigationBar theme={settings.theme} />
+                  <PlayerProfile />
+                </AnimatedPage>
+              } 
+            />
+            <Route 
+              path="/shop" 
+              element={
+                <AnimatedPage>
+                  <NavigationBar theme={settings.theme} />
+                  <Shop />
+                </AnimatedPage>
+              } 
+            />
           </Routes>
         </AnimatePresence>
       </div>
@@ -161,16 +133,21 @@ const MainContent = () => {
   );
 };
 
-// Create a wrapper component for the splash screen that handles navigation
-const SplashScreenWrapper = ({ onComplete }) => {
+// Update SplashScreenWrapper
+const SplashScreenWrapper = ({ onComplete, loadingProgress }) => {
   const navigate = useNavigate();
 
   const handleAnimationEnd = () => {
     onComplete();
-    navigate('/');
+    navigate('/game');
   };
 
-  return <SplashScreen onAnimationEnd={handleAnimationEnd} />;
+  return (
+    <SplashScreen 
+      onAnimationEnd={handleAnimationEnd} 
+      loadingProgress={loadingProgress}
+    />
+  );
 };
 
 // Add this new component
@@ -244,23 +221,133 @@ const AnimatedPage = ({ children }) => {
   );
 };
 
+// Separate Routes component to use settings context
+const AppRoutes = () => {
+  const { settings } = useSettings();
+  const location = useLocation();
+
+  return (
+    <Routes location={location} key={location.pathname}>
+      <Route path="/" element={<Navigate to="/game" replace />} />
+      <Route 
+        path="/game" 
+        element={
+          <AnimatedPage>
+            <PopItGame />
+          </AnimatedPage>
+        } 
+      />
+      <Route 
+        path="/about" 
+        element={
+          <AnimatedPage>
+            <NavigationBar theme={settings.theme} />
+            <About settings={settings} />
+          </AnimatedPage>
+        } 
+      />
+      <Route 
+        path="/settings" 
+        element={
+          <AnimatedPage>
+            <NavigationBar theme={settings.theme} />
+            <Settings />
+          </AnimatedPage>
+        } 
+      />
+      <Route 
+        path="/leaderboard" 
+        element={
+          <AnimatedPage>
+            <NavigationBar theme={settings.theme} />
+            <Leaderboard />
+          </AnimatedPage>
+        } 
+      />
+      <Route 
+        path="/profile" 
+        element={
+          <AnimatedPage>
+            <NavigationBar theme={settings.theme} />
+            <PlayerProfile />
+          </AnimatedPage>
+        } 
+      />
+      <Route 
+        path="/shop" 
+        element={
+          <AnimatedPage>
+            <NavigationBar theme={settings.theme} />
+            <Shop />
+          </AnimatedPage>
+        } 
+      />
+    </Routes>
+  );
+};
+
 // Main App component
 function App() {
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(() => {
+    return !localStorage.getItem('hasVisited');
+  });
+  const [assetsLoaded, setAssetsLoaded] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const location = useLocation();
+
+  useEffect(() => {
+    const loadGameAssets = async () => {
+      if (assetLoader.assetsLoaded) {
+        setAssetsLoaded(true);
+        setLoadingProgress(100);
+        return;
+      }
+
+      try {
+        const assets = await assetLoader.scanProjectAssets();
+        await assetLoader.loadAssetsOnce(assets, (progress) => {
+          setLoadingProgress(Math.round(progress));
+        });
+        setAssetsLoaded(true);
+      } catch (error) {
+        console.error('Failed to load assets:', error);
+        setAssetsLoaded(true);
+      }
+    };
+
+    loadGameAssets();
+  }, []);
 
   const handleSplashComplete = () => {
-    console.log('Splash screen complete');
+    localStorage.setItem('hasVisited', 'true');
     setShowSplash(false);
   };
+
+  // Only show splash on first ever visit
+  if (showSplash && !localStorage.getItem('hasVisited')) {
+    return (
+      <SettingsProvider>
+        <PlayerProvider>
+          <SplashScreenWrapper 
+            onComplete={handleSplashComplete} 
+            loadingProgress={loadingProgress}
+          />
+        </PlayerProvider>
+      </SettingsProvider>
+    );
+  }
 
   return (
     <SettingsProvider>
       <PlayerProvider>
-        {showSplash ? (
-          <SplashScreenWrapper onComplete={handleSplashComplete} />
-        ) : (
-          <MainContent />
-        )}
+        <div className="App">
+          <MobileOptimizer />
+          <ToastContainer />
+          <Toaster position="top-center" />
+          <AnimatePresence mode="sync">
+            <AppRoutes />
+          </AnimatePresence>
+        </div>
       </PlayerProvider>
     </SettingsProvider>
   );

@@ -8,7 +8,7 @@ const NavigationBar = ({ theme, gameState }) => {
   const location = useLocation();
   
   const navItems = [
-    { name: 'Home', icon: <Home className="w-5 h-5" />, path: '/' },
+    { name: 'Home', icon: <Home className="w-5 h-5" />, path: '/game' },
     { name: 'Profile', icon: <LucideUser className="w-5 h-5" />, path: '/profile' },
     { name: 'Leaderboard', icon: <Trophy className="w-5 h-5" />, path: '/leaderboard' },
     { name: 'Settings', icon: <LucideSettings className="w-5 h-5" />, path: '/settings' },

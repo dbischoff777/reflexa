@@ -159,3 +159,19 @@
     height: 2px !important;
   }
 }
+
+.loading-progress {
+  position: relative;
+  margin-top: 20px;
+  font-size: clamp(14px, 4vw, 18px);
+  color: #ffffff;
+  text-align: center;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
