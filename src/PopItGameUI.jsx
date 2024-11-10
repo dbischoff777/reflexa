@@ -787,23 +787,27 @@ const GameContent = ({
 
             {/* Game Over Overlay */}
             {showGameOver && (
-              <div className="fixed inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-[1000]">
+              <div className="fixed inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-[1000] p-2 xs:p-4">
                 <div className={`
-                  p-4 xs:p-5 sm:p-6 
+                  p-3 xs:p-4 sm:p-6 
                   rounded-xl 
                   text-center 
                   shadow-2xl
                   transform transition-all duration-300 ease-out
                   animate-fadeIn scale-100 
-                  max-w-[320px] xs:max-w-[360px] w-full 
+                  w-full
+                  max-w-[280px] xs:max-w-[320px] sm:max-w-[360px]
                   mx-auto
+                  overflow-y-auto
+                  max-h-[95vh]
                   ${settings.theme === 'dark' 
                     ? 'bg-gray-800/95 border border-purple-500/20' 
                     : 'bg-white/95 border border-purple-200'
                   }
                 `}>
                   <h2 className={`
-                    text-5xl font-bold mb-6
+                    text-3xl xs:text-4xl sm:text-5xl font-bold 
+                    mb-3 xs:mb-4 sm:mb-6
                     bg-gradient-to-r from-purple-400 to-pink-400 
                     bg-clip-text text-transparent
                     drop-shadow-lg
@@ -812,19 +816,19 @@ const GameContent = ({
                   </h2>
                   
                   <div className={`
-                    mb-8 space-y-3
+                    mb-4 xs:mb-6 sm:mb-8 space-y-2 xs:space-y-3
                     ${settings.theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}
                   `}>
-                    <p className="text-2xl font-semibold">
+                    <p className="text-xl xs:text-2xl font-semibold">
                       Final Score: <span className="text-purple-500">{gameStats.score}</span>
                     </p>
-                    <p className="text-xl">
+                    <p className="text-lg xs:text-xl">
                       High Score: <span className="text-purple-500">{gameStats.highscore}</span>
                     </p>
                   </div>
 
                   {/* Share Score Section */}
-                  <div className="flex flex-col gap-4 mb-6">
+                  <div className="flex flex-col gap-3 xs:gap-4 mb-4 xs:mb-6">
                     {/* Main Share Button */}
                     <button
                       onClick={async () => {
@@ -849,7 +853,9 @@ const GameContent = ({
                         }
                       }}
                       className={`
-                        w-full px-6 py-3 rounded-xl font-bold text-lg
+                        w-full px-4 xs:px-6 py-2 xs:py-3 
+                        rounded-xl font-bold 
+                        text-base xs:text-lg
                         transform transition-all duration-200
                         hover:scale-105 active:scale-95
                         ${settings.theme === 'dark'
@@ -862,77 +868,51 @@ const GameContent = ({
                     </button>
 
                     {/* Social Media Share Buttons */}
-                    <div className="flex justify-center gap-4">
-                      {/* Facebook */}
-                      <button
-                        onClick={() => {
-                          const shareText = encodeURIComponent(`I just scored ${score} points in Fetch & Feast!`);
-                          const url = encodeURIComponent(window.location.href);
-                          window.open(
-                            `https://facebook.com/sharer/sharer.php?u=${url}&quote=${shareText}`,
-                            'facebook-share',
-                            'width=580,height=296'
-                          );
-                        }}
-                        className={`
-                          p-3 rounded-xl transition-all duration-200
-                          hover:scale-110 active:scale-95
-                          shadow-lg hover:shadow-[#1877f2]/30
-                          bg-[#1877f2] hover:bg-[#0d6ce4] text-white
-                        `}
-                      >
-                        <FacebookIcon className="w-7 h-7" />
-                      </button>
-
-                      {/* Twitter/X */}
-                      <button
-                        onClick={() => {
-                          const shareText = encodeURIComponent(
-                            `🎮 I just scored ${score} points in Fetch & Feast! Can you beat my score? 🏆`
-                          );
-                          const url = encodeURIComponent(window.location.href);
-                          window.open(
-                            `https://twitter.com/intent/tweet?text=${shareText}&url=${url}`,
-                            'twitter-share',
-                            'width=550,height=235'
-                          );
-                        }}
-                        className={`
-                          p-3 rounded-xl transition-all duration-200
-                          hover:scale-110 active:scale-95
-                          shadow-lg hover:shadow-black/30
-                          bg-black hover:bg-gray-800 text-white
-                        `}
-                      >
-                        <TwitterIcon className="w-7 h-7" />
-                      </button>
-
-                      {/* WhatsApp */}
-                      <button
-                        onClick={() => {
-                          const shareText = encodeURIComponent(
-                            `🎮 I just scored ${score} points in Fetch & Feast! Can you beat my score? 🏆\n${window.location.href}`
-                          );
-                          window.open(`https://api.whatsapp.com/send?text=${shareText}`);
-                        }}
-                        className={`
-                          p-3 rounded-xl transition-all duration-200
-                          hover:scale-110 active:scale-95
-                          shadow-lg hover:shadow-[#25D366]/30
-                          bg-[#25D366] hover:bg-[#20bd5a] text-white
-                        `}
-                      >
-                        <WhatsAppIcon className="w-7 h-7" />
-                      </button>
+                    <div className="flex justify-center gap-2 xs:gap-4">
+                      {/* Social Media Buttons */}
+                      {['facebook', 'twitter', 'whatsapp'].map((platform) => (
+                        <button
+                          key={platform}
+                          onClick={() => {
+                            const shareText = encodeURIComponent(
+                              `🎮 I just scored ${score} points in Fetch & Feast! Can you beat my score? 🏆`
+                            );
+                            const url = encodeURIComponent(window.location.href);
+                            const shareUrls = {
+                              facebook: `https://facebook.com/sharer/sharer.php?u=${url}&quote=${shareText}`,
+                              twitter: `https://twitter.com/intent/tweet?text=${shareText}&url=${url}`,
+                              whatsapp: `https://api.whatsapp.com/send?text=${shareText}\n${url}`
+                            };
+                            window.open(shareUrls[platform]);
+                          }}
+                          className={`
+                            p-2 xs:p-3 rounded-xl 
+                            transition-all duration-200
+                            hover:scale-110 active:scale-95
+                            shadow-lg
+                            ${platform === 'facebook' ? 'bg-[#1877f2] hover:bg-[#0d6ce4] hover:shadow-[#1877f2]/30' :
+                              platform === 'twitter' ? 'bg-black hover:bg-gray-800 hover:shadow-black/30' :
+                              'bg-[#25D366] hover:bg-[#20bd5a] hover:shadow-[#25D366]/30'}
+                            text-white
+                          `}
+                        >
+                          {platform === 'facebook' ? <FacebookIcon className="w-5 h-5 xs:w-7 xs:h-7" /> :
+                           platform === 'twitter' ? <TwitterIcon className="w-5 h-5 xs:w-7 xs:h-7" /> :
+                           <WhatsAppIcon className="w-5 h-5 xs:w-7 xs:h-7" />}
+                        </button>
+                      ))}
                     </div>
                   </div>
 
                   {/* Game Control Buttons */}
-                  <div className="flex flex-col gap-3">
+                  <div className="flex flex-col gap-2 xs:gap-3">
                     <button
                       onClick={startGame}
                       className={`
-                        w-full px-4 xs:px-6 py-2 xs:py-3 rounded-lg xs:rounded-xl font-bold text-base xs:text-lg
+                        w-full px-4 xs:px-6 py-2 xs:py-3 
+                        rounded-lg xs:rounded-xl 
+                        font-bold 
+                        text-base xs:text-lg
                         transform transition-all duration-200
                         hover:scale-105 active:scale-95
                         ${settings.theme === 'dark'
@@ -947,7 +927,10 @@ const GameContent = ({
                     <Link
                       to="/profile"
                       className={`
-                        w-full px-6 py-3 rounded-xl font-bold text-lg
+                        w-full px-4 xs:px-6 py-2 xs:py-3 
+                        rounded-xl 
+                        font-bold 
+                        text-base xs:text-lg
                         transform transition-all duration-200
                         hover:scale-105 active:scale-95
                         ${settings.theme === 'dark'
@@ -962,7 +945,10 @@ const GameContent = ({
                     <button
                       onClick={exitGame}
                       className={`
-                        w-full px-6 py-3 rounded-xl font-bold text-lg
+                        w-full px-4 xs:px-6 py-2 xs:py-3 
+                        rounded-xl 
+                        font-bold 
+                        text-base xs:text-lg
                         transform transition-all duration-200
                         hover:scale-105 active:scale-95
                         ${settings.theme === 'dark'

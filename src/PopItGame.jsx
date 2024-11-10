@@ -6,8 +6,8 @@ import { updatePlayerStats } from './utils/playerStats';
 import { checkAchievementsUnlocked, ACHIEVEMENTS} from './utils/achievements';
 import './PopItGame.css';
 import mascotImage from './images/cute-mascot.png';
-import bowlAnimation from './assets/animations/Try.gif';
 import { SUCCESS_ANIMATIONS } from './constants/animations';
+import { TRY_ANIMATIONS } from './constants/animations';
 import { useAvatar } from './hooks/useAvatar';
 import { useScreenProtection } from './hooks/useScreenProtection';
 import { usePlayer } from './utils/PlayerContext';
@@ -143,6 +143,7 @@ const PopItGame = () => {
 
   // Add new state for current animation
   const [currentSuccessAnimation, setCurrentSuccessAnimation] = useState(SUCCESS_ANIMATIONS[0]);
+  const [currentTargetAnimation, setCurrentTargetAnimation] = useState(TRY_ANIMATIONS[0]);
 
   const { screenProtection } = useSettings();
 
@@ -517,7 +518,7 @@ const PopItGame = () => {
       25: "BEYOND LEGENDARY! 🌈✨",
       30: "COSMIC ACHIEVEMENT! 🌌",
       40: "IMPOSSIBLE FEAT! 💫",
-      50: "ULTIMATE MASTER! 👑💫"
+      50: "ULTIMATE MASTER! 👑🎪"
     };
   
     const comboSpecificMessages = {
@@ -995,8 +996,8 @@ const PopItGame = () => {
             {isTarget && (
              <div className="absolute inset-0 flex items-center justify-center filter drop-shadow-lg">
                 <img
-                  src={bowlAnimation}
-                  alt="Bowl Animation"
+                  src={currentTargetAnimation}
+                  alt="Target Animation"
                   className="w-4/5 2xs:w-[85%] xs:w-[87%] sm:w-[90%] object-contain pointer-events-none mix-blend-screen"
                   draggable="false"
                 />
@@ -1077,6 +1078,14 @@ const PopItGame = () => {
   useEffect(() => {
     localStorage.setItem('isMusicPlaying', JSON.stringify(isMusicPlaying));
   }, [isMusicPlaying]);
+
+  // Add this useEffect to randomly change the target animation
+  useEffect(() => {
+    if (targetButton !== null) {
+      const randomAnimation = TRY_ANIMATIONS[Math.floor(Math.random() * TRY_ANIMATIONS.length)];
+      setCurrentTargetAnimation(randomAnimation);
+    }
+  }, [targetButton]);
 
   return (
     <PopItGameUI
