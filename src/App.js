@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Routes, Route } from 'react-router-dom';
+import { useNavigate, Routes, Route, useLocation } from 'react-router-dom';
 import PopItGame from './PopItGame';
 import About from './About';
 import Settings from './Settings';
@@ -14,6 +14,7 @@ import Shop from './components/Shop';
 import NavigationBar from './components/NavigationBar';
 import MobileOptimizer from './components/MobileOptimizer';
 import './styles/SplashScreen.css';
+import { AnimatePresence, motion } from 'framer-motion';
 
 // Add the SplashScreen component
 const SplashScreen = ({ onAnimationEnd }) => {
@@ -85,6 +86,7 @@ const SplashScreen = ({ onAnimationEnd }) => {
 // Create a separate component for the main app content
 const MainContent = () => {
   const { settings } = useSettings();
+  const location = useLocation();
   
   return (
     <>
@@ -92,39 +94,45 @@ const MainContent = () => {
       <ToastContainer />
       <Toaster position="top-center" />
       <div className="App">
-        <Routes>
-          <Route path="/" element={<PopItGame />} />
-          <Route path="/about" element={
-            <>
-              <NavigationBar theme={settings.theme} />
-              <About settings={settings} />
-            </>
-          } />
-          <Route path="/settings" element={
-            <>
-              <NavigationBar theme={settings.theme} />
-              <Settings />
-            </>
-          } />
-          <Route path="/leaderboard" element={
-            <>
-              <NavigationBar theme={settings.theme} />
-              <Leaderboard />
-            </>
-          } />
-          <Route path="/profile" element={
-            <>
-              <NavigationBar theme={settings.theme} />
-              <PlayerProfile />
-            </>
-          } />
-          <Route path="/shop" element={
-            <>
-              <NavigationBar theme={settings.theme} />
-              <Shop />
-            </>
-          } />
-        </Routes>
+        <AnimatePresence mode="sync">
+          <Routes location={location} key={location.pathname}>
+            <Route path="/" element={
+              <AnimatedPage>
+                <PopItGame />
+              </AnimatedPage>
+            } />
+            <Route path="/about" element={
+              <AnimatedPage>
+                <NavigationBar theme={settings.theme} />
+                <About settings={settings} />
+              </AnimatedPage>
+            } />
+            <Route path="/settings" element={
+              <AnimatedPage>
+                <NavigationBar theme={settings.theme} />
+                <Settings />
+              </AnimatedPage>
+            } />
+            <Route path="/leaderboard" element={
+              <AnimatedPage>
+                <NavigationBar theme={settings.theme} />
+                <Leaderboard />
+              </AnimatedPage>
+            } />
+            <Route path="/profile" element={
+              <AnimatedPage>
+                <NavigationBar theme={settings.theme} />
+                <PlayerProfile />
+              </AnimatedPage>
+            } />
+            <Route path="/shop" element={
+              <AnimatedPage>
+                <NavigationBar theme={settings.theme} />
+                <Shop />
+              </AnimatedPage>
+            } />
+          </Routes>
+        </AnimatePresence>
       </div>
     </>
   );
@@ -140,6 +148,77 @@ const SplashScreenWrapper = ({ onComplete }) => {
   };
 
   return <SplashScreen onAnimationEnd={handleAnimationEnd} />;
+};
+
+// Add this new component
+const AnimatedPage = ({ children }) => {
+  const { settings } = useSettings();
+  
+  const isDark = settings.theme === 'dark';
+  const initialBg = isDark ? 'rgba(88, 28, 135, 0.4)' : 'rgba(243, 232, 255, 0.4)';
+  const finalBg = isDark ? 'rgba(88, 28, 135, 0.4)' : 'rgba(243, 232, 255, 0.4)';
+  
+  return (
+    <motion.div
+      initial={{ 
+        opacity: 0,
+        backgroundColor: initialBg,
+        scale: 1.1,
+        y: 20,
+        filter: isDark 
+          ? 'brightness(0.3) saturate(1.2)' 
+          : 'none',
+      }}
+      animate={{ 
+        opacity: 1,
+        backgroundColor: finalBg,
+        scale: 1,
+        y: 0,
+        filter: 'none',
+      }}
+      exit={{ 
+        opacity: 0,
+        backgroundColor: initialBg,
+        scale: 0.95,
+        y: -20,
+        filter: isDark 
+          ? 'brightness(0.3) saturate(1.2)' 
+          : 'none',
+      }}
+      transition={{ 
+        type: "spring",
+        stiffness: 400,
+        damping: 30,
+        mass: 0.8,
+        duration: 0.3
+      }}
+      style={{
+        width: '100%',
+        minHeight: '100vh',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        willChange: 'transform, opacity',
+        backgroundColor: isDark ? '#1a1a1a' : undefined,
+        overflow: 'hidden'
+      }}
+    >
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        transition={{
+          type: "spring",
+          stiffness: 400,
+          damping: 30,
+          mass: 0.8,
+          delay: 0.1
+        }}
+      >
+        {children}
+      </motion.div>
+    </motion.div>
+  );
 };
 
 // Main App component
