@@ -263,17 +263,27 @@ const GameContent = ({
     };
   }, [gameState]);
 
+  // Add transition classes to prevent flickering
+  const transitionClasses = {
+    base: "transition-all duration-300 ease-in-out will-change-auto",
+    fade: "transition-opacity duration-300 ease-in-out will-change-opacity",
+    transform: "transition-transform duration-300 ease-in-out will-change-transform",
+  };
+
   return (
     <div 
-      className={`min-h-screen w-full fixed inset-0 ${
-        settings.theme === 'dark'
+      className={`
+        min-h-screen w-full fixed inset-0 
+        ${transitionClasses.base}
+        ${settings.theme === 'dark'
           ? gridShake 
             ? 'animate-shake-and-flash bg-gray-800 text-white'
             : 'bg-gray-800 text-white'
           : gridShake
             ? 'animate-shake-and-flash bg-gray-100 text-gray-900'
             : 'bg-gray-100 text-gray-900'
-      }`}
+        }
+      `}
       onTouchStart={(e) => {
         if (gameState === GAME_STATES.PLAYING) {
           e.preventDefault();
@@ -290,10 +300,15 @@ const GameContent = ({
       }}
     >
       {gameState !== GAME_STATES.PLAYING && (
-        <NavigationBar 
-          theme={settings.theme} 
-          gameState={gameState}
-        />
+        <div className={`
+          ${transitionClasses.fade}
+          ${gameState === GAME_STATES.PLAYING ? 'opacity-0 pointer-events-none' : 'opacity-100'}
+        `}>
+          <NavigationBar 
+            theme={settings.theme} 
+            gameState={gameState}
+          />
+        </div>
       )}
       
       <div className="container mx-auto px-1 xs:px-2 sm:px-4 lg:px-6 py-1 xs:py-2 sm:py-4 lg:py-6 max-w-7xl mb-8 xs:mb-12 pt-16 xs:pt-20">
@@ -303,7 +318,8 @@ const GameContent = ({
           <div className="flex justify-center mb-1 xs:mb-2 sm:mb-4 pointer-events-none">
             <div className={`
               relative
-              transition-all duration-300 ease-in-out
+              ${transitionClasses.base}
+              transform-gpu
               ${gameState !== 'menu' 
                 ? 'opacity-0 scale-95 h-0 mb-0 overflow-hidden' 
                 : `opacity-100 scale-100 
@@ -491,11 +507,15 @@ const GameContent = ({
           </div>
         </div>
       {/* Game Header */}
-        <div className={`text-center transition-all duration-300 ease-in-out ${
-          gameState !== 'menu' 
-            ? 'opacity-0 h-0 overflow-hidden' 
-            : 'opacity-100 h-auto mb-2 xs:mb-4 sm:mb-6'
-        }`}>
+        <div className={`
+          text-center 
+          ${transitionClasses.base}
+          transform-gpu
+          ${gameState !== 'menu' 
+            ? 'opacity-0 h-0 overflow-hidden translate-y-2' 
+            : 'opacity-100 h-auto mb-2 xs:mb-4 sm:mb-6 translate-y-0'
+          }
+        `}>
           <div className="text-center mb-2 xs:mb-3 sm:mb-4">
             <h1 className={`
               relative inline-block 
@@ -960,18 +980,27 @@ const GameContent = ({
               {/* Square Aspect Ratio Container */}
               <div className="relative w-[95vw] xs:w-[90vw] sm:w-[85vw] md:w-[75vw] lg:w-[65vw] max-w-[800px] mx-auto">
                 <div 
-                  className="relative aspect-square rounded-lg overflow-hidden"
+                  className={`
+                    relative aspect-square rounded-lg overflow-hidden
+                    ${transitionClasses.base}
+                    transform-gpu
+                  `}
                   style={{
                     backgroundImage: `url(${floorBackground})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     backgroundRepeat: 'no-repeat',
+                    willChange: 'transform',
                   }}
                 >
                   {/* Animation Overlay */}
                   {showAnimation && (
                     <div 
-                      className="absolute pointer-events-none"
+                      className={`
+                        absolute pointer-events-none
+                        ${transitionClasses.fade}
+                        transform-gpu
+                      `}
                       style={{
                         left: '50%',
                         top: '50%',
@@ -980,6 +1009,7 @@ const GameContent = ({
                         height: '300px',
                         pointerEvents: 'none',
                         zIndex: 50,
+                        willChange: 'transform, opacity',
                       }}
                     >
                       <div className="absolute inset-0 flex items-center justify-center rounded-lg">
