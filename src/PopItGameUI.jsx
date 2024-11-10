@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import livesIcon from './images/lives.png';
@@ -270,6 +270,123 @@ const GameContent = ({
     transform: "transition-transform duration-300 ease-in-out will-change-transform",
   };
 
+  // Add performance optimization constants
+  const ANIMATION_CONFIG = {
+    frenchie: {
+      floatDuration: 3,
+      particleCount: window.innerWidth < 768 ? 8 : 12, // Reduce particles on mobile
+      sparkleCount: window.innerWidth < 768 ? 4 : 6,   // Reduce sparkles on mobile
+    }
+  };
+
+  // Add animation performance optimizations
+  const [isReducedMotion, setIsReducedMotion] = useState(false);
+
+  // Check for reduced motion preference
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setIsReducedMotion(mediaQuery.matches);
+
+    const handleChange = (e) => setIsReducedMotion(e.matches);
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+
+  // Optimize Frenchie animation
+  const frenchieAnimationProps = useMemo(() => ({
+    initial: { scale: 0.9, y: 10, rotate: -5 },
+    animate: isReducedMotion ? {} : { 
+      scale: [1, 1.05, 1],  // Reduced scale range
+      y: [0, -6, 0],        // Reduced movement range
+      rotate: [-3, 3, -3]   // Reduced rotation range
+    },
+    transition: {
+      duration: ANIMATION_CONFIG.frenchie.floatDuration,
+      repeat: Infinity,
+      repeatType: "reverse",
+      ease: "easeInOut",
+      // Use CSS transforms for better performance
+      type: "tween",
+      optimizeLegibility: true,
+    },
+    whileHover: isReducedMotion ? {} : {
+      scale: 1.1,           // Reduced hover scale
+      transition: {
+        duration: 0.2       // Faster hover transition
+      }
+    }
+  }), [isReducedMotion]);
+
+  // Optimize particle animations
+  const renderParticles = useCallback(() => {
+    if (isReducedMotion) return null;
+
+    return [...Array(ANIMATION_CONFIG.frenchie.particleCount)].map((_, i) => (
+      <motion.div
+        key={i}
+        className={`
+          absolute rounded-full
+          ${settings.theme === 'dark' ? 'bg-purple-400' : 'bg-purple-500'}
+          will-change-transform
+        `}
+        style={{
+          width: `${Math.random() * 3 + 2}px`,    // Reduced size variation
+          height: `${Math.random() * 3 + 2}px`,   // Reduced size variation
+          opacity: Math.random() * 0.4 + 0.2      // Reduced opacity range
+        }}
+        initial={{ opacity: 0 }}
+        animate={{ 
+          opacity: [0, 0.4, 0],                   // Reduced opacity range
+          x: Math.random() * 80 - 40,             // Reduced movement range
+          y: Math.random() * 80 - 40,             // Reduced movement range
+          scale: [0.8, 1.1, 0.8]                  // Reduced scale range
+        }}
+        transition={{
+          duration: 1.5 + Math.random(),          // Reduced duration variation
+          repeat: Infinity,
+          delay: i * 0.15,                        // Reduced delay between particles
+          ease: "easeInOut",
+          type: "tween",                          // Use CSS transforms
+          optimizeLegibility: true
+        }}
+      />
+    ));
+  }, [isReducedMotion, settings.theme]);
+
+  // Optimize sparkle animations
+  const renderSparkles = useCallback(() => {
+    if (isReducedMotion) return null;
+
+    return [...Array(ANIMATION_CONFIG.frenchie.sparkleCount)].map((_, i) => (
+      <motion.div
+        key={`sparkle-${i}`}
+        className={`
+          absolute w-1 h-1 rotate-45
+          ${settings.theme === 'dark' ? 'bg-purple-300' : 'bg-purple-400'}
+          will-change-transform
+        `}
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ 
+          opacity: [0, 0.8, 0],
+          scale: [0, 1, 0],
+          rotate: [0, 45, 90]                     // Reduced rotation range
+        }}
+        transition={{
+          duration: 1.2,                          // Reduced duration
+          repeat: Infinity,
+          delay: i * 0.25,                        // Reduced delay between sparkles
+          ease: "easeInOut",
+          type: "tween",                          // Use CSS transforms
+          optimizeLegibility: true
+        }}
+        style={{
+          left: `${Math.random() * 80 + 10}%`,    // Keep within bounds
+          top: `${Math.random() * 80 + 10}%`,     // Keep within bounds
+        }}
+      />
+    ));
+  }, [isReducedMotion, settings.theme]);
+
   return (
     <div 
       className={`
@@ -328,27 +445,7 @@ const GameContent = ({
                   animate-float`
               }
             `}>
-                <motion.div
-                  initial={{ scale: 0.9, y: 10, rotate: -5 }}
-                  animate={{ 
-                    scale: [1, 1.08, 1],
-                    y: [0, -8, 0],
-                    rotate: [-5, 5, -5]
-                  }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    repeatType: "reverse",
-                    ease: "easeInOut"
-                  }}
-                  whileHover={{
-                    scale: 1.15,
-                    rotate: [-5, 5],
-                    transition: {
-                      duration: 0.3
-                    }
-                  }}
-                >
+                <motion.div {...frenchieAnimationProps}>
                   <img
                     src={frenchieIcon}
                     alt="Frenchie"
@@ -356,23 +453,37 @@ const GameContent = ({
                       w-32 h-32 
                       object-contain 
                       drop-shadow-xl
-                      transition-all duration-300
-                      hover:scale-110
-                      hover:rotate-6
+                      transform-gpu                           // Force GPU acceleration
                       ${settings.theme === 'dark' 
                         ? 'filter-none' 
                         : 'brightness-100 contrast-105'
                       }
                     `}
                     style={{ 
-                      filter: `
-                        ${settings.theme === 'dark' 
-                          ? 'drop-shadow(0 0 12px rgba(147, 51, 234, 0.4)) brightness(1.1)' 
-                          : 'drop-shadow(0 0 8px rgba(107, 33, 168, 0.3))'
-                        }
-                      `
+                      filter: settings.theme === 'dark' 
+                        ? 'drop-shadow(0 0 12px rgba(147, 51, 234, 0.4)) brightness(1.1)' 
+                        : 'drop-shadow(0 0 8px rgba(107, 33, 168, 0.3))',
+                      willChange: 'transform',                // Hint to browser for optimization
                     }}
                   />
+                </motion.div>
+                
+                {/* Particles */}
+                <motion.div
+                  className="absolute inset-0 pointer-events-none"
+                  initial="hidden"
+                  animate="visible"
+                >
+                  {renderParticles()}
+                </motion.div>
+                
+                {/* Sparkles */}
+                <motion.div
+                  className="absolute inset-0 pointer-events-none"
+                  initial="hidden"
+                  animate="visible"
+                >
+                  {renderSparkles()}
                 </motion.div>
                 
                 {/* Add decorative elements */}
@@ -418,90 +529,6 @@ const GameContent = ({
                     }
                   `} />
                 </div>
-                
-                {/* Enhanced floating particles */}
-                <motion.div
-                  className="absolute inset-0"
-                  initial="hidden"
-                  animate="visible"
-                >
-                  {[...Array(12)].map((_, i) => (
-                    <motion.div
-                      key={i}
-                      className={`
-                        absolute 
-                        rounded-full
-                        ${settings.theme === 'dark' 
-                          ? 'bg-purple-400' 
-                          : 'bg-purple-500'
-                        }
-                      `}
-                      style={{
-                        width: Math.random() * 4 + 2 + 'px',
-                        height: Math.random() * 4 + 2 + 'px',
-                        opacity: Math.random() * 0.5 + 0.2
-                      }}
-                      initial={{ 
-                        opacity: 0,
-                        x: Math.random() * 100 - 50,
-                        y: Math.random() * 100 - 50
-                      }}
-                      animate={{ 
-                        opacity: [0, 0.5, 0],
-                        x: Math.random() * 100 - 50,
-                        y: Math.random() * 100 - 50,
-                        scale: [0.8, 1.2, 0.8]
-                      }}
-                      transition={{
-                        duration: 2 + Math.random() * 2,
-                        repeat: Infinity,
-                        delay: i * 0.2,
-                        ease: "easeInOut"
-                      }}
-                    />
-                  ))}
-                </motion.div>
-
-                {/* Add sparkles */}
-                <motion.div
-                  className="absolute inset-0"
-                  initial="hidden"
-                  animate="visible"
-                >
-                  {[...Array(6)].map((_, i) => (
-                    <motion.div
-                      key={`sparkle-${i}`}
-                      className={`
-                        absolute 
-                        w-1 h-1
-                        rotate-45
-                        ${settings.theme === 'dark' 
-                          ? 'bg-purple-300' 
-                          : 'bg-purple-400'
-                        }
-                      `}
-                      initial={{ 
-                        opacity: 0,
-                        scale: 0
-                      }}
-                      animate={{ 
-                        opacity: [0, 1, 0],
-                        scale: [0, 1, 0],
-                        rotate: [0, 90, 180]
-                      }}
-                      transition={{
-                        duration: 1.5,
-                        repeat: Infinity,
-                        delay: i * 0.3,
-                        ease: "easeInOut"
-                      }}
-                      style={{
-                        left: `${Math.random() * 100}%`,
-                        top: `${Math.random() * 100}%`,
-                      }}
-                    />
-                  ))}
-                </motion.div>
               </div>
             </div>
           </div>
