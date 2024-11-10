@@ -1,7 +1,6 @@
 import { useEffect, useCallback } from 'react';
 
 const MobileOptimizer = () => {
-  // Move functions outside useEffect for better organization
   const applyMobileOptimizations = useCallback(() => {
     try {
       // Helper function to safely add meta tags
@@ -25,8 +24,8 @@ const MobileOptimizer = () => {
         'apple-mobile-web-app-capable': 'yes',
         'apple-mobile-web-app-status-bar-style': 'black-translucent',
         'mobile-web-app-capable': 'yes',
-        'theme-color': '#000000', // Added for Android
-        'format-detection': 'telephone=no' // Prevent auto phone number detection
+        'theme-color': '#000000',
+        'format-detection': 'telephone=no'
       };
 
       Object.entries(metaTags).forEach(([name, content]) => {
@@ -85,25 +84,21 @@ const MobileOptimizer = () => {
               background-color: black;
             }
 
-            /* Additional optimizations */
             input, textarea {
               -webkit-appearance: none;
               border-radius: 0;
             }
             
-            /* Disable selection */
             * {
               -webkit-user-select: none;
               user-select: none;
             }
             
-            /* Enable selection only for input fields */
             input, textarea {
               -webkit-user-select: text;
               user-select: text;
             }
             
-            /* Smooth scrolling for iOS */
             @supports (-webkit-overflow-scrolling: touch) {
               body {
                 -webkit-overflow-scrolling: touch;
@@ -123,21 +118,13 @@ const MobileOptimizer = () => {
   }, []);
 
   const enterFullscreen = useCallback(async () => {
-    // Check if fullscreen is supported
-    const fullscreenEnabled = document.fullscreenEnabled ||
-      document.webkitFullscreenEnabled ||
-      document.msFullscreenEnabled;
-
-    if (!fullscreenEnabled) {
-      console.warn('Fullscreen not supported');
-      return;
-    }
-
     try {
       const elem = document.documentElement;
-      // Check if already fullscreen
+      
+      // Check if already in fullscreen
       if (document.fullscreenElement) return;
 
+      // Try different fullscreen methods
       if (elem.requestFullscreen) {
         await elem.requestFullscreen();
       } else if (elem.webkitRequestFullscreen) {
@@ -146,30 +133,30 @@ const MobileOptimizer = () => {
         await elem.msRequestFullscreen();
       }
     } catch (err) {
-      console.warn('Fullscreen request failed:', err);
+      console.debug('Fullscreen request failed:', err);
     }
   }, []);
 
   useEffect(() => {
-    // Debounce resize handler with a shorter timeout
-    let resizeTimeout;
-    const handleResize = () => {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(() => {
-        // Only enter fullscreen on significant size changes
-        const currentWidth = window.innerWidth;
-        const currentHeight = window.innerHeight;
-        if (Math.abs(lastWidth - currentWidth) > 50 || Math.abs(lastHeight - currentHeight) > 50) {
-          enterFullscreen();
-        }
-      }, 100); // Reduced timeout
-    };
-
     // Track window dimensions
     let lastWidth = window.innerWidth;
     let lastHeight = window.innerHeight;
 
-    // Handle various events that might show the status bar
+    // Debounced resize handler
+    let resizeTimeout;
+    const handleResize = () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        const currentWidth = window.innerWidth;
+        const currentHeight = window.innerHeight;
+        if (Math.abs(lastWidth - currentWidth) > 50 || Math.abs(lastHeight - currentHeight) > 50) {
+          enterFullscreen();
+          lastWidth = currentWidth;
+          lastHeight = currentHeight;
+        }
+      }, 100);
+    };
+
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         enterFullscreen();
@@ -177,13 +164,9 @@ const MobileOptimizer = () => {
     };
 
     const handleOrientationChange = () => {
-      // Wait for orientation change to complete
-      setTimeout(() => {
-        enterFullscreen();
-      }, 100);
+      setTimeout(enterFullscreen, 100);
     };
 
-    // Prevent default touch behaviors
     const preventPullToRefresh = (e) => {
       e.preventDefault();
     };
@@ -193,23 +176,24 @@ const MobileOptimizer = () => {
     window.addEventListener('resize', handleResize);
     window.addEventListener('orientationchange', handleOrientationChange);
     document.addEventListener('touchmove', preventPullToRefresh, { passive: false });
-
-    // Add error boundary
-    const handleError = (err) => {
-      console.error('MobileOptimizer error:', err);
-    };
-    window.addEventListener('error', handleError);
+    window.addEventListener('focus', handleVisibilityChange);
+    
+    // Mobile-specific event for initial touch
+    window.addEventListener('touchend', () => {
+      setTimeout(enterFullscreen, 100);
+    }, { once: true });
 
     // Initial setup
     applyMobileOptimizations();
     enterFullscreen();
 
+    // Cleanup
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('orientationchange', handleOrientationChange);
       document.removeEventListener('touchmove', preventPullToRefresh);
-      window.removeEventListener('error', handleError);
+      window.removeEventListener('focus', handleVisibilityChange);
       clearTimeout(resizeTimeout);
     };
   }, [applyMobileOptimizations, enterFullscreen]);

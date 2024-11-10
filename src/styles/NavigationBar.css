@@ -1,0 +1,15 @@
+.navigation-bar {
+  /* ... existing styles ... */
+  height: calc(var(--vh, 1vh) * 100);
+  /* Add any other necessary mobile-specific styles */
+}
+
+/* Ensure the app container uses the custom vh unit */
+.App {
+  min-height: calc(var(--vh, 1vh) * 100);
+}
+
+/* Update AnimatedPage styles */
+.animated-page {
+  min-height: calc(var(--vh, 1vh) * 100);
+} 

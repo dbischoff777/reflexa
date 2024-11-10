@@ -35,101 +35,24 @@ const SplashScreen = ({ onAnimationEnd, loadingProgress }) => {
   }, [loadingProgress, onAnimationEnd]);
 
   return (
-    <>
-      <MobileOptimizer />
-      <div className="splash-screen">
-        <div className="particles"></div>
-        <div className="logo-container">
-          <img 
-            src="/assets/logo/debis-high-res-logo-transp.png" 
-            alt="Game Logo" 
-            className="logo"
-            style={{
-              maxWidth: '90vw',
-              height: 'auto',
-              maxHeight: '50vh'
-            }}
-          />
-          <div className="loading-progress">
-            Loading... {loadingProgress}%
-          </div>
+    <div className="splash-screen">
+      <div className="particles"></div>
+      <div className="logo-container">
+        <img 
+          src="/assets/logo/debis-high-res-logo-transp.png" 
+          alt="Game Logo" 
+          className="logo"
+          style={{
+            maxWidth: '90vw',
+            height: 'auto',
+            maxHeight: '50vh'
+          }}
+        />
+        <div className="loading-progress">
+          Loading... {loadingProgress}%
         </div>
       </div>
-    </>
-  );
-};
-
-// Create a separate component for the main app content
-const MainContent = () => {
-  const { settings } = useSettings();
-  const location = useLocation();
-  
-  return (
-    <>
-      <MobileOptimizer />
-      <ToastContainer />
-      <Toaster position="top-center" />
-      <div className="App">
-        <AnimatePresence mode="sync">
-          <Routes location={location} key={location.pathname}>
-            <Route path="/" element={<Navigate to="/game" replace />} />
-            <Route 
-              path="/game" 
-              element={
-                <AnimatedPage>
-                  <PopItGame />
-                </AnimatedPage>
-              } 
-            />
-            <Route 
-              path="/about" 
-              element={
-                <AnimatedPage>
-                  <NavigationBar theme={settings.theme} />
-                  <About settings={settings} />
-                </AnimatedPage>
-              } 
-            />
-            <Route 
-              path="/settings" 
-              element={
-                <AnimatedPage>
-                  <NavigationBar theme={settings.theme} />
-                  <Settings />
-                </AnimatedPage>
-              } 
-            />
-            <Route 
-              path="/leaderboard" 
-              element={
-                <AnimatedPage>
-                  <NavigationBar theme={settings.theme} />
-                  <Leaderboard />
-                </AnimatedPage>
-              } 
-            />
-            <Route 
-              path="/profile" 
-              element={
-                <AnimatedPage>
-                  <NavigationBar theme={settings.theme} />
-                  <PlayerProfile />
-                </AnimatedPage>
-              } 
-            />
-            <Route 
-              path="/shop" 
-              element={
-                <AnimatedPage>
-                  <NavigationBar theme={settings.theme} />
-                  <Shop />
-                </AnimatedPage>
-              } 
-            />
-          </Routes>
-        </AnimatePresence>
-      </div>
-    </>
+    </div>
   );
 };
 
@@ -195,12 +118,16 @@ const AnimatedPage = ({ children }) => {
       style={{
         width: '100%',
         minHeight: '100vh',
-        position: 'absolute',
+        position: 'fixed',
         top: 0,
         left: 0,
+        right: 0,
+        bottom: 0,
         willChange: 'transform, opacity',
         backgroundColor: isDark ? '#1a1a1a' : undefined,
-        overflow: 'hidden'
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        zIndex: 1
       }}
     >
       <motion.div
@@ -213,6 +140,11 @@ const AnimatedPage = ({ children }) => {
           damping: 30,
           mass: 0.8,
           delay: 0.1
+        }}
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column'
         }}
       >
         {children}
@@ -293,7 +225,6 @@ function App() {
   });
   const [assetsLoaded, setAssetsLoaded] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
-  const location = useLocation();
 
   useEffect(() => {
     const loadGameAssets = async () => {
@@ -327,6 +258,7 @@ function App() {
   if (showSplash && !localStorage.getItem('hasVisited')) {
     return (
       <SettingsProvider>
+        <MobileOptimizer />
         <PlayerProvider>
           <SplashScreenWrapper 
             onComplete={handleSplashComplete} 
@@ -339,9 +271,9 @@ function App() {
 
   return (
     <SettingsProvider>
+      <MobileOptimizer />
       <PlayerProvider>
         <div className="App">
-          <MobileOptimizer />
           <ToastContainer />
           <Toaster position="top-center" />
           <AnimatePresence mode="sync">
