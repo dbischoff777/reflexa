@@ -413,21 +413,24 @@ const getAnimationConfig = useCallback((step) => {
     const multiplierBonus = Math.floor(maxMultiplier * 5); // Bonus for highest multiplier achieved
     const experienceGained = baseExperience + timeBonus + multiplierBonus;
 
-    return {
-      ...gameStats,
-      score,
-      multiplier: maxMultiplier,
-      maxMultiplier,
-      duration,
-      gameTime,
-      averageCombo: gameStats.combos.reduce((a, b) => a + b, 0) / gameStats.combos.length || 0,
-      avgReactionTime: gameStats.reactionTimes.reduce((a, b) => a + b, 0) / gameStats.reactionTimes.length || 0,
-      bestReactionTime: Math.min(...gameStats.reactionTimes) || 0,
-      scorePerMinute: score / (duration / 60),
-      lives,
-      maxLives: 9,
-      experienceGained
+    const finalStats = {
+        ...gameStats,
+        score,
+        multiplier: maxMultiplier,
+        maxMultiplier,
+        duration,
+        gameTime,
+        averageCombo: gameStats.combos.reduce((a, b) => a + b, 0) / gameStats.combos.length || 0,
+        avgReactionTime: gameStats.reactionTimes.reduce((a, b) => a + b, 0) / gameStats.reactionTimes.length || 0,
+        bestReactionTime: Math.min(...gameStats.reactionTimes) || 0,
+        scorePerMinute: score / (duration / 60),
+        lives,
+        maxLives: 9,
+        experienceGained
     };
+
+    console.log('Final Stats:', finalStats);
+    return finalStats;
   }, [gameStats, score, gameTime, lives, maxMultiplier]);
 
   // Update leaderboard
@@ -514,7 +517,7 @@ const getAnimationConfig = useCallback((step) => {
     ];
   
     const goodMessages = [
-      "Keep it up! ���",
+      "Keep it up! 🎯",
       "You're doing great! 🌟",
       "Nice rhythm! 🎵",
       "That's the spirit! ✨",

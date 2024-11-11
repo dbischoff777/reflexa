@@ -103,7 +103,12 @@ export const initialPlayerStats = {
       stats.timeStats.totalSessionTime += gameData.duration;
   
       // Update progress
-      const xpGained = gameData.experienceGained;
+      const xpGained = gameData.experienceGained || Math.floor(
+        gameData.score * 0.1 + // Base XP from score
+        (gameData.successfulClicks * 2) + // XP from successful clicks
+        (gameData.longestStreak * 5) + // XP from streaks
+        (gameData.lives === gameData.maxLives ? 50 : 0) // Bonus XP for perfect games
+      );
       stats.progress.experience += xpGained;
 
       // Calculate new level
