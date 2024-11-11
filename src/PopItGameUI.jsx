@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import livesIcon from './images/lives.png';
-import frenchieIcon from './images/frenchie.png';
-import scoreIcon from './images/score.png';
+import livesIcon from './assets/images/lives.png';
+import frenchieIcon from './assets/images/frenchie.png';
+import scoreIcon from './assets/images/score.png';
 import { FacebookIcon, TwitterIcon, WhatsAppIcon } from './Icons';
 import DailyQuests from './DailyQuests';
 import WeeklyQuests from './WeeklyQuests';
 import { LucidePlay, LucideCalendar, ShoppingCart, Clock, Volume2, VolumeX, X } from 'lucide-react';
-import floorBackground from './images/gameBackgrounds/floor1.png';
+import floorBackground from './assets/images/gameBackgrounds/floor1.png';
 import NavigationBar from './components/NavigationBar';
 import { GAME_STATES } from './PopItGame';
 import { TutorialProvider, useTutorial } from './contexts/TutorialContext';

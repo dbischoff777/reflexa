@@ -5,7 +5,7 @@ import { useSettings } from './Settings';
 import { updatePlayerStats } from './utils/playerStats';
 import { checkAchievementsUnlocked, ACHIEVEMENTS} from './utils/achievements';
 import './PopItGame.css';
-import mascotImage from './images/cute-mascot.png';
+import mascotImage from './assets/images/cute-mascot.png';
 import { 
   SUCCESS_ANIMATIONS_BY_SIZE, 
   TRY_ANIMATIONS_BY_SIZE,
