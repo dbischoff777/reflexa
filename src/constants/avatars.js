@@ -1,8 +1,8 @@
-import defaultAvatar from '../images/avatars/default.png';
-import girl from '../images/avatars/girl.png';
-import boy from '../images/avatars/boy.png';
-import dog from '../images/avatars/dog.png';
-import ninja from '../images/avatars/ninja.png';
+import defaultAvatar from '../assets/images/avatars/default.png';
+import girl from '../assets/images/avatars/girl.png';
+import boy from '../assets/images/avatars/boy.png';
+import dog from '../assets/images/avatars/dog.png';
+import ninja from '../assets/images/avatars/ninja.png';
 
 export const AVAILABLE_AVATARS = [
   {
