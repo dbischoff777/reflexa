@@ -136,13 +136,19 @@ const GameContent = ({
 
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
-  const handleExitApp = () => {
-    // Close the window/tab
-    window.close();
-    
-    // Fallback for browsers that don't allow window.close()
-    if (window.electron) {
-      window.electron.closeApp();
+  const handleExitApp = async () => {
+    // Check if running in Capacitor (mobile)
+    if (window.Capacitor) {
+      const { App } = await import('@capacitor/app');
+      await App.exitApp();
+    } else {
+      // Web fallback
+      window.close();
+      
+      // Electron fallback
+      if (window.electron) {
+        window.electron.closeApp();
+      }
     }
   };
 

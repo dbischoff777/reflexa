@@ -3,7 +3,12 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'com.reflexa.app',
   appName: 'reflexa',
-  webDir: 'build'
+  webDir: 'build',
+  plugins: {
+    App: {
+      enabled: true
+    }
+  }
 };
 
 export default config;
