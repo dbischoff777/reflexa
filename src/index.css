@@ -225,6 +225,54 @@ code {
   -webkit-user-select: none;
   -ms-user-select: none;
   user-select: none;
+  cursor: url('./assets/images/pawCursor.png'), auto;
+  touch-action: manipulation;
+}
+
+.touch-cursor {
+  position: fixed;
+  width: 32px; /* Adjust based on your cursor image size */
+  height: 32px; /* Adjust based on your cursor image size */
+  background-image: url('./assets/images/pawCursor.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  animation: cursorFade 0.5s ease-out forwards;
+}
+
+@keyframes cursorFade {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.5);
+  }
+}
+
+/* Add these rules for touch devices */
+@media (hover: none) and (pointer: coarse) {
+  * {
+    /* This creates a "touch ripple" effect using the cursor image */
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  *:active::after {
+    content: '';
+    position: fixed;
+    width: 32px; /* Adjust based on your cursor image size */
+    height: 32px; /* Adjust based on your cursor image size */
+    background-image: url('./assets/images/pawCursor.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    /* Will be positioned at touch point via JavaScript */
+  }
 }
 
 img {

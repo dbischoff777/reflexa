@@ -102,6 +102,29 @@ const SplashScreenWrapper = ({ onComplete, loadingProgress, loadingMessage }) =>
 };
 
 // Add this new component
+const TouchCursorHandler = () => {
+  useEffect(() => {
+    const handleTouch = (e) => {
+      const touch = e.touches[0];
+      const cursor = document.createElement('div');
+      cursor.className = 'touch-cursor';
+      cursor.style.left = `${touch.clientX}px`;
+      cursor.style.top = `${touch.clientY}px`;
+      document.body.appendChild(cursor);
+
+      setTimeout(() => {
+        cursor.remove();
+      }, 500); // Adjust duration as needed
+    };
+
+    document.addEventListener('touchstart', handleTouch);
+    return () => document.removeEventListener('touchstart', handleTouch);
+  }, []);
+
+  return null;
+};
+
+// Add these styles to your existing AnimatedPage component
 const AnimatedPage = ({ children }) => {
   const { settings } = useSettings();
   
@@ -155,7 +178,14 @@ const AnimatedPage = ({ children }) => {
         backgroundColor: isDark ? '#1a1a1a' : undefined,
         overflowY: 'auto',
         overflowX: 'hidden',
-        zIndex: 1
+        zIndex: 1,
+        cursor: 'url(/assets/images/pawCursor.png), auto',
+        WebkitUserSelect: 'none',
+        MozUserSelect: 'none',
+        msUserSelect: 'none',
+        userSelect: 'none',
+        WebkitUserDrag: 'none',
+        touchAction: 'manipulation',
       }}
     >
       <motion.div
@@ -305,6 +335,7 @@ function App() {
       <MobileOptimizer />
       <PlayerProvider>
         <div className="App">
+          <TouchCursorHandler />
           <ToastContainer />
           <Toaster position="top-center" />
           <AnimatePresence mode="sync">
