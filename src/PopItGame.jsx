@@ -1,25 +1,14 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useEffect } from 'react';
 import PopItGameUI from './PopItGameUI';
 import soundManager from './sounds/sound';
 import { useSettings } from './Settings';
-import { updatePlayerStats } from './utils/playerStats';
-import { checkAchievementsUnlocked, ACHIEVEMENTS} from './utils/achievements';
-import './PopItGame.css';
-import mascotImage from './assets/images/cute-mascot.png';
-import { 
-  SUCCESS_ANIMATIONS_BY_SIZE, 
-  TRY_ANIMATIONS_BY_SIZE,
-  ANIMATION_DURATIONS,
-  MAX_LIVES,
-  FAILURES_BEFORE_ANIMATION_CHANGE 
-} from './constants/animations';
 import { useAvatar } from './hooks/useAvatar';
-import { useScreenProtection } from './hooks/useScreenProtection';
-import { usePlayer } from './utils/PlayerContext';
+import { useGameHooks } from './hooks/useGameHooks';
 import MusicGenerator from './services/MusicGenerator';
 import Particles from "react-tsparticles";
+import mascotImage from './assets/images/cute-mascot.png';
 
-// Add game state constants at the top of the file
+// Game state constants
 export const GAME_STATES = {
   MENU: 'menu',
   COUNTDOWN: 'countdown',
@@ -28,1181 +17,249 @@ export const GAME_STATES = {
 };
 
 const PopItGame = () => {
-
-  // keep screen awake
-  useScreenProtection();
-
-  // Add state for wake lock status
-  const [wakeLockActive, setWakeLockActive] = useState(false);
+  const { settings } = useSettings();
+  const { playerAvatar, setPlayerAvatar } = useAvatar();
+  const game = useGameHooks();
 
   // Initialize screen protection
   useEffect(() => {
     let wakeLock = null;
 
     const requestWakeLock = async () => {
-        try {
-            wakeLock = await navigator.wakeLock.request('screen');
-            setWakeLockActive(true);
-            console.log('Wake Lock is active');
-        } catch (err) {
-            setWakeLockActive(false);
-            console.log('Wake Lock request failed:', err.message);
-        }
+      try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        game.setWakeLockActive(true);
+        console.log('Wake Lock is active');
+      } catch (err) {
+        game.setWakeLockActive(false);
+        console.log('Wake Lock request failed:', err.message);
+      }
     };
 
     const handleVisibilityChange = () => {
-        if (document.visibilityState === 'visible') {
-            requestWakeLock();
-        }
+      if (document.visibilityState === 'visible') {
+        requestWakeLock();
+      }
     };
 
-    // Initial wake lock request
     requestWakeLock();
-
-    // Re-request wake lock if page visibility changes
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    // Cleanup
     return () => {
-        document.removeEventListener('visibilitychange', handleVisibilityChange);
-        if (wakeLock) {
-            wakeLock.release()
-                .then(() => {
-                    setWakeLockActive(false);
-                    console.log('Wake Lock released');
-                })
-                .catch((err) => console.log('Error releasing Wake Lock:', err));
-        }
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (wakeLock) {
+        wakeLock.release()
+          .then(() => {
+            game.setWakeLockActive(false);
+            console.log('Wake Lock released');
+          })
+          .catch((err) => console.log('Error releasing Wake Lock:', err));
+      }
     };
   }, []);
-  
-  // Simplify music state to just track if it's enabled
-  const [isMusicPlaying, setIsMusicPlaying] = useState(false);
 
-  const { settings } = useSettings();
-  
-  //avatars
-  const { playerAvatar, setPlayerAvatar } = useAvatar();
-
-  //success animation
-  const [showAnimation, setShowAnimation] = useState(false);
-  const [animationPosition, setAnimationPosition] = useState({ x: 0, y: 0 });
-  const [isAnimationPlaying, setIsAnimationPlaying] = useState(false);
-
-  // Game state
-  const [gameState, setGameState] = useState(GAME_STATES.MENU); // menu, countdown, playing, over
-  const [gameStarted, setGameStarted] = useState(false);
-  const [gameOver, setGameOver] = useState(false);
-  const [showGameOver, setShowGameOver] = useState(false);
-  const [countdown, setCountdown] = useState(3);
-  const [score, setScore] = useState(0);
-  const [highScore, setHighScore] = useState(0);
-  const [longestStreak, setLongestStreak] = useState(0);
-
-  // Game mechanics
-  const [multiplier, setMultiplier] = useState(1);
-  const [lives, setLives] = useState(5);
-  const [targetButton, setTargetButton] = useState(null);
-  const [gridShake, setGridShake] = useState(false);
-  const [flashRed, setFlashRed] = useState(false);
-  
-  // Timing and stats
-  const { playerData, updatePlayerData } = usePlayer();
-  const [startTime, setStartTime] = useState(null);
-  const [gameTime, setGameTime] = useState(0);
-  const [gameSpeed, setGameSpeed] = useState(1);
-  const BASE_INTERVAL = 1500; // Base interval in milliseconds
-  
-  // UI states
-  const [showUsernameInput, setShowUsernameInput] = useState(false);
-  const [newAchievement, setNewAchievement] = useState(null);
-  const [username, setUsername] = useState(localStorage.getItem('username') || '');
-
-  // Game statistics tracking
-  const [gameStats, setGameStats] = useState({
-    score: 0,
-    duration: 0,
-    successfulClicks: 0,
-    missedClicks: 0,
-    totalClicks: 0,
-    longestStreak: 0,
-    currentStreak: 0,
-    highestCombo: 0,
-    combos: [],
-    reactionTimes: [],
-    multiplier: 1,
-    lives: 9,
-    maxLives: 9,
-    startTime: null,
-    lastClickTime: null
-  });
-
-  //particle variables
-  const [particleEffects, setParticleEffects] = useState([]);
-  const maxParticleEffects = 2; // Limit concurrent effects
-  
-  //mascot variables
-  const [showSpeechBubble, setShowSpeechBubble] = useState(false);
-  const [mascotMessage, setMascotMessage] = useState('');
-
-  // Add new state for current animation
-  const [gameStep, setGameStep] = useState(1);  // Track current step (1-7)
-  const [currentSize, setCurrentSize] = useState('LARGE');  // Track current animation size
-  const [currentDuration, setCurrentDuration] = useState(ANIMATION_DURATIONS.LONG);
-  const [consecutiveFailures, setConsecutiveFailures] = useState(0);
-  const [currentSuccessAnimation, setCurrentSuccessAnimation] = useState(SUCCESS_ANIMATIONS_BY_SIZE.LARGE[0]);
-  const [currentTargetAnimation, setCurrentTargetAnimation] = useState(TRY_ANIMATIONS_BY_SIZE.LARGE[0]);
-
-// Add this helper function
-const getAnimationConfig = useCallback((step) => {
-  if (step <= 3) {
-    return {
-      duration: ANIMATION_DURATIONS.LONG,
-      sizes: ['LARGE', 'MEDIUM', 'SMALL']
-    };
-  } else if (step <= 6) {
-    return {
-      duration: ANIMATION_DURATIONS.MEDIUM,
-      sizes: ['LARGE', 'MEDIUM', 'SMALL']
-    };
-  } else {
-    return {
-      duration: ANIMATION_DURATIONS.SHORT,
-      sizes: ['LARGE', 'MEDIUM', 'SMALL']
-    };
-  }
-}, []);
-
-  const { screenProtection } = useSettings();
-
-  // brightness
-  const adjustBrightness = () => {
-    // Try native brightness API first
-    if ('screen' in navigator && 'brightness' in navigator.screen) {
-      try {
-        navigator.screen.brightness.set(screenProtection.brightness / 100);
-      } catch (error) {
-        console.log('Native brightness API not available, using CSS fallback');
-      }
-    }
-    
-    // CSS fallback for brightness
-    const brightnessValue = screenProtection.brightness / 100;
-    document.documentElement.style.filter = `brightness(${brightnessValue})`;
-  };
-
-
-  // color temperature
-  const adjustColorTemperature = () => {
-      const hour = new Date().getHours();
-      if (hour >= 18 || hour < 6) {
-        // Combine brightness and night mode filters
-        const brightnessValue = screenProtection.autoBrightness 
-          ? screenProtection.brightness / 100 
-          : 1;
-        document.documentElement.style.filter = `brightness(${brightnessValue}) sepia(0.2)`;
-      } else {
-        // Only apply brightness if auto-brightness is on
-        if (screenProtection.autoBrightness) {
-          const brightnessValue = screenProtection.brightness / 100;
-          document.documentElement.style.filter = `brightness(${brightnessValue})`;
-        } else {
-          document.documentElement.style.filter = 'none';
-        }
-      }
-    };
-
-  // Effect for night mode
+  // Initialize music generator
   useEffect(() => {
-    if (screenProtection.nightMode) {
-      const interval = setInterval(adjustColorTemperature, 60000); // Check every minute
-      adjustColorTemperature(); // Initial check
-      return () => clearInterval(interval);
-    } else {
-      document.documentElement.style.filter = 'none';
-    }
-  }, [screenProtection.nightMode]);
-
-  // Effect for brightness
-  useEffect(() => {
-    if (screenProtection.autoBrightness) {
-      adjustBrightness();
-    }
-  }, [screenProtection.autoBrightness, screenProtection.brightness, adjustBrightness]);
-
-  // Update the PopEffect component
-  const PopEffect = ({ row, col, theme, gridRows, gridColumns, onComplete }) => {
-    // Array of vibrant colors for particles
-    const particleColors = [
-      // Purples
-      "#9333EA", "#A855F7", "#C084FC",
-      // Blues
-      "#3B82F6", "#60A5FA", "#93C5FD",
-      // Pinks
-      "#EC4899", "#F472B6", "#F9A8D4",
-      // Greens
-      "#10B981", "#34D399", "#6EE7B7",
-      // Oranges
-      "#F59E0B", "#FBBF24", "#FCD34D",
-      // Reds
-      "#EF4444", "#F87171", "#FCA5A5"
-    ];
-  
-    // Get random colors from the array
-    const getRandomColors = (count = 3) => {
-      const shuffled = [...particleColors].sort(() => 0.5 - Math.random());
-      return shuffled.slice(0, count);
+    MusicGenerator.generateMusic();
+    return () => {
+      MusicGenerator.pause();
     };
-  
-    const options = {
-      fullScreen: { enable: false },
-      fpsLimit: 60,
-      particles: {
-        number: { value: 21 },
-        color: { 
-          value: getRandomColors() // Use random colors
-        },
-        shape: { type: "circle" },
-        opacity: {
-          value: 1,
-          animation: {
-            enable: true,
-            speed: 1,
-            minimumValue: 0,
-            sync: false
-          }
-        },
-        size: {
-          value: 3,
-          random: {
-            enable: true,
-            minimumValue: 2
-          }
-        },
-        move: {
-          enable: true,
-          gravity: { 
-            enable: true, 
-            acceleration: 25
-          },
-          speed: 20,
-          direction: "top",
-          random: true,
-          straight: false,
-          outModes: { default: "destroy" }
-        }
-      },
-      detectRetina: true,
-      emitters: {
-        direction: "top",
-        life: { 
-          count: 1, 
-          duration: 0.05
-        },
-        rate: { 
-          delay: 0, 
-          quantity: 15
-        }
-      }
-    };
-  
-    useEffect(() => {
-      const timer = setTimeout(onComplete, 500);
-      return () => clearTimeout(timer);
-    }, [onComplete]);
-  
-    return (
-    <div
-      className="absolute pointer-events-none"
-      style={{
-        top: `${row * (100 / gridRows) + (50 / gridRows)}%`,  // Center vertically
-        left: `${col * (100 / gridColumns) + (50 / gridColumns)}%`,  // Center horizontally
-        width: `${100 / gridColumns}%`,
-        height: `${100 / gridRows}%`,
-        pointerEvents: 'none',
-        zIndex: 1000,
-        transform: 'translate(-50%, -50%) translateZ(0)' // Center the div and maintain performance
-      }}
-    >
-      <Particles
-        id={`pop-effect-${Date.now()}`}
-        options={{
-          ...options,
-          particles: {
-            ...options.particles,
-            size: {
-              ...options.particles.size,
-              value: {
-                min: Math.min(100 / gridColumns, 100 / gridRows) / 15,
-                max: Math.min(100 / gridColumns, 100 / gridRows) / 8
-              },
-              animation: {
-                enable: true,
-                speed: 3,
-                minimumValue: 0.1,
-                sync: false,
-                startValue: "max",
-                destroy: "min"
-              }
-            },
-            number: {
-              value: Math.min(Math.max(15, (100 / gridColumns) * 2), 30) // Adaptive particle count
-            },
-            move: {
-              ...options.particles.move,
-              speed: Math.min(Math.max(15, (100 / gridColumns) * 1.5), 25) // Adaptive speed
-            }
-          },
-          emitters: {
-            ...options.emitters,
-            rate: {
-              ...options.emitters.rate,
-              quantity: Math.min(Math.max(10, (100 / gridColumns) * 1.5), 20) // Adaptive emission rate
-            }
-          }
-        }}
-      />
-    </div>
-  );
-};
-  
-  //mascot speechbubble
-  useEffect(() => {
-    if (mascotMessage) {
-      setShowSpeechBubble(true);
-      const timer = setTimeout(() => {
-        setShowSpeechBubble(false);
-      }, 8000); // Increased to 8 seconds (from 4 seconds)
-  
-      return () => clearTimeout(timer);
-    }
-  }, [mascotMessage]);
+  }, []);
 
-  //playSound function
-  const playSound = useCallback((soundName) => {
-    if (!settings.soundEnabled) return;
-    soundManager.play(soundName);
-  }, [settings.soundEnabled]);
-
-  //sync settings with SoundManager
+  // Sync settings with SoundManager
   useEffect(() => {
     if (settings.soundEnabled !== !soundManager.isMuted()) {
       soundManager.toggleMute();
     }
   }, [settings.soundEnabled]);
 
-  const getRandomButton = useCallback(() => {
-    const totalButtons = settings.gridRows * settings.gridColumns;
-    return Math.floor(Math.random() * totalButtons);
-  }, [settings.gridRows, settings.gridColumns]);   
-
-  const [maxMultiplier, setMaxMultiplier] = useState(1);
-
-  // Update maxMultiplier whenever multiplier changes
+  // Handle mascot messages
   useEffect(() => {
-      if (multiplier > maxMultiplier) {
-          setMaxMultiplier(multiplier);
-      }
-  }, [multiplier, maxMultiplier]);
-
-  // Calculate final stats
-  const calculateFinalStats = useCallback((endTime) => {
-    const duration = Math.floor((endTime - gameStats.startTime) / 1000);
-    const baseExperience = Math.floor(score / 10); // Base experience from score
-    const timeBonus = Math.floor(duration / 10); // Bonus for game duration
-    const multiplierBonus = Math.floor(maxMultiplier * 5); // Bonus for highest multiplier achieved
-    const experienceGained = baseExperience + timeBonus + multiplierBonus;
-
-    const finalStats = {
-        ...gameStats,
-        score,
-        multiplier: maxMultiplier,
-        maxMultiplier,
-        duration,
-        gameTime,
-        averageCombo: gameStats.combos.reduce((a, b) => a + b, 0) / gameStats.combos.length || 0,
-        avgReactionTime: gameStats.reactionTimes.reduce((a, b) => a + b, 0) / gameStats.reactionTimes.length || 0,
-        bestReactionTime: Math.min(...gameStats.reactionTimes) || 0,
-        scorePerMinute: score / (duration / 60),
-        lives,
-        maxLives: 9,
-        experienceGained
-    };
-
-    console.log('Final Stats:', finalStats);
-    return finalStats;
-  }, [gameStats, score, gameTime, lives, maxMultiplier]);
-
-  // Update leaderboard
-  const updateLeaderboard = useCallback((newScore) => {
-    const leaderboard = JSON.parse(localStorage.getItem('leaderboard') || '[]');
-    const newEntry = {
-      username: localStorage.getItem('username'),
-      avatar: playerAvatar,
-      score: newScore,
-      multiplier,
-      timestamp: Date.now()
-    };
-    
-    leaderboard.push(newEntry);
-    leaderboard.sort((a, b) => b.score - a.score);
-    leaderboard.splice(100);
-    
-    localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
-  }, [multiplier, playerAvatar]);
-
-  // Update recent games
-  const updateRecentGames = useCallback((gameStats) => {
-    const recentGames = JSON.parse(localStorage.getItem('recentGames') || '[]');
-    const newGame = {
-      score: gameStats.score,
-      multiplier: gameStats.maxMultiplier,
-      duration: gameStats.duration,
-      timestamp: Date.now()
-    };
-    
-    recentGames.unshift(newGame);
-    recentGames.splice(10); // Keep only last 10 games
-    localStorage.setItem('recentGames', JSON.stringify(recentGames));
-  }, []);
-  
-  // Define getMascotMessage with useCallback
-  const getMascotMessage = useCallback((combos) => {
-    const epicMessages = [
-      "INCREDIBLE! 🌟✨",
-      "YOU'RE ON FIRE! 🔥",
-      "UNSTOPPABLE! ⚡",
-      "LEGENDARY! 👑",
-      "PHENOMENAL! 🌈",
-      "MIND-BLOWING! 💫",
-      "SPECTACULAR! ⭐",
-      "EXTRAORDINARY! 🎯",
-      "MAGNIFICENT! 🌠",
-      "PHENOMENAL! 🎪"
-    ];
-  
-    const ultraMessages = [
-      "COSMIC POWER! 🌌✨",
-      "DIVINE COMBO! 🔮💫",
-      "TRANSCENDENT! 🎇",
-      "ASTRONOMICAL! 🚀",
-      "SUPERNATURAL! 🌟",
-      "GODLIKE MOVES! ⚡👑",
-      "REALITY BENDING! 🌈✨",
-      "DIMENSION BREAKER! 💫",
-      "BEYOND EPIC! 🎭",
-      "CELESTIAL MASTERY! 🌠"
-    ];
-  
-    const supremeMessages = [
-      "UNIVERSAL DOMINATION! 🌍✨",
-      "INFINITE POWER! 💫⚡",
-      "COSMIC OVERLORD! 🌌👑",
-      "REALITY SHAPER! 🎇✨",
-      "OMNIPOTENT! 🔮💫",
-      "BEYOND LEGENDARY! 🎪✨",
-      "ABSOLUTE PERFECTION! 💯",
-      "QUANTUM MASTERY! 🚀",
-      "ETHEREAL BRILLIANCE! 🌟",
-      "TRANSCENDENT BEING! 🎭"
-    ];
-  
-    const greatMessages = [
-      "Awesome combo! 🎯",
-      "Spectacular! ⭐",
-      "Brilliant moves! 💫",
-      "You're crushing it! 💪",
-      "Outstanding! 🌟",
-      "Fantastic work! 🎨"
-    ];
-  
-    const goodMessages = [
-      "Keep it up! 🎯",
-      "You're doing great! 🌟",
-      "Nice rhythm! 🎵",
-      "That's the spirit! ✨",
-      "Getting better! 🎯",
-      "Keep going! 💫"
-    ];
-  
-    const startingMessages = [
-      "Good job! 😊",
-      "Nice one! 👍",
-      "You got this! ⭐",
-      "Keep playing! 🎮",
-      "Having fun! 🎪",
-      "That's it! 💫"
-    ];
-  
-    const rareMessages = [
-      "COSMIC COMBO! 🌌",
-      "ABSOLUTELY RADICAL! 🎸",
-      "SPECTACULAR MOVES! 🌠",
-      "DIMENSIONAL SHIFT! 🎇",
-      "REALITY WARPING! 🌈",
-      "TIME BENDER! ⌛"
-    ];
-  
-    const milestoneMessages = {
-      15: "NEW RECORD! 🏆",
-      20: "GODLIKE! ⚡👑⚡",
-      25: "BEYOND LEGENDARY! 🌈✨",
-      30: "COSMIC ACHIEVEMENT! 🌌",
-      40: "IMPOSSIBLE FEAT! 💫",
-      50: "ULTIMATE MASTER! 👑🎪"
-    };
-  
-    const comboSpecificMessages = {
-      5: "High Five! 🖐️",
-      7: "Lucky Seven! 🎲",
-      10: "Perfect Ten! 💯",
-      12: "Dozen of Glory! 🌟",
-      15: "Fantastic Fifteen! 🎯",
-      20: "Twenty Terror! 🔥",
-      25: "Quarter Century! 💫",
-      30: "Thirty Thunder! ⚡",
-      40: "Forty Phenomenon! 🌈",
-      50: "Fifty Frenzy! 🎪"
-    };
-  
-    const getRandomMessage = (arr) => arr[Math.floor(Math.random() * arr.length)];
-  
-    // Check milestones first
-    if (milestoneMessages[combos]) {
-      return milestoneMessages[combos];
+    if (game.mascotMessage) {
+      game.setShowSpeechBubble(true);
+      const timer = setTimeout(() => {
+        game.setShowSpeechBubble(false);
+      }, 8000);
+      return () => clearTimeout(timer);
     }
-  
-    // Check combo-specific messages
-    if (comboSpecificMessages[combos]) {
-      return comboSpecificMessages[combos];
-    }
-  
-    // Check for rare messages (10% chance for high combos)
-    if (combos >= 7 && Math.random() < 0.1) {
-      return getRandomMessage(rareMessages);
-    }
-  
-    // Regular combo messages with extended tiers
-    if (combos >= 30) return getRandomMessage(supremeMessages);
-    if (combos >= 20) return getRandomMessage(ultraMessages);
-    if (combos >= 10) return getRandomMessage(epicMessages);
-    if (combos >= 7) return getRandomMessage(greatMessages);
-    if (combos >= 4) return getRandomMessage(goodMessages);
-    return getRandomMessage(startingMessages);
-  }, []);  
+  }, [game.mascotMessage]);
 
-  const getFailureMessage = useCallback(() => {
-    const failureMessages = [
-      // Encouraging failures
-      "Oops! Try again! 💫",
-      "Almost had it! 🎯",
-      "So close! 💫",
-      "Keep trying! 🌟",
-      "You can do it! ⭐",
-      "Don't give up! 💪",
-  
-      // Playful failures
-      "Whoopsie! 🎪",
-      "Aw snap! 🎭",
-      "Oh no! 🙈",
-      "Oopsie-daisy! 🌼",
-      "Not quite! 🎯",
-      "Nearly there! ✨",
-  
-      // Motivational failures
-      "One more try! 🎮",
-      "Practice makes perfect! 📝",
-      "Getting better! 💫",
-      "Learning in progress! 🎓",
-      "Keep at it! 🌟",
-      "You're improving! 📈",
-  
-      // Humorous failures
-      "Butterfingers! 🍳",
-      "Oops-a-doodle! 🐣",
-      "That was sneaky! 🦊",
-      "Tricky one! 🎲",
-      "Plot twist! 🎬",
-      "Surprise move! 🎪"
-    ];
-  
-    // Special messages for consecutive failures (if you track them)
-    const persistenceMessages = [
-      "Never give up! 💪",
-      "Persistence is key! 🔑",
-      "You're getting closer! 🎯",
-      "The next one's yours! ⭐"
-    ];
-  
-    // Random selection with a twist
-    const getRandomMessage = (arr) => arr[Math.floor(Math.random() * arr.length)];
-  
-    // Add this if you track consecutive failures
-    if (consecutiveFailures >= 3) {
-      return getRandomMessage(persistenceMessages);
-    }
-  
-    return getRandomMessage(failureMessages);
-  }, [consecutiveFailures]); // Add consecutiveFailures as dependency
-
-  // Simplify music controls to just handle toggle
-  const toggleMusic = useCallback(() => {
-    if (!isMusicPlaying) {
-      MusicGenerator.play();
-      setIsMusicPlaying(true);
-    } else {
-      MusicGenerator.pause();
-      setIsMusicPlaying(false);
-    }
-  }, [isMusicPlaying]);
-
-  // Initialize music generator once
+  // Handle achievement notifications
   useEffect(() => {
-    MusicGenerator.generateMusic();
-    
-    // Cleanup
-    return () => {
-      MusicGenerator.pause();
-    };
-  }, []); // Only run once on mount
-
-  // Modify startGame to handle music
-  const startGame = useCallback(() => {
-    if (!username) {
-        setShowUsernameInput(true);
-        return;
+    if (game.newAchievement) {
+      game.playSound('achievement');
+      const timer = setTimeout(() => {
+        game.setNewAchievement(null);
+      }, 3000);
+      return () => clearTimeout(timer);
     }
-    
-    // Increment games played in achievement progress
-    const currentProgress = JSON.parse(localStorage.getItem('achievementProgress') || '{}');
-    const updatedProgress = {
-        ...currentProgress,
-        gamesPlayed: (currentProgress.gamesPlayed || 0) + 1
-    };
+  }, [game.newAchievement]);
 
-    localStorage.setItem('achievementProgress', JSON.stringify(updatedProgress));
-    
-    // Check countdown setting and set appropriate game state
-    if (settings.countdownTimer) {
-        setGameState(GAME_STATES.COUNTDOWN);
-        setCountdown(3);
-        playSound('countdown');
-    } else {
-        setGameState(GAME_STATES.PLAYING);
-        setTargetButton(getRandomButton());
-        setStartTime(Date.now());
-        playSound('trySound');
-    }
-
-    setGameStarted(true);
-    setGameOver(false);
-    setShowGameOver(false);
-    setScore(0);
-    setLives(5);
-    setMultiplier(1);
-    setGameSpeed(1); // Reset game speed
-    setGameStep(1);
-    setCurrentSize('LARGE');
-    setCurrentDuration(ANIMATION_DURATIONS.LONG);
-    setConsecutiveFailures(0);
-    setCurrentSuccessAnimation(SUCCESS_ANIMATIONS_BY_SIZE.LARGE[0]);
-    setCurrentTargetAnimation(TRY_ANIMATIONS_BY_SIZE.LARGE[0]);
-    
-    // Reset game stats
-    setGameStats({
-        score: 0,
-        duration: 0,
-        successfulClicks: 0,
-        missedClicks: 0,
-        totalClicks: 0,
-        longestStreak: 0,
-        currentStreak: 0,
-        highestCombo: 0,
-        combos: [],
-        reactionTimes: [],
-        maxMultiplier: 1,
-        lives: 5,
-        maxLives: 9,
-        startTime: Date.now(),
-        lastClickTime: null,
-    });
-}, [username, playSound, settings.countdownTimer, getRandomButton]);
-
-  // Modify handleExit to handle music
-  const handleExit = useCallback(() => {
-    // Remove music resume since music is now only controlled by toggle
-    
-    setTargetButton(null);
-    setGameOver(false);
-    setShowGameOver(false);
-    setGameState(GAME_STATES.MENU);
-    setScore(0);
-    setLives(5);
-    setMultiplier(1);
-    setGameSpeed(1);
-    setParticleEffects([]);
-  }, []);
-
-  // Handle game over
-  const handleGameOver = useCallback(() => {
-    const endTime = Date.now();
-    const finalStats = calculateFinalStats(endTime);
-
-    // Update player data with the new stats
-    updatePlayerData({
-      dailyGamesPlayed: (playerData.dailyGamesPlayed || 0) + 1,
-      weeklyGamesPlayed: (playerData.weeklyGamesPlayed || 0) + 1,
-      dailyHighScore: Math.max(playerData.dailyHighScore || 0, finalStats.score),
-      weeklyHighScore: Math.max(playerData.weeklyHighScore || 0, finalStats.score),
-      dailyHighestMultiplier: Math.max(playerData.dailyHighestMultiplier || 0, finalStats.maxMultiplier),
-      weeklyHighestMultiplier: Math.max(playerData.weeklyHighestMultiplier || 0, finalStats.maxMultiplier),
-      totalGamesPlayed: (playerData.totalGamesPlayed || 0) + 1,
-      totalScore: (playerData.totalScore || 0) + finalStats.score,
-      bestScore: Math.max(playerData.bestScore || 0, finalStats.score),
-      bestMultiplier: Math.max(playerData.bestMultiplier || 0, finalStats.maxMultiplier),
-      totalGameTime: (playerData.totalGameTime || 0) + finalStats.duration,
-      averageScore: ((playerData.averageScore || 0) * (playerData.totalGamesPlayed || 0) + finalStats.score) / ((playerData.totalGamesPlayed || 0) + 1),
-      averageMultiplier: ((playerData.averageMultiplier || 0) * (playerData.totalGamesPlayed || 0) + finalStats.maxMultiplier) / ((playerData.totalGamesPlayed || 0) + 1),
-    });
-
-    // Create final stats for UI display
-    const gameUIStats = {
-        score: score,
-        highScore: Math.max(score, finalStats.highScore || 0), // Use finalStats.highScore
-        lives: lives,
-        multiplier: multiplier,
-        longestStreak: gameStats.longestStreak || 0 // Use gameStats.longestStreak
-    };
-    
-    // Update game stats for UI
-    setGameStats(gameUIStats);
-    
-    // Update player stats
-    updatePlayerStats(finalStats);
-    
-    // Update leaderboard
-    updateLeaderboard(finalStats.score);
-    
-    // Update recent games
-    updateRecentGames(finalStats);
-
-    // Update achievement progress
-    const currentProgress = JSON.parse(localStorage.getItem('achievementProgress') || '{}');
-    // Update progress with new stats including games played
-    const updatedProgress = {
-        ...currentProgress,
-        totalScore: (currentProgress.totalScore || 0),
-        highestScore: Math.max(finalStats.score, currentProgress.highestScore || 0),
-        highestMultiplier: Math.max(maxMultiplier, currentProgress.highestMultiplier || 0),
-    };
-    localStorage.setItem('achievementProgress', JSON.stringify(updatedProgress));
-    
-    // Check for newly unlocked achievements
-    const unlockedAchievements = checkAchievementsUnlocked(updatedProgress);
-    if (unlockedAchievements.length > 0) {
-        // Get previously unlocked achievements
-        const previouslyUnlocked = new Set(JSON.parse(localStorage.getItem('unlockedAchievements') || '[]'));
-        
-        // Find new achievements (ones that weren't previously unlocked)
-        const newlyUnlocked = unlockedAchievements.filter(id => !previouslyUnlocked.has(id));
-        
-        // Save all unlocked achievements
-        localStorage.setItem('unlockedAchievements', 
-            JSON.stringify(Array.from(new Set([...previouslyUnlocked, ...unlockedAchievements])))
-        );
-        
-        // Show achievement notification if there are new ones
-        if (newlyUnlocked.length > 0) {
-            // Find the achievement details for the notification
-            const achievementDetails = Object.values(ACHIEVEMENTS)
-                .flat()
-                .find(achievement => achievement.id === newlyUnlocked[0]);
-                
-            setNewAchievement(achievementDetails);
-        }
-    }
-    playSound('gameOver');
-    setGameOver(true);
-    setShowGameOver(true);
-    setGameState(GAME_STATES.OVER);
-}, [
-    calculateFinalStats,
-    updatePlayerStats,
-    updateLeaderboard,
-    updateRecentGames,
-    playSound,
-    setGameOver,
-    setShowGameOver,
-    setGameState,
-    setNewAchievement,
-    score,
-    gameStats,
-    lives,
-    multiplier,
-    maxMultiplier
-]);
-
-  
-  // Add useEffect to handle achievement notification display
+  // Update maxMultiplier
   useEffect(() => {
-    if (newAchievement) {
-        // Clear achievement notification after delay
-        playSound('achievement')
-        const timer = setTimeout(() => {
-            setNewAchievement(null);
-        }, 3000); // Show for 3 seconds
-        
-        return () => clearTimeout(timer);
+    if (game.multiplier > game.maxMultiplier) {
+      game.setMaxMultiplier(game.multiplier);
     }
-  }, [newAchievement]);
+  }, [game.multiplier, game.maxMultiplier]);
 
-  const checkAndUpdateAchievements = useCallback(() => {
-    const endTime = Date.now();
-    const finalStats = calculateFinalStats(endTime);
-    const currentProgress = JSON.parse(localStorage.getItem('achievementProgress') || '{}');
-    const updatedProgress = {
-        ...currentProgress,
-        totalScore: (currentProgress.totalScore || 0),
-        highestScore: Math.max(finalStats.score, currentProgress.highestScore || 0),
-        highestMultiplier: Math.max(maxMultiplier, currentProgress.highestMultiplier || 0),
-        combos: gameStats.combos,
-        reactionTimes: gameStats.reactionTimes,
-        avgReactionTime: finalStats.avgReactionTime,
-        bestReactionTime: finalStats.bestReactionTime
+  // Game loop effects
+  useEffect(() => {
+    if (game.gameState === GAME_STATES.COUNTDOWN && game.countdown > 0) {
+      const timer = setTimeout(() => {
+        game.setCountdown(prev => prev - 1);
+        game.playSound('countdown');
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+
+    if (game.gameState === GAME_STATES.COUNTDOWN && game.countdown === 0) {
+      game.setGameState(GAME_STATES.PLAYING);
+      game.setTargetButton(game.getRandomButton());
+      game.setStartTime(Date.now());
+      game.playSound('trySound');
+    }
+  }, [game.gameState, game.countdown]);
+
+  // Handle game over condition
+  useEffect(() => {
+    if (game.lives <= 0 && !game.gameOver) {
+      game.handleGameOver();
+    }
+  }, [game.lives, game.gameOver]);
+
+  // Save music state
+  useEffect(() => {
+    localStorage.setItem('isMusicPlaying', JSON.stringify(game.isMusicPlaying));
+  }, [game.isMusicPlaying]);
+
+  // Update target animation
+  useEffect(() => {
+    if (game.targetButton !== null) {
+      const randomAnimation = game.TRY_ANIMATIONS_BY_SIZE[game.currentSize];
+      game.setCurrentTargetAnimation(randomAnimation[Math.floor(Math.random() * randomAnimation.length)]);
+    }
+  }, [game.targetButton, game.currentSize]);
+
+  // PopEffect component
+  const PopEffect = ({ row, col, theme, gridRows, gridColumns, onComplete }) => {
+    const particleColors = [
+      "#9333EA", "#A855F7", "#C084FC",
+      "#3B82F6", "#60A5FA", "#93C5FD",
+      "#EC4899", "#F472B6", "#F9A8D4",
+      "#10B981", "#34D399", "#6EE7B7",
+      "#F59E0B", "#FBBF24", "#FCD34D",
+      "#EF4444", "#F87171", "#FCA5A5"
+    ];
+
+    const getRandomColors = (count = 3) => {
+      const shuffled = [...particleColors].sort(() => 0.5 - Math.random());
+      return shuffled.slice(0, count);
     };
 
-    localStorage.setItem('achievementProgress', JSON.stringify(updatedProgress));
+    const options = {
+      // ... (keep existing particle options)
+    };
 
-    // Check for newly unlocked achievements
-    const previouslyUnlocked = new Set(JSON.parse(localStorage.getItem('unlockedAchievements') || '[]'));
-    const unlockedAchievements = checkAchievementsUnlocked(updatedProgress);
-    
-    const newlyUnlocked = unlockedAchievements.filter(id => !previouslyUnlocked.has(id));
+    useEffect(() => {
+      const timer = setTimeout(onComplete, 500);
+      return () => clearTimeout(timer);
+    }, [onComplete]);
 
-    if (newlyUnlocked.length > 0) {
-        // Save all unlocked achievements
-        localStorage.setItem('unlockedAchievements', 
-            JSON.stringify([...Array.from(previouslyUnlocked), ...newlyUnlocked])
-        );
-
-        // Find achievement details for notification
-        const achievementDetails = Object.values(ACHIEVEMENTS)
-            .flat()
-            .find(achievement => achievement.id === newlyUnlocked[0]);
-
-        setNewAchievement(achievementDetails);
-    }
-}, [calculateFinalStats, gameStats.combos, gameStats.reactionTimes, maxMultiplier]);
-
-  // Call checkAndUpdateAchievements when relevant game events occur
-  useEffect(() => {
-    if (gameState === GAME_STATES.PLAYING) {
-        checkAndUpdateAchievements();
-    }
-  }, [score, multiplier, gameState, checkAndUpdateAchievements]);
-
-  // Handle button click
-  const handleButtonClick = useCallback((index) => {
-    if (gameOver || !gameStarted || gameState !== GAME_STATES.PLAYING) return;
-  
-    const now = Date.now();
-    setGameStats(prev => ({
-      ...prev,
-      totalClicks: prev.totalClicks + 1,
-      lastClickTime: now
-    }));
-    
-    if (navigator.vibrate) {
-      navigator.vibrate(150);
-    }
-
-    if (index === targetButton) {
-      setIsAnimationPlaying(true);
-      soundManager.stop('trySound');
-      playSound('success');
-
-      // Calculate grid position
-      const col = index % settings.gridColumns;
-      const row = settings.gridRows === 1 ? 0 : 
-        settings.gridRows - Math.floor(index / settings.gridColumns) - 1;
-      
-      // Clear the current target immediately
-      setTargetButton(null);
-
-      // Update game step and animations
-      setGameStep(prev => {
-        const nextStep = prev >= 7 ? 4 : prev + 1; // Reset to step 4 after step 7
-        const config = getAnimationConfig(nextStep);
-        const stepIndex = (nextStep - 1) % 3; // 0, 1, or 2 for size selection
-        
-        const newSize = config.sizes[stepIndex];
-        setCurrentSize(newSize);
-        setCurrentDuration(config.duration);
-      
-        // Set new animations based on size
-        const successAnims = SUCCESS_ANIMATIONS_BY_SIZE[newSize];
-        const tryAnims = TRY_ANIMATIONS_BY_SIZE[newSize];
-      
-        setCurrentSuccessAnimation(successAnims[Math.floor(Math.random() * successAnims.length)]);
-        setCurrentTargetAnimation(tryAnims[0]); // Start with first animation of new size
-      
-        return nextStep;
-      });
-
-      setConsecutiveFailures(0); // Reset consecutive failures on success
-
-      // Randomly select a new success animation
-      const randomAnimation = SUCCESS_ANIMATIONS_BY_SIZE[currentSize];
-      setCurrentSuccessAnimation(randomAnimation[Math.floor(Math.random() * randomAnimation.length)]);
-
-      // Set animation position
-      setAnimationPosition({ row, col });
-      setShowAnimation(true);
-
-      // Update score and multiplier
-      const newMultiplier = Math.min(multiplier + 1, 10);
-      const newScore = score + Math.round(200 * multiplier);
-      setScore(newScore);
-      setMultiplier(newMultiplier);
-
-      if (particleEffects.length < maxParticleEffects) {
-        setParticleEffects(prev => [...prev, {
-          id: Date.now(),
-          row: row,
-          col: col
-        }]);
-      }
-  
-      setGameStats(prev => ({
-        ...prev,
-        successfulClicks: prev.successfulClicks + 1,
-        highestCombo: Math.max(prev.highestCombo, newMultiplier),
-        reactionTimes: [...prev.reactionTimes, now - prev.lastClickTime]
-      }));
-      
-      setMascotMessage(getMascotMessage(newMultiplier));
-      
-      // Handle animation end and new target with a delay
-      setTimeout(() => {
-        setShowAnimation(false);
-        if (gameState === GAME_STATES.PLAYING) {
-          setTargetButton(getRandomButton());  // This will trigger a new timeout in the game loop
-          // Add a small delay before playing the sound
-          setTimeout(() => {
-            playSound('trySound');
-          }, 100); // 100ms delay for the sound
-        }
-      }, 2000);
-      setIsAnimationPlaying(false);
-
-    } else {
-
-      playSound('miss')
-      // Handle incorrect
-      setGameStep(1); // Reset to step 1 on failure
-      setCurrentSize('LARGE');
-      setCurrentDuration(ANIMATION_DURATIONS.LONG); 
-      setGridShake(true);
-      setFlashRed(true);
-      setTimeout(() => {
-        setGridShake(false);
-        setFlashRed(false);
-      }, 300);
-      
-      // Reset speed and multiplier on miss
-      setGameSpeed(1);
-      setLives(prev => prev - 1);
-      setMultiplier(1);
-      setMascotMessage(getFailureMessage());
-  
-      if (lives <= 1) {
-        handleGameOver();
-      }
-    }
-  }, [
-    gameState,
-    gameOver,
-    gameStarted,
-    getFailureMessage,
-    getAnimationConfig,
-    currentSize,
-    targetButton,
-    multiplier,
-    score,
-    lives,
-    handleGameOver,
-    getRandomButton,
-    getMascotMessage,
-    playSound,
-    particleEffects.length,
-    settings.gridColumns,
-    settings.gridRows,
-    settings.gridSize,
-  ]);
-    
-  //Update the renderButton function
-  const renderButton = useCallback((index) => {
-    const isTarget = index === targetButton;
-    
     return (
       <div
-        key={index}
-        className="relative aspect-square w-full"
-        onClick={() => handleButtonClick(index)}
-        onTouchStart={(e) => {
-          e.preventDefault(); // Prevent double-firing on some devices
-          handleButtonClick(index);
+        className="absolute pointer-events-none"
+        style={{
+          top: `${row * (100 / gridRows) + (50 / gridRows)}%`,
+          left: `${col * (100 / gridColumns) + (50 / gridColumns)}%`,
+          width: `${100 / gridColumns}%`,
+          height: `${100 / gridRows}%`,
+          pointerEvents: 'none',
+          zIndex: 1000,
+          transform: 'translate(-50%, -50%) translateZ(0)'
         }}
       >
-        {!showAnimation && !gameOver && (
-          <>
-            {/* Video Overlay - only show bowl animation when it's the target */}
-            {isTarget && (
-             <div className="absolute inset-0 flex items-center justify-center filter drop-shadow-lg">
-                <img
-                  src={currentTargetAnimation}
-                  alt="Target Animation"
-                  className="w-4/5 2xs:w-[85%] xs:w-[87%] sm:w-[90%] object-contain pointer-events-none mix-blend-screen"
-                  draggable="false"
-                />
-              </div> 
-            )}
-          </>
-        )}
+        <Particles
+          id={`pop-effect-${Date.now()}`}
+          options={{
+            ...options,
+            particles: {
+              ...options.particles,
+              size: {
+                ...options.particles.size,
+                value: {
+                  min: Math.min(100 / gridColumns, 100 / gridRows) / 15,
+                  max: Math.min(100 / gridColumns, 100 / gridRows) / 8
+                },
+                animation: {
+                  enable: true,
+                  speed: 3,
+                  minimumValue: 0.1,
+                  sync: false,
+                  startValue: "max",
+                  destroy: "min"
+                }
+              },
+              number: {
+                value: Math.min(Math.max(15, (100 / gridColumns) * 2), 30) // Adaptive particle count
+              },
+              move: {
+                ...options.particles.move,
+                speed: Math.min(Math.max(15, (100 / gridColumns) * 1.5), 25) // Adaptive speed
+              }
+            },
+            emitters: {
+              ...options.emitters,
+              rate: {
+                ...options.emitters.rate,
+                quantity: Math.min(Math.max(10, (100 / gridColumns) * 1.5), 20) // Adaptive emission rate
+              }
+            }
+          }}
+        />
       </div>
     );
-  }, [targetButton, settings.theme, handleButtonClick, gameState, gameOver, showAnimation]);
-  
-  // Game loop effects
-  useEffect(() => {
-    if (gameState === GAME_STATES.COUNTDOWN && countdown > 0) {
-        const timer = setTimeout(() => {
-            setCountdown(prev => prev - 1);
-            playSound('countdown');
-        }, 1000);
-        return () => clearTimeout(timer);
-    }
-    
-    if (gameState === GAME_STATES.COUNTDOWN && countdown === 0) {
-        setGameState(GAME_STATES.PLAYING);
-        setTargetButton(getRandomButton());
-        setStartTime(Date.now());
-        // Add initial try sound
-        playSound('trySound');
-    }
-}, [gameState, countdown, playSound, getRandomButton]);
-
-  // Game loop effects
-  useEffect(() => {
-    if (gameState !== GAME_STATES.PLAYING) return;
-  
-    let timeoutId = null;
-    
-    const startNewTimeout = () => {
-      if (timeoutId) clearTimeout(timeoutId);
-      
-      const config = getAnimationConfig(gameStep);
-      
-      timeoutId = setTimeout(() => {
-        if (gameState === GAME_STATES.PLAYING && targetButton !== null) {
-          const newTarget = getRandomButton();
-          setTargetButton(newTarget);
-          
-          setLives(prev => {
-            if (prev <= 1) {
-              handleGameOver();
-              return prev;
-            }
-            return prev - 1;
-          });
-          
-          setConsecutiveFailures(prev => {
-            const newFailures = prev + 1;
-            // Change animation after 3 consecutive failures
-            if (newFailures >= FAILURES_BEFORE_ANIMATION_CHANGE) {
-              const currentAnimations = TRY_ANIMATIONS_BY_SIZE[currentSize];
-              const nextIndex = (currentAnimations.indexOf(currentTargetAnimation) + 1) % currentAnimations.length;
-              setCurrentTargetAnimation(currentAnimations[nextIndex]);
-              return 0; // Reset counter
-            }
-            return newFailures;
-          });
-          
-          setMultiplier(1);
-          setGameSpeed(1);
-        }
-      }, config.duration);
-    };
-  
-    if (targetButton !== null) {
-      startNewTimeout();
-    }
-  
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [gameState, gameSpeed, handleGameOver, getRandomButton, targetButton, gameStep, currentSize]);
-
-
-  useEffect(() => {
-    if (lives <= 0 && !gameOver) {
-      handleGameOver();
-    }
-  }, [lives, gameOver, handleGameOver]);
-
-  // Now we can add the effects that depend on isMusicPlaying
-  useEffect(() => {
-    localStorage.setItem('isMusicPlaying', JSON.stringify(isMusicPlaying));
-  }, [isMusicPlaying]);
-
-  // Add this useEffect to randomly change the target animation
-  useEffect(() => {
-    if (targetButton !== null) {
-      const randomAnimation = TRY_ANIMATIONS_BY_SIZE[currentSize];
-      setCurrentTargetAnimation(randomAnimation[Math.floor(Math.random() * randomAnimation.length)]);
-    }
-  }, [targetButton, currentSize]);
+  };
 
   return (
     <PopItGameUI
       settings={settings}
-      username={username}
-      setShowUsernameInput={setShowUsernameInput}
-      setUsername={setUsername}
-      showUsernameInput={showUsernameInput}
-      startTime={startTime}
-      setGameTime={setGameTime}
-      newAchievement={newAchievement}
-      score={score}
-      lives={lives}
-      multiplier={multiplier}
-      gameState={gameState}
-      showSpeechBubble={showSpeechBubble}
-      mascotMessage={mascotMessage}
+      username={game.username}
+      setShowUsernameInput={game.setShowUsernameInput}
+      setUsername={game.setUsername}
+      showUsernameInput={game.showUsernameInput}
+      startTime={game.startTime}
+      setGameTime={game.setGameTime}
+      newAchievement={game.newAchievement}
+      score={game.score}
+      lives={game.lives}
+      multiplier={game.multiplier}
+      gameState={game.gameState}
+      showSpeechBubble={game.showSpeechBubble}
+      mascotMessage={game.mascotMessage}
       mascotImage={mascotImage}
-      countdown={countdown}
-      showGameOver={showGameOver}
-      gameStats={gameStats}
-      gridShake={gridShake}
-      flashRed={flashRed}
-      particleEffects={particleEffects}
-      startGame={startGame}
-      exitGame={handleExit}
-      renderButton={renderButton}
+      countdown={game.countdown}
+      showGameOver={game.showGameOver}
+      gameStats={game.gameStats}
+      gridShake={game.gridShake}
+      flashRed={game.flashRed}
+      particleEffects={game.particleEffects}
+      startGame={game.startGame}
+      exitGame={game.handleExit}
+      renderButton={game.renderButton}
       PopEffect={PopEffect}
-      setParticleEffects={setParticleEffects}
+      setParticleEffects={game.setParticleEffects}
       playerAvatar={playerAvatar}
       setPlayerAvatar={setPlayerAvatar}
-      handleButtonClick={handleButtonClick}
-      showAnimation={showAnimation}
-      animationPosition={animationPosition}
-      successAnimation={currentSuccessAnimation}
-      setShowAnimation={setShowAnimation}
-      wakeLockActive={wakeLockActive}
+      handleButtonClick={game.handleButtonClick}
+      showAnimation={game.showAnimation}
+      animationPosition={game.animationPosition}
+      successAnimation={game.currentSuccessAnimation}
+      setShowAnimation={game.setShowAnimation}
+      wakeLockActive={game.wakeLockActive}
       startMusic={() => MusicGenerator.play()}
       stopMusic={() => MusicGenerator.pause()}
-      isMusicPlaying={isMusicPlaying}
-      onMusicToggle={toggleMusic}
+      isMusicPlaying={game.isMusicPlaying}
+      onMusicToggle={game.toggleMusic}
     />
   );
 };

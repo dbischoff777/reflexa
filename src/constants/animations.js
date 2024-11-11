@@ -30,5 +30,4 @@ export const SUCCESS_ANIMATIONS_BY_SIZE = {
 };
 
 // Constants for game logic
-export const MAX_LIVES = 9;
 export const FAILURES_BEFORE_ANIMATION_CHANGE = 3;
