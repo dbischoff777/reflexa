@@ -6,8 +6,13 @@ import { updatePlayerStats } from './utils/playerStats';
 import { checkAchievementsUnlocked, ACHIEVEMENTS} from './utils/achievements';
 import './PopItGame.css';
 import mascotImage from './images/cute-mascot.png';
-import { SUCCESS_ANIMATIONS } from './constants/animations';
-import { TRY_ANIMATIONS } from './constants/animations';
+import { 
+  SUCCESS_ANIMATIONS_BY_SIZE, 
+  TRY_ANIMATIONS_BY_SIZE,
+  ANIMATION_DURATIONS,
+  MAX_LIVES,
+  FAILURES_BEFORE_ANIMATION_CHANGE 
+} from './constants/animations';
 import { useAvatar } from './hooks/useAvatar';
 import { useScreenProtection } from './hooks/useScreenProtection';
 import { usePlayer } from './utils/PlayerContext';
@@ -126,8 +131,8 @@ const PopItGame = () => {
     combos: [],
     reactionTimes: [],
     multiplier: 1,
-    lives: 5,
-    maxLives: 5,
+    lives: 9,
+    maxLives: 9,
     startTime: null,
     lastClickTime: null
   });
@@ -137,13 +142,36 @@ const PopItGame = () => {
   const maxParticleEffects = 2; // Limit concurrent effects
   
   //mascot variables
-  const [consecutiveFailures, setConsecutiveFailures] = useState(0);
   const [showSpeechBubble, setShowSpeechBubble] = useState(false);
   const [mascotMessage, setMascotMessage] = useState('');
 
   // Add new state for current animation
-  const [currentSuccessAnimation, setCurrentSuccessAnimation] = useState(SUCCESS_ANIMATIONS[0]);
-  const [currentTargetAnimation, setCurrentTargetAnimation] = useState(TRY_ANIMATIONS[0]);
+  const [gameStep, setGameStep] = useState(1);  // Track current step (1-7)
+  const [currentSize, setCurrentSize] = useState('LARGE');  // Track current animation size
+  const [currentDuration, setCurrentDuration] = useState(ANIMATION_DURATIONS.LONG);
+  const [consecutiveFailures, setConsecutiveFailures] = useState(0);
+  const [currentSuccessAnimation, setCurrentSuccessAnimation] = useState(SUCCESS_ANIMATIONS_BY_SIZE.LARGE[0]);
+  const [currentTargetAnimation, setCurrentTargetAnimation] = useState(TRY_ANIMATIONS_BY_SIZE.LARGE[0]);
+
+// Add this helper function
+const getAnimationConfig = useCallback((step) => {
+  if (step <= 3) {
+    return {
+      duration: ANIMATION_DURATIONS.LONG,
+      sizes: ['LARGE', 'MEDIUM', 'SMALL']
+    };
+  } else if (step <= 6) {
+    return {
+      duration: ANIMATION_DURATIONS.MEDIUM,
+      sizes: ['LARGE', 'MEDIUM', 'SMALL']
+    };
+  } else {
+    return {
+      duration: ANIMATION_DURATIONS.SHORT,
+      sizes: ['LARGE', 'MEDIUM', 'SMALL']
+    };
+  }
+}, []);
 
   const { screenProtection } = useSettings();
 
@@ -397,7 +425,7 @@ const PopItGame = () => {
       bestReactionTime: Math.min(...gameStats.reactionTimes) || 0,
       scorePerMinute: score / (duration / 60),
       lives,
-      maxLives: 5,
+      maxLives: 9,
       experienceGained
     };
   }, [gameStats, score, gameTime, lives, maxMultiplier]);
@@ -486,7 +514,7 @@ const PopItGame = () => {
     ];
   
     const goodMessages = [
-      "Keep it up! 👍",
+      "Keep it up! ���",
       "You're doing great! 🌟",
       "Nice rhythm! 🎵",
       "That's the spirit! ✨",
@@ -670,6 +698,12 @@ const PopItGame = () => {
     setLives(5);
     setMultiplier(1);
     setGameSpeed(1); // Reset game speed
+    setGameStep(1);
+    setCurrentSize('LARGE');
+    setCurrentDuration(ANIMATION_DURATIONS.LONG);
+    setConsecutiveFailures(0);
+    setCurrentSuccessAnimation(SUCCESS_ANIMATIONS_BY_SIZE.LARGE[0]);
+    setCurrentTargetAnimation(TRY_ANIMATIONS_BY_SIZE.LARGE[0]);
     
     // Reset game stats
     setGameStats({
@@ -685,7 +719,7 @@ const PopItGame = () => {
         reactionTimes: [],
         maxMultiplier: 1,
         lives: 5,
-        maxLives: 5,
+        maxLives: 9,
         startTime: Date.now(),
         lastClickTime: null,
     });
@@ -892,9 +926,31 @@ const PopItGame = () => {
       // Clear the current target immediately
       setTargetButton(null);
 
+      // Update game step and animations
+      setGameStep(prev => {
+        const nextStep = prev >= 7 ? 4 : prev + 1; // Reset to step 4 after step 7
+        const config = getAnimationConfig(nextStep);
+        const stepIndex = (nextStep - 1) % 3; // 0, 1, or 2 for size selection
+        
+        const newSize = config.sizes[stepIndex];
+        setCurrentSize(newSize);
+        setCurrentDuration(config.duration);
+      
+        // Set new animations based on size
+        const successAnims = SUCCESS_ANIMATIONS_BY_SIZE[newSize];
+        const tryAnims = TRY_ANIMATIONS_BY_SIZE[newSize];
+      
+        setCurrentSuccessAnimation(successAnims[Math.floor(Math.random() * successAnims.length)]);
+        setCurrentTargetAnimation(tryAnims[0]); // Start with first animation of new size
+      
+        return nextStep;
+      });
+
+      setConsecutiveFailures(0); // Reset consecutive failures on success
+
       // Randomly select a new success animation
-      const randomAnimation = SUCCESS_ANIMATIONS[Math.floor(Math.random() * SUCCESS_ANIMATIONS.length)];
-      setCurrentSuccessAnimation(randomAnimation);
+      const randomAnimation = SUCCESS_ANIMATIONS_BY_SIZE[currentSize];
+      setCurrentSuccessAnimation(randomAnimation[Math.floor(Math.random() * randomAnimation.length)]);
 
       // Set animation position
       setAnimationPosition({ row, col });
@@ -939,7 +995,10 @@ const PopItGame = () => {
     } else {
 
       playSound('miss')
-      // Handle incorrect 
+      // Handle incorrect
+      setGameStep(1); // Reset to step 1 on failure
+      setCurrentSize('LARGE');
+      setCurrentDuration(ANIMATION_DURATIONS.LONG); 
       setGridShake(true);
       setFlashRed(true);
       setTimeout(() => {
@@ -962,6 +1021,8 @@ const PopItGame = () => {
     gameOver,
     gameStarted,
     getFailureMessage,
+    getAnimationConfig,
+    currentSize,
     targetButton,
     multiplier,
     score,
@@ -984,7 +1045,7 @@ const PopItGame = () => {
       <div
         key={index}
         className="relative aspect-square w-full"
-        //onClick={() => handleButtonClick(index)}
+        onClick={() => handleButtonClick(index)}
         onTouchStart={(e) => {
           e.preventDefault(); // Prevent double-firing on some devices
           handleButtonClick(index);
@@ -1031,14 +1092,15 @@ const PopItGame = () => {
   // Game loop effects
   useEffect(() => {
     if (gameState !== GAME_STATES.PLAYING) return;
-
+  
     let timeoutId = null;
     
     const startNewTimeout = () => {
       if (timeoutId) clearTimeout(timeoutId);
       
+      const config = getAnimationConfig(gameStep);
+      
       timeoutId = setTimeout(() => {
-        // Only proceed if we're still in playing state and have a target
         if (gameState === GAME_STATES.PLAYING && targetButton !== null) {
           const newTarget = getRandomButton();
           setTargetButton(newTarget);
@@ -1051,21 +1113,32 @@ const PopItGame = () => {
             return prev - 1;
           });
           
+          setConsecutiveFailures(prev => {
+            const newFailures = prev + 1;
+            // Change animation after 3 consecutive failures
+            if (newFailures >= FAILURES_BEFORE_ANIMATION_CHANGE) {
+              const currentAnimations = TRY_ANIMATIONS_BY_SIZE[currentSize];
+              const nextIndex = (currentAnimations.indexOf(currentTargetAnimation) + 1) % currentAnimations.length;
+              setCurrentTargetAnimation(currentAnimations[nextIndex]);
+              return 0; // Reset counter
+            }
+            return newFailures;
+          });
+          
           setMultiplier(1);
           setGameSpeed(1);
         }
-      }, 5000 / gameSpeed);
+      }, config.duration);
     };
-
-    // Only start a new timeout if we have a target button
+  
     if (targetButton !== null) {
       startNewTimeout();
     }
-
+  
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [gameState, gameSpeed, handleGameOver, getRandomButton, targetButton, playSound]);
+  }, [gameState, gameSpeed, handleGameOver, getRandomButton, targetButton, gameStep, currentSize]);
 
 
   useEffect(() => {
@@ -1082,10 +1155,10 @@ const PopItGame = () => {
   // Add this useEffect to randomly change the target animation
   useEffect(() => {
     if (targetButton !== null) {
-      const randomAnimation = TRY_ANIMATIONS[Math.floor(Math.random() * TRY_ANIMATIONS.length)];
-      setCurrentTargetAnimation(randomAnimation);
+      const randomAnimation = TRY_ANIMATIONS_BY_SIZE[currentSize];
+      setCurrentTargetAnimation(randomAnimation[Math.floor(Math.random() * randomAnimation.length)]);
     }
-  }, [targetButton]);
+  }, [targetButton, currentSize]);
 
   return (
     <PopItGameUI

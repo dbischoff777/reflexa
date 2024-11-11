@@ -8,17 +8,27 @@ import tryAnimation2 from '../assets/animations/try/tryBrownSilver.gif';
 import tryAnimation3 from '../assets/animations/try/tryMix.gif';
 import tryAnimation4 from '../assets/animations/try/tryMix2.gif';
 
-export const SUCCESS_ANIMATIONS = [
-  successAnimation1,
-  successAnimation2,
-  successAnimation3,
-  successAnimation4,
-  successAnimation5
-];
+// Animation durations in milliseconds
+export const ANIMATION_DURATIONS = {
+  LONG: 5000,   // 5 seconds
+  MEDIUM: 4000, // 4 seconds
+  SHORT: 3000   // 3 seconds
+};
 
-export const TRY_ANIMATIONS = [
-    tryAnimation1,
-    tryAnimation2,
-    tryAnimation3,
-    tryAnimation4,
-  ];
+// Group animations by size
+export const TRY_ANIMATIONS_BY_SIZE = {
+  LARGE: [tryAnimation1, tryAnimation2],
+  MEDIUM: [tryAnimation3],
+  SMALL: [tryAnimation4]
+};
+
+// Success animations by size
+export const SUCCESS_ANIMATIONS_BY_SIZE = {
+  LARGE: [successAnimation1, successAnimation2],
+  MEDIUM: [successAnimation3, successAnimation4],
+  SMALL: [successAnimation5]
+};
+
+// Constants for game logic
+export const MAX_LIVES = 9;
+export const FAILURES_BEFORE_ANIMATION_CHANGE = 3;
