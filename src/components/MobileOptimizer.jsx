@@ -175,7 +175,6 @@ const MobileOptimizer = () => {
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('resize', handleResize);
     window.addEventListener('orientationchange', handleOrientationChange);
-    document.addEventListener('touchmove', preventPullToRefresh, { passive: false });
     window.addEventListener('focus', handleVisibilityChange);
     
     // Mobile-specific event for initial touch
@@ -192,7 +191,6 @@ const MobileOptimizer = () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('orientationchange', handleOrientationChange);
-      document.removeEventListener('touchmove', preventPullToRefresh);
       window.removeEventListener('focus', handleVisibilityChange);
       clearTimeout(resizeTimeout);
     };
