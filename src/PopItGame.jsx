@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import PopItGameUI from './PopItGameUI';
 import soundManager from './sounds/sound';
 import { useSettings } from './Settings';
@@ -7,10 +7,12 @@ import { useGameHooks } from './hooks/useGameHooks';
 import MusicGenerator from './services/MusicGenerator';
 import Particles from "react-tsparticles";
 import mascotImage from './assets/images/cute-mascot.png';
+import LevelSelect from './components/LevelSelect';
 
 // Game state constants
 export const GAME_STATES = {
   MENU: 'menu',
+  LEVELS: 'levels',
   COUNTDOWN: 'countdown',
   PLAYING: 'playing',
   OVER: 'over'
@@ -20,6 +22,12 @@ const PopItGame = () => {
   const { settings } = useSettings();
   const { playerAvatar, setPlayerAvatar } = useAvatar();
   const game = useGameHooks();
+
+  const [currentLevel, setCurrentLevel] = useState(1);
+  const [maxLevel, setMaxLevel] = useState(() => {
+    const saved = localStorage.getItem('maxLevel');
+    return saved ? parseInt(saved) : 1;
+  });
 
   // Initialize screen protection
   useEffect(() => {
@@ -220,47 +228,78 @@ const PopItGame = () => {
     );
   };
 
+  const handleLevelComplete = () => {
+    if (currentLevel === maxLevel) {
+      const newMaxLevel = maxLevel + 1;
+      setMaxLevel(newMaxLevel);
+      localStorage.setItem('maxLevel', newMaxLevel);
+    }
+    // You might want to show a level complete screen here
+  };
+
+  const handleLevelSelect = (level) => {
+    setCurrentLevel(level);
+    game.setGameState(GAME_STATES.COUNTDOWN);
+    // Configure game difficulty based on level
+    game.setCurrentSize(Math.min(3 + Math.floor(level / 2), 8)); // Example: increase grid size with level
+    game.setTimeLimit(Math.max(60 - (level * 2), 30)); // Example: decrease time limit with level
+  };
+
   return (
-    <PopItGameUI
-      settings={settings}
-      username={game.username}
-      setShowUsernameInput={game.setShowUsernameInput}
-      setUsername={game.setUsername}
-      showUsernameInput={game.showUsernameInput}
-      startTime={game.startTime}
-      setGameTime={game.setGameTime}
-      newAchievement={game.newAchievement}
-      score={game.score}
-      lives={game.lives}
-      multiplier={game.multiplier}
-      gameState={game.gameState}
-      showSpeechBubble={game.showSpeechBubble}
-      mascotMessage={game.mascotMessage}
-      mascotImage={mascotImage}
-      countdown={game.countdown}
-      showGameOver={game.showGameOver}
-      gameStats={game.gameStats}
-      gridShake={game.gridShake}
-      flashRed={game.flashRed}
-      particleEffects={game.particleEffects}
-      startGame={game.startGame}
-      exitGame={game.handleExit}
-      renderButton={game.renderButton}
-      PopEffect={PopEffect}
-      setParticleEffects={game.setParticleEffects}
-      playerAvatar={playerAvatar}
-      setPlayerAvatar={setPlayerAvatar}
-      handleButtonClick={game.handleButtonClick}
-      showAnimation={game.showAnimation}
-      animationPosition={game.animationPosition}
-      successAnimation={game.currentSuccessAnimation}
-      setShowAnimation={game.setShowAnimation}
-      wakeLockActive={game.wakeLockActive}
-      startMusic={() => MusicGenerator.play()}
-      stopMusic={() => MusicGenerator.pause()}
-      isMusicPlaying={game.isMusicPlaying}
-      onMusicToggle={game.toggleMusic}
-    />
+    <>
+      {game.gameState === GAME_STATES.LEVELS ? (
+        <LevelSelect
+          currentLevel={currentLevel}
+          maxLevel={maxLevel}
+          onLevelSelect={handleLevelSelect}
+          onBack={() => game.setGameState(GAME_STATES.MENU)}
+        />
+      ) : (
+        <PopItGameUI
+          settings={settings}
+          username={game.username}
+          setShowUsernameInput={game.setShowUsernameInput}
+          setUsername={game.setUsername}
+          showUsernameInput={game.showUsernameInput}
+          startTime={game.startTime}
+          setGameTime={game.setGameTime}
+          newAchievement={game.newAchievement}
+          score={game.score}
+          lives={game.lives}
+          multiplier={game.multiplier}
+          gameState={game.gameState}
+          setGameState={game.setGameState}
+          showSpeechBubble={game.showSpeechBubble}
+          mascotMessage={game.mascotMessage}
+          mascotImage={mascotImage}
+          countdown={game.countdown}
+          showGameOver={game.showGameOver}
+          gameStats={game.gameStats}
+          gridShake={game.gridShake}
+          flashRed={game.flashRed}
+          particleEffects={game.particleEffects}
+          startGame={game.startGame}
+          exitGame={game.handleExit}
+          renderButton={game.renderButton}
+          PopEffect={PopEffect}
+          setParticleEffects={game.setParticleEffects}
+          playerAvatar={playerAvatar}
+          setPlayerAvatar={setPlayerAvatar}
+          handleButtonClick={game.handleButtonClick}
+          showAnimation={game.showAnimation}
+          animationPosition={game.animationPosition}
+          successAnimation={game.currentSuccessAnimation}
+          setShowAnimation={game.setShowAnimation}
+          wakeLockActive={game.wakeLockActive}
+          startMusic={() => MusicGenerator.play()}
+          stopMusic={() => MusicGenerator.pause()}
+          isMusicPlaying={game.isMusicPlaying}
+          onMusicToggle={game.toggleMusic}
+          currentLevel={currentLevel}
+          maxLevel={maxLevel}
+        />
+      )}
+    </>
   );
 };
 

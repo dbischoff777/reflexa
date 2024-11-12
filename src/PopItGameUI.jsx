@@ -7,9 +7,8 @@ import scoreIcon from './assets/images/score.png';
 import { FacebookIcon, TwitterIcon, WhatsAppIcon } from './Icons';
 import DailyQuests from './DailyQuests';
 import WeeklyQuests from './WeeklyQuests';
-import { LucidePlay, LucideCalendar, ShoppingCart, Clock, Volume2, VolumeX, X } from 'lucide-react';
+import { LucidePlay, LucideCalendar, ShoppingCart, Clock, Volume2, VolumeX, X, Layers } from 'lucide-react';
 import floorBackground from './assets/images/gameBackgrounds/floor1.png';
-import NavigationBar from './components/NavigationBar';
 import { GAME_STATES } from './PopItGame';
 import { TutorialProvider, useTutorial } from './contexts/TutorialContext';
 import Tutorial from './components/Tutorial';
@@ -24,6 +23,7 @@ const GameContent = ({
   lives,
   multiplier,
   gameState,
+  setGameState,
   showSpeechBubble,
   mascotMessage,
   mascotImage,
@@ -1211,7 +1211,28 @@ const GameContent = ({
                     `}
                   >
                     <LucidePlay className="h-5 w-5" />
-                    Start Game
+                    Quick Play
+                  </button>
+
+                  {/* Add Level Select Button */}
+                  <button
+                    onClick={() => setGameState(GAME_STATES.LEVELS)}
+                    className={`
+                      w-full max-w-[280px] py-3 xs:py-3.5 px-4 xs:px-6 
+                      rounded-xl
+                      font-bold text-base xs:text-lg
+                      transition-all duration-200 transform 
+                      hover:scale-[1.02] active:scale-[0.98]
+                      flex items-center justify-center gap-2
+                      shadow-lg hover:shadow-xl
+                      ${settings.theme === 'dark'
+                        ? 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white'
+                        : 'bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white'
+                      }
+                    `}
+                  >
+                    <Layers className="h-5 w-5" />
+                    Select Level
                   </button>
 
                   {/* Shop Button */}
