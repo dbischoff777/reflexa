@@ -13,6 +13,7 @@ import { GAME_STATES } from './PopItGame';
 import { TutorialProvider, useTutorial } from './contexts/TutorialContext';
 import Tutorial from './components/Tutorial';
 import { useSettings } from './Settings';
+import NavigationBar from './components/NavigationBar';
 
 const GameContent = ({
   settings,
@@ -448,6 +449,10 @@ const GameContent = ({
 
   return (
     <div className="relative">
+      {/* Hide NavigationBar during gameplay states */}
+      {gameState === GAME_STATES.MENU && (
+        <NavigationBar gameState={gameState} />
+      )}
       <div 
         className={`
           min-h-screen w-full fixed inset-0 
@@ -1216,7 +1221,7 @@ const GameContent = ({
 
                   {/* Add Level Select Button */}
                   <button
-                    onClick={() => setGameState(GAME_STATES.LEVELS)}
+                    onClick={() => setGameState(GAME_STATES.LEVELSELECT)}
                     className={`
                       w-full max-w-[280px] py-3 xs:py-3.5 px-4 xs:px-6 
                       rounded-xl

@@ -12,9 +12,9 @@ import LevelSelect from './components/LevelSelect';
 // Game state constants
 export const GAME_STATES = {
   MENU: 'menu',
-  LEVELS: 'levels',
   COUNTDOWN: 'countdown',
   PLAYING: 'playing',
+  LEVELSELECT: 'levelselect',
   OVER: 'over'
 };
 
@@ -22,12 +22,6 @@ const PopItGame = () => {
   const { settings } = useSettings();
   const { playerAvatar, setPlayerAvatar } = useAvatar();
   const game = useGameHooks();
-
-  const [currentLevel, setCurrentLevel] = useState(1);
-  const [maxLevel, setMaxLevel] = useState(() => {
-    const saved = localStorage.getItem('maxLevel');
-    return saved ? parseInt(saved) : 1;
-  });
 
   // Initialize screen protection
   useEffect(() => {
@@ -228,31 +222,23 @@ const PopItGame = () => {
     );
   };
 
-  const handleLevelComplete = () => {
-    if (currentLevel === maxLevel) {
-      const newMaxLevel = maxLevel + 1;
-      setMaxLevel(newMaxLevel);
-      localStorage.setItem('maxLevel', newMaxLevel);
-    }
-    // You might want to show a level complete screen here
-  };
-
-  const handleLevelSelect = (level) => {
-    setCurrentLevel(level);
-    game.setGameState(GAME_STATES.COUNTDOWN);
-    // Configure game difficulty based on level
-    game.setCurrentSize(Math.min(3 + Math.floor(level / 2), 8)); // Example: increase grid size with level
-    game.setTimeLimit(Math.max(60 - (level * 2), 30)); // Example: decrease time limit with level
-  };
-
   return (
     <>
-      {game.gameState === GAME_STATES.LEVELS ? (
+      {game.gameState === GAME_STATES.LEVELSELECT ? (
         <LevelSelect
-          currentLevel={currentLevel}
-          maxLevel={maxLevel}
-          onLevelSelect={handleLevelSelect}
-          onBack={() => game.setGameState(GAME_STATES.MENU)}
+          key="level-select"
+          currentLevel={game.currentLevel || 1}
+          maxLevel={game.maxLevel || 1}
+          onLevelSelect={(level) => {
+            if (typeof game.handleLevelSelect === 'function') {
+              game.handleLevelSelect(level);
+            }
+          }}
+          onBack={() => {
+            if (typeof game.setGameState === 'function') {
+              game.setGameState(GAME_STATES.MENU);
+            }
+          }}
         />
       ) : (
         <PopItGameUI
@@ -295,8 +281,8 @@ const PopItGame = () => {
           stopMusic={() => MusicGenerator.pause()}
           isMusicPlaying={game.isMusicPlaying}
           onMusicToggle={game.toggleMusic}
-          currentLevel={currentLevel}
-          maxLevel={maxLevel}
+          currentLevel={game.currentLevel}
+          maxLevel={game.maxLevel}
         />
       )}
     </>

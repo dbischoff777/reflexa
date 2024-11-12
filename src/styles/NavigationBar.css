@@ -5,10 +5,10 @@
 }
 
 /* Content container that will flex-grow to push navbar down */
-/* .content-container {
+.content-container {
   flex: 1;
   overflow-y: auto;
-} */
+}
 
 /* Navigation bar stays at bottom */
 .navigation-bar {

@@ -11,6 +11,7 @@ import {
   ANIMATION_DURATIONS,
   FAILURES_BEFORE_ANIMATION_CHANGE,
 } from '../constants/animations';
+import { GAME_STATES } from '../PopItGame';
 
 export const useGameHooks = () => {
   // Wake Lock state
@@ -90,6 +91,16 @@ export const useGameHooks = () => {
   const [currentSuccessAnimation, setCurrentSuccessAnimation] = useState(SUCCESS_ANIMATIONS_BY_SIZE.LARGE[0]);
   const [currentTargetAnimation, setCurrentTargetAnimation] = useState(TRY_ANIMATIONS_BY_SIZE.LARGE[0]);
   const [maxMultiplier, setMaxMultiplier] = useState(1);
+
+  // Level states
+  const [currentLevel, setCurrentLevel] = useState(1);
+  const [maxLevel, setMaxLevel] = useState(() => {
+    const saved = localStorage.getItem('maxLevel');
+    return saved ? parseInt(saved) : 1;
+  });
+
+  // Add timeLimit state
+  const [timeLimit, setTimeLimit] = useState(60); // Default 60 seconds
 
   // Helper functions
   const getAnimationConfig = useCallback((step) => {
@@ -222,7 +233,7 @@ export const useGameHooks = () => {
     const supremeMessages = [
       "UNIVERSAL DOMINATION! 🌍✨",
       "INFINITE POWER! 💫⚡",
-      "COSMIC OVERLORD! 🌌👑",
+      "COSMIC OVERLORD! ��👑",
       "REALITY SHAPER! 🎇✨",
       "OMNIPOTENT! 🔮💫",
       "BEYOND LEGENDARY! 🎪✨",
@@ -464,6 +475,10 @@ export const useGameHooks = () => {
 
     localStorage.setItem('achievementProgress', JSON.stringify(updatedProgress));
     
+    setGameStarted(true);
+    setGameOver(false);
+    setShowGameOver(false);
+
     if (settings.countdownTimer) {
       setGameState('countdown');
       setCountdown(3);
@@ -476,11 +491,8 @@ export const useGameHooks = () => {
     }
 
     // Reset all game states
-    setGameStarted(true);
-    setGameOver(false);
-    setShowGameOver(false);
     setScore(0);
-    setLives(5);
+    setLives(9);
     setMultiplier(1);
     setGameSpeed(1);
     setGameStep(1);
@@ -704,6 +716,57 @@ export const useGameHooks = () => {
     );
   }, [targetButton, showAnimation, gameOver, currentTargetAnimation, handleButtonClick]);
 
+  const handleLevelComplete = useCallback(() => {
+    if (currentLevel === maxLevel) {
+      const newMaxLevel = maxLevel + 1;
+      setMaxLevel(newMaxLevel);
+      localStorage.setItem('maxLevel', newMaxLevel);
+    }
+  }, [currentLevel, maxLevel]);
+
+  const handleLevelSelect = useCallback((level) => {
+    // Input validation
+    if (!level || level < 1) {
+      console.warn('Invalid level selected');
+      return;
+    }
+
+    // Ensure level doesn't exceed maxLevel
+    if (level > maxLevel) {
+      console.warn('Selected level exceeds max level');
+      return;
+    }
+
+    // Update states with proper validation
+    setCurrentLevel(level);
+    setGameState(GAME_STATES.COUNTDOWN);
+    
+    // Calculate size (ensure it stays within bounds)
+    const calculatedSize = Math.min(3 + Math.floor(level / 2), 8);
+    setCurrentSize(calculatedSize);
+    
+    // Calculate time limit (ensure it stays within bounds)
+    const calculatedTimeLimit = Math.max(60 - (level * 2), 30);
+    setTimeLimit(calculatedTimeLimit);
+
+    // Reset necessary game states
+    setScore(0);
+    setMultiplier(1);
+    setLives(9);
+    setGameSpeed(1);
+    setGameStep(1);
+    setConsecutiveFailures(0);
+    
+    // Reset animations to initial state
+    setCurrentSuccessAnimation(SUCCESS_ANIMATIONS_BY_SIZE.LARGE[0]);
+    setCurrentTargetAnimation(TRY_ANIMATIONS_BY_SIZE.LARGE[0]);
+    
+    // Clear any existing effects or messages
+    setParticleEffects([]);
+    setMascotMessage('');
+    setShowAnimation(false);
+  }, [maxLevel, GAME_STATES.COUNTDOWN]);
+
   return {
     // Game states
     wakeLockActive,
@@ -741,6 +804,9 @@ export const useGameHooks = () => {
     currentSuccessAnimation,
     currentTargetAnimation,
     maxMultiplier,
+    currentLevel,
+    maxLevel,
+    timeLimit,
 
     // Setters
     setWakeLockActive,
@@ -778,6 +844,9 @@ export const useGameHooks = () => {
     setCurrentSuccessAnimation,
     setCurrentTargetAnimation,
     setMaxMultiplier,
+    setCurrentLevel,
+    setMaxLevel,
+    setTimeLimit,
 
     // Functions
     getAnimationConfig,
@@ -794,6 +863,8 @@ export const useGameHooks = () => {
     handleExit,
     renderButton,
     handleButtonClick,
+    handleLevelComplete,
+    handleLevelSelect,
 
     // Constants
     SUCCESS_ANIMATIONS_BY_SIZE,

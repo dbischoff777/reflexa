@@ -16,6 +16,8 @@ import MobileOptimizer from './components/MobileOptimizer';
 import './styles/SplashScreen.css';
 import { AnimatePresence, motion } from 'framer-motion';
 import assetLoader from './utils/assetLoader';
+import LevelSelect from './components/LevelSelect';
+import { GAME_STATES } from './PopItGame';
 
 // Update SplashScreen component
 const SplashScreen = ({ onAnimationEnd, loadingProgress, loadingMessage }) => {
@@ -253,6 +255,14 @@ const AppRoutes = () => {
         } 
       />
       <Route 
+        path="/levels" 
+        element={
+          <AnimatedPage>
+            <LevelSelect />
+          </AnimatedPage>
+        } 
+      />
+      <Route 
         path="/settings" 
         element={
           <AnimatedPage>
@@ -352,6 +362,7 @@ function App() {
 // New component to handle the themed content
 function AppContent() {
   const { settings } = useSettings();
+  const [gameState, setGameState] = useState(GAME_STATES.MENU);
   
   return (
     <div className={`app-wrapper ${
@@ -366,11 +377,11 @@ function AppContent() {
             <ToastContainer />
             <Toaster position="top-center" />
             <AnimatePresence mode="sync">
-              <AppRoutes />
+              <AppRoutes gameState={gameState} setGameState={setGameState} />
             </AnimatePresence>
           </div>
         </PlayerProvider>
-        <NavigationBar />
+        <NavigationBar gameState={gameState} />
       </div>
     </div>
   );

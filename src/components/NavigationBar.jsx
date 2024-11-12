@@ -7,6 +7,13 @@ import { GAME_STATES } from '../PopItGame';
 const NavigationBar = ({ theme, gameState }) => {
   const location = useLocation();
   
+  // Hide navbar if we're in level select or during gameplay
+  if (gameState === GAME_STATES.PLAYING || 
+      gameState === GAME_STATES.COUNTDOWN || 
+      gameState === GAME_STATES.LEVELSELECT) {
+    return null;
+  }
+
   const navItems = [
     { name: 'Home', icon: <Home className="w-5 h-5" />, path: '/game' },
     { name: 'Profile', icon: <LucideUser className="w-5 h-5" />, path: '/profile' },
@@ -14,11 +21,6 @@ const NavigationBar = ({ theme, gameState }) => {
     { name: 'Settings', icon: <LucideSettings className="w-5 h-5" />, path: '/settings' },
     { name: 'About', icon: <LucideInfo className="w-5 h-5" />, path: '/about' }
   ];
-
-  // Direct comparison with gameState
-  if (gameState === GAME_STATES.PLAYING || gameState === GAME_STATES.COUNTDOWN) {
-    return null;
-  }
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-transparent">
