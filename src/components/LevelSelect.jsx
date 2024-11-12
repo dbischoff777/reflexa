@@ -2,7 +2,6 @@ import React, { useEffect, useRef } from 'react';
 import { useSettings } from '../Settings';
 
 const LevelSelect = ({ currentLevel, maxLevel, onLevelSelect, onBack }) => {
-  const levels = Array.from({ length: 10 }, (_, i) => i + 1);
   const svgRef = useRef(null);
   const { settings } = useSettings();
 
@@ -20,6 +19,8 @@ const LevelSelect = ({ currentLevel, maxLevel, onLevelSelect, onBack }) => {
     if (svgRef.current) {
       const svg = svgRef.current;
       const path = svg.querySelector('#levelPath');
+      
+      const levels = Array.from({ length: 10 }, (_, i) => i + 1);
       
       levels.forEach((level, index) => {
         const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -77,7 +78,7 @@ const LevelSelect = ({ currentLevel, maxLevel, onLevelSelect, onBack }) => {
         svg.appendChild(group);
       });
     }
-  }, [currentLevel, levels, onLevelSelect]);
+  }, [currentLevel, onLevelSelect]);
 
   return (
     <div className="fixed inset-0 z-[5] overflow-auto bg-transparent">

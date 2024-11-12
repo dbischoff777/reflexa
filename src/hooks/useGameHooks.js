@@ -13,6 +13,31 @@ import {
 } from '../constants/animations';
 import { GAME_STATES } from '../PopItGame';
 
+// Add safety checks for animation constants
+const getDefaultAnimations = () => {
+  const defaultLargeAnimation = '/path/to/default/animation.gif'; // Replace with actual default animation path
+  return {
+    SUCCESS_ANIMATIONS_BY_SIZE: {
+      LARGE: [defaultLargeAnimation],
+      MEDIUM: [defaultLargeAnimation],
+      SMALL: [defaultLargeAnimation]
+    },
+    TRY_ANIMATIONS_BY_SIZE: {
+      LARGE: [defaultLargeAnimation],
+      MEDIUM: [defaultLargeAnimation],
+      SMALL: [defaultLargeAnimation]
+    }
+  };
+};
+
+// Add safety checks when accessing animations
+const getAnimationForSize = (size, type) => {
+  const animations = type === 'success' ? 
+    (SUCCESS_ANIMATIONS_BY_SIZE[size] || []) : 
+    (TRY_ANIMATIONS_BY_SIZE[size] || []);
+  return animations.length > 0 ? animations[0] : null;
+};
+
 export const useGameHooks = (gameState, setGameState) => {
   // Wake Lock state
   const [wakeLockActive, setWakeLockActive] = useState(false);
@@ -151,6 +176,9 @@ export const useGameHooks = (gameState, setGameState) => {
     const multiplierBonus = Math.floor(maxMultiplier * 5);
     const experienceGained = baseExperience + timeBonus + multiplierBonus;
 
+    const combos = gameStats.combos || [];
+    const reactionTimes = gameStats.reactionTimes || [];
+
     const finalStats = {
       ...gameStats,
       score,
@@ -158,10 +186,10 @@ export const useGameHooks = (gameState, setGameState) => {
       maxMultiplier,
       duration,
       gameTime,
-      averageCombo: gameStats.combos.reduce((a, b) => a + b, 0) / gameStats.combos.length || 0,
-      avgReactionTime: gameStats.reactionTimes.reduce((a, b) => a + b, 0) / gameStats.reactionTimes.length || 0,
-      bestReactionTime: Math.min(...gameStats.reactionTimes) || 0,
-      scorePerMinute: score / (duration / 60),
+      averageCombo: combos.length > 0 ? combos.reduce((a, b) => a + b, 0) / combos.length : 0,
+      avgReactionTime: reactionTimes.length > 0 ? reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length : 0,
+      bestReactionTime: reactionTimes.length > 0 ? Math.min(...reactionTimes) : 0,
+      scorePerMinute: duration > 0 ? (score / (duration / 60)) : 0,
       lives,
       maxLives: 9,
       experienceGained
@@ -254,7 +282,7 @@ export const useGameHooks = (gameState, setGameState) => {
     const goodMessages = [
       "Keep it up! 🎯",
       "You're doing great! 🌟",
-      "Nice rhythm! 🎵",
+      "Nice rhythm! ",
       "That's the spirit! ✨",
       "Getting better! 🎯",
       "Keep going! 💫"
@@ -474,9 +502,38 @@ export const useGameHooks = (gameState, setGameState) => {
 
     localStorage.setItem('achievementProgress', JSON.stringify(updatedProgress));
     
+    // Safely initialize animations
+    const initialSuccessAnimation = getAnimationForSize('LARGE', 'success');
+    const initialTryAnimation = getAnimationForSize('LARGE', 'try');
+
+    if (!initialSuccessAnimation || !initialTryAnimation) {
+      console.error('Failed to initialize animations');
+      return;
+    }
+
     setGameStarted(true);
     setGameOver(false);
     setShowGameOver(false);
+
+    // Initialize all game states with proper default values
+    const initialGameStats = {
+      score: 0,
+      duration: 0,
+      successfulClicks: 0,
+      missedClicks: 0,
+      totalClicks: 0,
+      longestStreak: 0,
+      currentStreak: 0,
+      highestCombo: 0,
+      combos: [], // Initialize empty array
+      reactionTimes: [], // Initialize empty array
+      maxMultiplier: 1,
+      lives: 9,
+      maxLives: 9,
+      startTime: Date.now(),
+      lastClickTime: null,
+      highScore: 0
+    };
 
     if (settings.countdownTimer) {
       setGameState(GAME_STATES.COUNTDOWN);
@@ -489,42 +546,30 @@ export const useGameHooks = (gameState, setGameState) => {
       playSound('trySound');
     }
 
-    // Reset all game states
+    // Reset all game states with proper initialization and safety checks
     setScore(0);
     setLives(9);
     setMultiplier(1);
     setGameSpeed(1);
     setGameStep(1);
     setCurrentSize('LARGE');
-    setCurrentDuration(ANIMATION_DURATIONS.LONG);
+    setCurrentDuration(ANIMATION_DURATIONS.LONG || 1000);
     setConsecutiveFailures(0);
-    setCurrentSuccessAnimation(SUCCESS_ANIMATIONS_BY_SIZE.LARGE[0]);
-    setCurrentTargetAnimation(TRY_ANIMATIONS_BY_SIZE.LARGE[0]);
+    setCurrentSuccessAnimation(initialSuccessAnimation);
+    setCurrentTargetAnimation(initialTryAnimation);
+    setParticleEffects([]); // Initialize empty array
+    setMascotMessage('');
+    setShowAnimation(false);
+    setGameStats(initialGameStats);
+    setMaxMultiplier(1);
     
-    setGameStats({
-      score: 0,
-      duration: 0,
-      successfulClicks: 0,
-      missedClicks: 0,
-      totalClicks: 0,
-      longestStreak: 0,
-      currentStreak: 0,
-      highestCombo: 0,
-      combos: [],
-      reactionTimes: [],
-      maxMultiplier: 1,
-      lives: 5,
-      maxLives: 9,
-      startTime: Date.now(),
-      lastClickTime: null,
-    });
-  }, [
+}, [
     username,
     playSound,
     settings.countdownTimer,
     getRandomButton,
     setGameState
-  ]);
+]);
 
   const handleExit = useCallback(() => {
     setTargetButton(null);
@@ -575,12 +620,16 @@ export const useGameHooks = (gameState, setGameState) => {
         setCurrentSize(newSize);
         setCurrentDuration(config.duration);
       
-        // Set new animations based on size
-        const successAnims = SUCCESS_ANIMATIONS_BY_SIZE[newSize];
-        const tryAnims = TRY_ANIMATIONS_BY_SIZE[newSize];
-      
-        setCurrentSuccessAnimation(successAnims[Math.floor(Math.random() * successAnims.length)]);
-        setCurrentTargetAnimation(tryAnims[0]); // Start with first animation of new size
+        // Safely get new animations
+        const newSuccessAnimation = getAnimationForSize(newSize, 'success');
+        const newTryAnimation = getAnimationForSize(newSize, 'try');
+
+        if (newSuccessAnimation) {
+          setCurrentSuccessAnimation(newSuccessAnimation);
+        }
+        if (newTryAnimation) {
+          setCurrentTargetAnimation(newTryAnimation);
+        }
       
         return nextStep;
       });
@@ -737,13 +786,45 @@ export const useGameHooks = (gameState, setGameState) => {
       return;
     }
 
+    // Initialize game stats first
+    const initialGameStats = {
+      score: 0,
+      duration: 0,
+      successfulClicks: 0,
+      missedClicks: 0,
+      totalClicks: 0,
+      longestStreak: 0,
+      currentStreak: 0,
+      highestCombo: 0,
+      combos: [],
+      reactionTimes: [],
+      maxMultiplier: 1,
+      lives: 9,
+      maxLives: 9,
+      startTime: Date.now(),
+      lastClickTime: null,
+      highScore: 0
+    };
+
+    // Safely initialize animations
+    const initialSuccessAnimation = SUCCESS_ANIMATIONS_BY_SIZE.LARGE?.[0] || null;
+    const initialTryAnimation = TRY_ANIMATIONS_BY_SIZE.LARGE?.[0] || null;
+
+    if (!initialSuccessAnimation || !initialTryAnimation) {
+      console.error('Failed to initialize animations');
+      return;
+    }
+
     // Update states with proper validation
     setCurrentLevel(level);
+    setGameStarted(true);
+    setGameOver(false);
+    setShowGameOver(false);
     setGameState(GAME_STATES.COUNTDOWN);
     
     // Calculate size (ensure it stays within bounds)
     const calculatedSize = Math.min(3 + Math.floor(level / 2), 8);
-    setCurrentSize(calculatedSize);
+    setCurrentSize('LARGE'); // Start with LARGE size
     
     // Calculate time limit (ensure it stays within bounds)
     const calculatedTimeLimit = Math.max(60 - (level * 2), 30);
@@ -756,16 +837,27 @@ export const useGameHooks = (gameState, setGameState) => {
     setGameSpeed(1);
     setGameStep(1);
     setConsecutiveFailures(0);
+    setCountdown(3);
     
     // Reset animations to initial state
-    setCurrentSuccessAnimation(SUCCESS_ANIMATIONS_BY_SIZE.LARGE[0]);
-    setCurrentTargetAnimation(TRY_ANIMATIONS_BY_SIZE.LARGE[0]);
+    setCurrentSuccessAnimation(initialSuccessAnimation);
+    setCurrentTargetAnimation(initialTryAnimation);
     
     // Clear any existing effects or messages
     setParticleEffects([]);
     setMascotMessage('');
     setShowAnimation(false);
-  }, [maxLevel, GAME_STATES.COUNTDOWN]);
+    setGameStats(initialGameStats);
+
+    // Start countdown sound
+    playSound('countdown');
+    
+}, [
+    maxLevel,
+    GAME_STATES.COUNTDOWN,
+    playSound,
+    setGameState
+]);
 
   return {
     // Game states
