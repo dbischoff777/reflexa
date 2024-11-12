@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, createContext, useContext } from 'react';
 import { Routes, Route, useLocation, Navigate, useNavigate } from 'react-router-dom';
 import PopItGame from './PopItGame';
 import About from './About';
@@ -18,6 +18,9 @@ import { AnimatePresence, motion } from 'framer-motion';
 import assetLoader from './utils/assetLoader';
 import LevelSelect from './components/LevelSelect';
 import { GAME_STATES } from './PopItGame';
+
+// Create a GameStateContext
+export const GameStateContext = createContext();
 
 // Update SplashScreen component
 const SplashScreen = ({ onAnimationEnd, loadingProgress, loadingMessage }) => {
@@ -234,6 +237,7 @@ const ScrollHandler = () => {
 const AppRoutes = () => {
   const { settings } = useSettings();
   const location = useLocation();
+  const { gameState, setGameState } = useContext(GameStateContext);
 
   return (
     <Routes location={location} key={location.pathname}>
@@ -242,7 +246,7 @@ const AppRoutes = () => {
         path="/game" 
         element={
           <AnimatedPage>
-            <PopItGame />
+            <PopItGame gameState={gameState} setGameState={setGameState} />
           </AnimatedPage>
         } 
       />
@@ -362,28 +366,43 @@ function App() {
 // New component to handle the themed content
 function AppContent() {
   const { settings } = useSettings();
+  const location = useLocation();
   const [gameState, setGameState] = useState(GAME_STATES.MENU);
   
+  // Debug log to check state changes
+  useEffect(() => {
+    console.log('Current game state:', gameState);
+  }, [gameState]);
+
   return (
-    <div className={`app-wrapper ${
-      settings.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'
-    }`}>
-      <div className="content-container">
-        <MobileOptimizer />
-        <PlayerProvider>
-          <div className="App">
-            <TouchCursorHandler />
-            <ScrollHandler /> 
-            <ToastContainer />
-            <Toaster position="top-center" />
-            <AnimatePresence mode="sync">
-              <AppRoutes gameState={gameState} setGameState={setGameState} />
-            </AnimatePresence>
+    <GameStateContext.Provider value={{ gameState, setGameState }}>
+      <div className={`app-wrapper ${
+        settings.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'
+      }`}>
+        <div className="content-container">
+          <MobileOptimizer />
+          <PlayerProvider>
+            <div className="App">
+              <TouchCursorHandler />
+              <ScrollHandler /> 
+              <ToastContainer />
+              <Toaster position="top-center" />
+              <AnimatePresence mode="sync">
+                <AppRoutes />
+              </AnimatePresence>
+            </div>
+          </PlayerProvider>
+          <div className={`
+            transition-opacity duration-300
+            ${(gameState !== GAME_STATES.MENU && location.pathname === '/game') 
+              ? 'opacity-0 pointer-events-none' 
+              : 'opacity-100'
+            }`}>
+            <NavigationBar gameState={gameState} />
           </div>
-        </PlayerProvider>
-        <NavigationBar gameState={gameState} />
+        </div>
       </div>
-    </div>
+    </GameStateContext.Provider>
   );
 }
 

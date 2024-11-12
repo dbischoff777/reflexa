@@ -13,7 +13,7 @@ import {
 } from '../constants/animations';
 import { GAME_STATES } from '../PopItGame';
 
-export const useGameHooks = () => {
+export const useGameHooks = (gameState, setGameState) => {
   // Wake Lock state
   const [wakeLockActive, setWakeLockActive] = useState(false);
 
@@ -30,7 +30,6 @@ export const useGameHooks = () => {
   const [isAnimationPlaying, setIsAnimationPlaying] = useState(false);
 
   // Game state
-  const [gameState, setGameState] = useState('menu');
   const [gameStarted, setGameStarted] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [showGameOver, setShowGameOver] = useState(false);
@@ -233,7 +232,7 @@ export const useGameHooks = () => {
     const supremeMessages = [
       "UNIVERSAL DOMINATION! 🌍✨",
       "INFINITE POWER! 💫⚡",
-      "COSMIC OVERLORD! ��👑",
+      "COSMIC OVERLORD! 👑",
       "REALITY SHAPER! 🎇✨",
       "OMNIPOTENT! 🔮💫",
       "BEYOND LEGENDARY! 🎪✨",
@@ -445,7 +444,7 @@ export const useGameHooks = () => {
     playSound('gameOver');
     setGameOver(true);
     setShowGameOver(true);
-    setGameState('over');
+    setGameState(GAME_STATES.OVER);
   }, [
     calculateFinalStats,
     updatePlayerStats,
@@ -480,11 +479,11 @@ export const useGameHooks = () => {
     setShowGameOver(false);
 
     if (settings.countdownTimer) {
-      setGameState('countdown');
+      setGameState(GAME_STATES.COUNTDOWN);
       setCountdown(3);
       playSound('countdown');
     } else {
-      setGameState('playing');
+      setGameState(GAME_STATES.PLAYING);
       setTargetButton(getRandomButton());
       setStartTime(Date.now());
       playSound('trySound');
@@ -523,20 +522,21 @@ export const useGameHooks = () => {
     username,
     playSound,
     settings.countdownTimer,
-    getRandomButton
+    getRandomButton,
+    setGameState
   ]);
 
   const handleExit = useCallback(() => {
     setTargetButton(null);
     setGameOver(false);
     setShowGameOver(false);
-    setGameState('menu');
+    setGameState(GAME_STATES.MENU);
     setScore(0);
     setLives(5);
     setMultiplier(1);
     setGameSpeed(1);
     setParticleEffects([]);
-  }, []);
+  }, [setGameState]);
 
   const handleButtonClick = useCallback((index) => {
     if (gameOver || !gameStarted || gameState !== 'playing') return;
@@ -774,7 +774,6 @@ export const useGameHooks = () => {
     showAnimation,
     animationPosition,
     isAnimationPlaying,
-    gameState,
     gameStarted,
     gameOver,
     showGameOver,
@@ -814,7 +813,6 @@ export const useGameHooks = () => {
     setShowAnimation,
     setAnimationPosition,
     setIsAnimationPlaying,
-    setGameState,
     setGameStarted,
     setGameOver,
     setShowGameOver,
@@ -880,5 +878,9 @@ export const useGameHooks = () => {
     setCurrentSize,
     setCurrentDuration,
     setConsecutiveFailures,
+
+    // Game state
+    gameState,
+    setGameState,
   };
 }; 

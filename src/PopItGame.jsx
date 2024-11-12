@@ -18,10 +18,10 @@ export const GAME_STATES = {
   OVER: 'over'
 };
 
-const PopItGame = () => {
+const PopItGame = ({ gameState, setGameState }) => {
   const { settings } = useSettings();
   const { playerAvatar, setPlayerAvatar } = useAvatar();
-  const game = useGameHooks();
+  const game = useGameHooks(gameState, setGameState);
 
   // Initialize screen protection
   useEffect(() => {
