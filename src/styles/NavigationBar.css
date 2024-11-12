@@ -1,7 +1,29 @@
+.app-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+/* Content container that will flex-grow to push navbar down */
+/* .content-container {
+  flex: 1;
+  overflow-y: auto;
+} */
+
+/* Navigation bar stays at bottom */
 .navigation-bar {
-  /* ... existing styles ... */
-  height: calc(var(--vh, 1vh) * 100);
-  /* Add any other necessary mobile-specific styles */
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  height: 60px;
+  backdrop-filter: blur(8px);
+}
+
+/* Optional: Add styles for when nav is "sticky" */
+.navigation-bar.sticky {
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
 }
 
 /* Ensure the app container uses the custom vh unit */

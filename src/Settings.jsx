@@ -105,9 +105,11 @@ const Settings = () => {
   return (
     <div className={`
       settings-controls 
-      min-h-screen w-full 
       fixed inset-0 
+      w-full 
       ${settings.theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'}
+      overflow-y-auto
+      overscroll-none
     `}>
       <div className={`
         p-2 2xs:p-3 xs:p-4 
@@ -117,7 +119,6 @@ const Settings = () => {
         mt-2 2xs:mt-3 xs:mt-4 sm:mt-6
         rounded-md 2xs:rounded-lg sm:rounded-xl
         shadow-md 2xs:shadow-lg
-        overflow-y-auto
         ${settings.theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-gray-100'}
       `}>
         {/* Header with Game Settings title and Back button */}

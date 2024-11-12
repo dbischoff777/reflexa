@@ -129,14 +129,11 @@ const AnimatedPage = ({ children }) => {
   const { settings } = useSettings();
   
   const isDark = settings.theme === 'dark';
-  const initialBg = isDark ? 'rgba(88, 28, 135, 0.4)' : 'rgba(243, 232, 255, 0.4)';
-  const finalBg = isDark ? 'rgba(88, 28, 135, 0.4)' : 'rgba(243, 232, 255, 0.4)';
-  
+    
   return (
     <motion.div
       initial={{ 
         opacity: 0,
-        backgroundColor: initialBg,
         scale: 1.1,
         y: 20,
         filter: isDark 
@@ -145,14 +142,12 @@ const AnimatedPage = ({ children }) => {
       }}
       animate={{ 
         opacity: 1,
-        backgroundColor: finalBg,
         scale: 1,
         y: 0,
         filter: 'none',
       }}
       exit={{ 
         opacity: 0,
-        backgroundColor: initialBg,
         scale: 0.95,
         y: -20,
         filter: isDark 
@@ -175,7 +170,6 @@ const AnimatedPage = ({ children }) => {
         right: 0,
         bottom: 0,
         willChange: 'transform, opacity',
-        backgroundColor: isDark ? '#1a1a1a' : undefined,
         overflowY: 'auto',
         overflowX: 'hidden',
         zIndex: 1,
@@ -211,6 +205,29 @@ const AnimatedPage = ({ children }) => {
   );
 };
 
+// Add this new component
+const ScrollHandler = () => {
+  const { settings } = useSettings();
+  const [isSticky, setIsSticky] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const isScrolled = window.scrollY > 0;
+      setIsSticky(isScrolled);
+      
+      // Set background color based on theme when scrolled
+      document.body.style.backgroundColor = isScrolled 
+        ? settings.theme === 'dark' ? 'bg-gray-800' : '#bg-gray-100'
+        : '';
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [settings.theme]);
+
+  return null;
+};
+
 // Separate Routes component to use settings context
 const AppRoutes = () => {
   const { settings } = useSettings();
@@ -231,7 +248,6 @@ const AppRoutes = () => {
         path="/about" 
         element={
           <AnimatedPage>
-            <NavigationBar theme={settings.theme} />
             <About settings={settings} />
           </AnimatedPage>
         } 
@@ -240,7 +256,6 @@ const AppRoutes = () => {
         path="/settings" 
         element={
           <AnimatedPage>
-            <NavigationBar theme={settings.theme} />
             <Settings />
           </AnimatedPage>
         } 
@@ -249,7 +264,6 @@ const AppRoutes = () => {
         path="/leaderboard" 
         element={
           <AnimatedPage>
-            <NavigationBar theme={settings.theme} />
             <Leaderboard />
           </AnimatedPage>
         } 
@@ -258,7 +272,6 @@ const AppRoutes = () => {
         path="/profile" 
         element={
           <AnimatedPage>
-            <NavigationBar theme={settings.theme} />
             <PlayerProfile />
           </AnimatedPage>
         } 
@@ -267,7 +280,6 @@ const AppRoutes = () => {
         path="/shop" 
         element={
           <AnimatedPage>
-            <NavigationBar theme={settings.theme} />
             <Shop />
           </AnimatedPage>
         } 
@@ -332,18 +344,35 @@ function App() {
 
   return (
     <SettingsProvider>
-      <MobileOptimizer />
-      <PlayerProvider>
-        <div className="App">
-          <TouchCursorHandler />
-          <ToastContainer />
-          <Toaster position="top-center" />
-          <AnimatePresence mode="sync">
-            <AppRoutes />
-          </AnimatePresence>
-        </div>
-      </PlayerProvider>
+      <AppContent />
     </SettingsProvider>
+  );
+}
+
+// New component to handle the themed content
+function AppContent() {
+  const { settings } = useSettings();
+  
+  return (
+    <div className={`app-wrapper ${
+      settings.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'
+    }`}>
+      <div className="content-container">
+        <MobileOptimizer />
+        <PlayerProvider>
+          <div className="App">
+            <TouchCursorHandler />
+            <ScrollHandler /> 
+            <ToastContainer />
+            <Toaster position="top-center" />
+            <AnimatePresence mode="sync">
+              <AppRoutes />
+            </AnimatePresence>
+          </div>
+        </PlayerProvider>
+        <NavigationBar />
+      </div>
+    </div>
   );
 }
 

@@ -265,7 +265,7 @@ const PlayerProfile = () => {
   }, []);
 
   return (
-    <div className={`min-h-screen w-full fixed inset-0 ${
+    <div className={`min-h-screen w-full fixed ${
       settings.theme === 'dark'
         ? 'bg-gray-800 text-white'
         : 'bg-gray-100 text-gray-900'

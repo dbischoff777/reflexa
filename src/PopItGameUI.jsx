@@ -481,10 +481,6 @@ const GameContent = ({
             ${transitionClasses.fade}
             ${gameState === GAME_STATES.PLAYING ? 'opacity-0 pointer-events-none' : 'opacity-100'}
           `}>
-            <NavigationBar 
-              theme={settings.theme} 
-              gameState={gameState}
-            />
           </div>
         )}
         

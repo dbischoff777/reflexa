@@ -53,35 +53,24 @@ const MobileOptimizer = () => {
             }
 
             html {
-              position: fixed;
-              width: 100%;
               height: 100%;
-              overflow: hidden;
-              touch-action: none;
-              -ms-touch-action: none;
-              background-color: black;
+              width: 100%;
+              background-color: var(--background-color);
             }
 
             body {
-              position: fixed;
-              width: 100%;
               height: 100%;
-              overflow: hidden;
-              touch-action: none;
-              -ms-touch-action: none;
+              width: 100%;
               -webkit-overflow-scrolling: touch;
-              overscroll-behavior: none;
               margin: 0;
               padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-              background-color: black;
+              background-color: var(--background-color);
             }
 
             #root {
-              position: fixed;
-              width: 100%;
               height: 100%;
-              overflow: hidden;
-              background-color: black;
+              width: 100%;
+              background-color: var(--background-color);
             }
 
             input, textarea {
