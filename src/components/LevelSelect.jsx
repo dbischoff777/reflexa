@@ -100,6 +100,30 @@ const additionalStyles = `
     height: 12px;
     border-radius: 50%;
   }
+  
+  // Add responsive tooltip styles
+  @media (max-width: 480px) {
+    .level-tooltip {
+      width: 160px;
+      height: 100px;
+      transform: translate(-50%, -130%);
+    }
+    
+    .tooltip-content {
+      padding: 8px;
+      font-size: 12px;
+    }
+    
+    .tooltip-content h3 {
+      font-size: 14px;
+      margin: 0 0 4px 0;
+    }
+    
+    .tooltip-stats {
+      margin-top: 4px;
+      padding-top: 4px;
+    }
+  }
 `;
 
 // Add these helper functions at the top
@@ -121,9 +145,22 @@ const getLevelProgress = (level) => {
   };
 };
 
-const LevelSelect = ({ currentLevel, maxLevel, onLevelSelect, onBack }) => {
+const LevelSelect = ({ currentLevel = 1, maxLevel = 30, onLevelSelect, onBack }) => {
   const svgRef = useRef(null);
   const { settings } = useSettings();
+
+  // Add this useEffect to inject the styles
+  useEffect(() => {
+    // Create style element
+    const styleEl = document.createElement('style');
+    styleEl.innerHTML = additionalStyles;
+    document.head.appendChild(styleEl);
+
+    // Cleanup on unmount
+    return () => {
+      document.head.removeChild(styleEl);
+    };
+  }, []);
 
   // Add handler for first level selection
   const handleLevelSelect = (level) => {
@@ -160,7 +197,7 @@ const LevelSelect = ({ currentLevel, maxLevel, onLevelSelect, onBack }) => {
       const svg = svgRef.current;
       const path = svg.querySelector('#levelPath');
       
-      const levels = Array.from({ length: 20 }, (_, i) => i + 1);
+      const levels = Array.from({ length: maxLevel }, (_, i) => i + 1);
       
       levels.forEach((level, index) => {
         const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -202,6 +239,9 @@ const LevelSelect = ({ currentLevel, maxLevel, onLevelSelect, onBack }) => {
         const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         circle.setAttribute('r', '20');
         circle.setAttribute(level <= currentLevel ? 'done' : 'todo', '');
+        if (level === currentLevel) {
+          circle.setAttribute('current-level', '');
+        }
         circle.style.stroke = difficulty.color;
         circle.style.strokeWidth = '2';
         
@@ -246,63 +286,60 @@ const LevelSelect = ({ currentLevel, maxLevel, onLevelSelect, onBack }) => {
   }, [currentLevel, onLevelSelect, maxLevel]);
 
   const generatePath = (levelCount) => {
-    const basePath = [
-      'M200 60',  // Starting point
-      'c80 40 120 80 120 120',  // Right curve
-      'c0 80 -240 80 -240 200', // Left curve
-      'c0 80 240 80 240 200',   // Right curve
-      'c0 80 -240 80 -240 200', // Left curve
-      'c0 80 240 80 240 200'    // Right curve
-    ];
+    // Adjust curve size and spacing based on screen width
+    const isMobile = window.innerWidth < 480;
+    const curveSize = isMobile ? 120 : 180;  // Smaller curves on mobile
+    const spacing = isMobile ? 180 : 250;    // Reduced spacing on mobile
     
-    // Calculate how many complete sets we need
-    const segmentsNeeded = Math.ceil(levelCount / 12); // Each set fits about 12 levels
-    const fullPath = [basePath[0]]; // Start with initial M command
+    let path = `M200 60`;
+    const curves = Math.ceil(levelCount / 4);
     
-    for (let i = 0; i < segmentsNeeded; i++) {
-      // Add each segment from the base path (skipping the initial M command)
-      for (let j = 1; j < basePath.length; j++) {
-        fullPath.push(basePath[j]);
+    for (let i = 0; i < curves; i++) {
+      if (i % 2 === 0) {
+        path += ` C${200 + curveSize} ${60 + i * spacing},` +
+                ` ${200 + curveSize} ${60 + (i + 1) * spacing},` +
+                ` 200 ${60 + (i + 1) * spacing}`;
+      } else {
+        path += ` C${200 - curveSize} ${60 + i * spacing},` +
+                ` ${200 - curveSize} ${60 + (i + 1) * spacing},` +
+                ` 200 ${60 + (i + 1) * spacing}`;
       }
     }
     
-    // Add optional paths
-    if (levelCount > 10) {
-      fullPath.push('M300 400 C350 450, 400 500, 450 500'); // Branch right
-      fullPath.push('M300 400 C250 450, 200 500, 150 500'); // Branch left
-    }
-    
-    return fullPath.join(' ');
+    return path;
   };
 
   return (
-    <div className="fixed inset-0 z-[5] overflow-auto bg-transparent">
-      <div className={`flex flex-col items-center p-4 sm:p-8 h-full
+    <div className="fixed inset-0 z-[5] overflow-auto scrollbar-hide">
+      <div className={`flex flex-col items-center p-2 xs:p-4 sm:p-8 min-h-full
         ${settings.theme === 'dark' 
           ? 'bg-gradient-to-b from-purple-800 to-purple-600' 
           : 'bg-gradient-to-b from-gray-100 to-gray-200'}`}
       >
-        {/* Back Button */}
+        {/* Back Button - Updated for better mobile visibility */}
         <button
           onClick={onBack}
-          className={`fixed top-4 left-4 sm:left-8 px-3 py-1 sm:px-4 sm:py-2 rounded-lg transition-all duration-300
-                     flex items-center gap-2 shadow-lg text-sm sm:text-base w-fit
+          className={`fixed top-2 xs:top-4 left-2 xs:left-4 sm:left-8 
+                     px-2 py-1 xs:px-3 xs:py-1 sm:px-4 sm:py-2 
+                     rounded-lg transition-all duration-300
+                     flex items-center gap-1 xs:gap-2 shadow-lg 
+                     text-xs xs:text-sm sm:text-base w-fit
                      ${settings.theme === 'dark'
                        ? 'bg-purple-700/20 hover:bg-purple-700/30 text-white backdrop-blur-sm'
                        : 'bg-purple-600 hover:bg-purple-700 text-white'}`}
         >
-          <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-3 h-3 xs:w-4 xs:h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Back
         </button>
 
-        {/* SVG content */}
+        {/* SVG content - Updated viewBox and styles */}
         <svg 
           ref={svgRef} 
-          viewBox={`0 0 400 ${Math.max(800, 1000 * Math.ceil(maxLevel / 12))}`}
-          className="w-full h-[calc(100vh-8rem-64px)] sm:h-[calc(100vh-12rem-64px)]"
-          style={{ maxHeight: 'calc(100vh - 128px)', overflow: 'visible' }}
+          viewBox={`0 0 400 ${Math.max(800, 200 * Math.ceil(maxLevel / 4))}`}
+          className="w-full max-w-[400px] mx-auto"
+          style={{ overflow: 'visible' }}
         >
           <defs>
             {/* Enhanced gradient with more stops */}
@@ -326,12 +363,33 @@ const LevelSelect = ({ currentLevel, maxLevel, onLevelSelect, onBack }) => {
           
           <style>
             {`
+              // Update circle sizes for mobile
               circle { 
-                r: 15; 
+                r: 12; 
                 cursor: pointer; 
                 transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
               }
+              @media (min-width: 480px) { circle { r: 15; } }
               @media (min-width: 640px) { circle { r: 20; } }
+              
+              // Update text sizes for mobile
+              text { 
+                font-size: 10px;
+              }
+              @media (min-width: 480px) { text { font-size: 12px; } }
+              @media (min-width: 640px) { text { font-size: 16px; } }
+              
+              // Update star positioning for mobile
+              .star {
+                transform: scale(0.8);
+              }
+              @media (min-width: 480px) { 
+                .star { transform: scale(0.9); }
+              }
+              @media (min-width: 640px) { 
+                .star { transform: scale(1); }
+              }
+              
               [done] { 
                 fill: url(#pathGradient);
                 filter: url(#glow);
@@ -344,14 +402,6 @@ const LevelSelect = ({ currentLevel, maxLevel, onLevelSelect, onBack }) => {
               [todo]:hover {
                 opacity: 0.7;
               }
-              text { 
-                fill: ${settings.theme === 'dark' ? 'white' : '#4C1D95'};
-                font-weight: bold;
-                pointer-events: none;
-                font-size: 12px;
-                filter: url(#glow);
-              }
-              @media (min-width: 640px) { text { font-size: 16px; } }
               .glow {
                 fill: ${settings.theme === 'dark' ? 'rgba(147, 51, 234, 0.3)' : 'rgba(139, 92, 246, 0.3)'};
                 animation: pulse 3s ease-in-out infinite;
@@ -390,20 +440,6 @@ const LevelSelect = ({ currentLevel, maxLevel, onLevelSelect, onBack }) => {
                   stroke-dashoffset: -1000;
                 }
               }
-              .level-tooltip {
-                opacity: 0;
-                transition: opacity 0.3s;
-                pointer-events: none;
-              }
-              .level-tooltip .tooltip-content {
-                background: rgba(0,0,0,0.8);
-                padding: 8px;
-                border-radius: 4px;
-                color: white;
-              }
-              g:hover .level-tooltip {
-                opacity: 1;
-              }
               .explosion {
                 r: 0;
                 fill: none;
@@ -415,9 +451,16 @@ const LevelSelect = ({ currentLevel, maxLevel, onLevelSelect, onBack }) => {
                 0% { r: 20; opacity: 1; }
                 100% { r: 50; opacity: 0; }
               }
-              [data-difficulty='easy'] { border: 2px solid green; }
-              [data-difficulty='medium'] { border: 2px solid yellow; }
-              [data-difficulty='hard'] { border: 2px solid red; }
+              /* Hide scrollbar for Chrome, Safari and Opera */
+              .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+              }
+
+              /* Hide scrollbar for IE, Edge and Firefox */
+              .scrollbar-hide {
+                -ms-overflow-style: none;  /* IE and Edge */
+                scrollbar-width: none;  /* Firefox */
+              }
             `}
           </style>
 
