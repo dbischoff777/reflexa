@@ -284,7 +284,7 @@ const PlayerProfile = () => {
             `}
           >
             <ArrowLeft className="w-5 h-5" />
-            <span>Back to Game</span>
+            <span>Back to Menu</span>
           </Link>
         </div>
   

@@ -162,7 +162,7 @@ const Leaderboard = () => {
           `}
         >
           <ArrowLeftIcon className="w-3 h-3 2xs:w-4 2xs:h-4 xs:w-5 xs:h-5" />
-          Back to Game
+          Back to Menu
         </Link>
 
         {/* Stats Cards */}
