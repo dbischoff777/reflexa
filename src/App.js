@@ -241,7 +241,14 @@ const AppRoutes = () => {
 
   return (
     <Routes location={location} key={location.pathname}>
-      <Route path="/" element={<Navigate to="/game" replace />} />
+      <Route 
+        path="/" 
+        element={
+          <AnimatedPage>
+            <PopItGame gameState={gameState} setGameState={setGameState} />
+          </AnimatedPage>
+        } 
+      />
       <Route 
         path="/game" 
         element={
@@ -262,7 +269,7 @@ const AppRoutes = () => {
         path="/levels" 
         element={
           <AnimatedPage>
-            <LevelSelect />
+            <LevelSelect gameState={gameState} setGameState={setGameState} />
           </AnimatedPage>
         } 
       />
@@ -286,7 +293,7 @@ const AppRoutes = () => {
         path="/profile" 
         element={
           <AnimatedPage>
-            <PlayerProfile />
+            <PlayerProfile gameState={gameState} setGameState={setGameState} />
           </AnimatedPage>
         } 
       />
@@ -310,6 +317,7 @@ function App() {
   const [assetsLoaded, setAssetsLoaded] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [loadingMessage, setLoadingMessage] = useState('');
+  const [gameState, setGameState] = useState(GAME_STATES.MENU);
 
   useEffect(() => {
     const loadGameAssets = async () => {
@@ -344,21 +352,25 @@ function App() {
   if (showSplash && !localStorage.getItem('hasVisited')) {
     return (
       <SettingsProvider>
-        <MobileOptimizer />
-        <PlayerProvider>
-          <SplashScreenWrapper 
-            onComplete={handleSplashComplete} 
-            loadingProgress={loadingProgress}
-            loadingMessage={loadingMessage}
-          />
-        </PlayerProvider>
+        <GameStateContext.Provider value={{ gameState, setGameState }}>
+          <MobileOptimizer />
+          <PlayerProvider>
+            <SplashScreenWrapper 
+              onComplete={handleSplashComplete} 
+              loadingProgress={loadingProgress}
+              loadingMessage={loadingMessage}
+            />
+          </PlayerProvider>
+        </GameStateContext.Provider>
       </SettingsProvider>
     );
   }
 
   return (
     <SettingsProvider>
-      <AppContent />
+      <GameStateContext.Provider value={{ gameState, setGameState }}>
+        <AppContent />
+      </GameStateContext.Provider>
     </SettingsProvider>
   );
 }
@@ -367,7 +379,16 @@ function App() {
 function AppContent() {
   const { settings } = useSettings();
   const location = useLocation();
-  const [gameState, setGameState] = useState(GAME_STATES.MENU);
+  const { gameState, setGameState } = useContext(GameStateContext);
+  
+  // Add effect to save state changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('gameState', JSON.stringify(gameState));
+    } catch (error) {
+      console.error('Failed to save game state:', error);
+    }
+  }, [gameState]);
   
   // Debug log to check state changes
   useEffect(() => {
@@ -394,11 +415,11 @@ function AppContent() {
           </PlayerProvider>
           <div className={`
             transition-opacity duration-300
-            ${(gameState !== GAME_STATES.MENU && location.pathname === '/game') 
+            ${(gameState !== GAME_STATES.MENU && location.pathname === '/') 
               ? 'opacity-0 pointer-events-none' 
               : 'opacity-100'
             }`}>
-            <NavigationBar gameState={gameState} />
+            <NavigationBar gameState={gameState} setGameState={setGameState}/>
           </div>
         </div>
       </div>

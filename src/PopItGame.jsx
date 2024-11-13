@@ -224,19 +224,16 @@ const PopItGame = ({ gameState, setGameState }) => {
 
   return (
     <>
-      {game.gameState === GAME_STATES.LEVELSELECT ? (
+      {gameState === GAME_STATES.LEVELSELECT ? (
         <LevelSelect
           key="level-select"
           currentLevel={game.currentLevel || 1}
           maxLevel={game.maxLevel || 1}
+          gameState={gameState}
+          setGameState={setGameState}
           onLevelSelect={(level) => {
             if (typeof game.handleLevelSelect === 'function') {
               game.handleLevelSelect(level);
-            }
-          }}
-          onBack={() => {
-            if (typeof game.setGameState === 'function') {
-              game.setGameState(GAME_STATES.MENU);
             }
           }}
         />

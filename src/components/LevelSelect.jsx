@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useSettings } from '../Settings';
 import { useNavigate } from 'react-router-dom';
+import { GAME_STATES } from '../PopItGame';
 
 // Helper function to get level data (move this to a game state manager in a real app)
 const getLevelData = (level) => {
@@ -146,7 +147,13 @@ const getLevelProgress = (level) => {
   };
 };
 
-const LevelSelect = ({ currentLevel = 1, maxLevel = 20, onLevelSelect }) => {
+const LevelSelect = ({ 
+  currentLevel = 1, 
+  maxLevel = 20, 
+  onLevelSelect, 
+  gameState, 
+  setGameState 
+}) => {
   const svgRef = useRef(null);
   const { settings } = useSettings();
   const navigate = useNavigate();
@@ -268,11 +275,12 @@ const LevelSelect = ({ currentLevel = 1, maxLevel = 20, onLevelSelect }) => {
         group.appendChild(circle);
         group.appendChild(text);
         
-        // Add animations
+        // Fix the keyPoints calculation
+        const keyPointValue = levels.length > 1 ? index / (levels.length - 1) : 0;
         const animateMotion = document.createElementNS("http://www.w3.org/2000/svg", "animateMotion");
         animateMotion.setAttribute('dur', `${0.5 + index * 0.1}s`);
         animateMotion.setAttribute('fill', 'freeze');
-        animateMotion.setAttribute('keyPoints', `0;${index / (levels.length - 1)}`);
+        animateMotion.setAttribute('keyPoints', `0;${keyPointValue}`);
         animateMotion.setAttribute('keyTimes', '0;1');
         animateMotion.setAttribute('calcMode', 'linear');
         
@@ -311,6 +319,14 @@ const LevelSelect = ({ currentLevel = 1, maxLevel = 20, onLevelSelect }) => {
     return path;
   };
 
+  const handleBackClick = () => {
+    // Handle state update and navigation directly
+    if (typeof setGameState === 'function') {
+      setGameState(GAME_STATES.MENU);
+    }
+    navigate('/');
+  };
+
   return (
     <div className="fixed inset-0 z-[5] overflow-auto scrollbar-hide">
       <div className={`flex flex-col items-center p-2 xs:p-4 sm:p-8 min-h-full
@@ -319,7 +335,7 @@ const LevelSelect = ({ currentLevel = 1, maxLevel = 20, onLevelSelect }) => {
           : 'bg-gradient-to-b from-gray-100 to-gray-200'}`}
       >
         <button
-          onClick={() => navigate('/')}
+          onClick={handleBackClick}
           className={`fixed top-2 xs:top-4 left-2 xs:left-4 sm:left-8 
                      px-2 py-1 xs:px-3 xs:py-1 sm:px-4 sm:py-2 
                      rounded-lg transition-all duration-300
