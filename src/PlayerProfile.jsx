@@ -133,7 +133,7 @@ const AchievementCard = ({ achievement, progress, unlocked, theme }) => (
 );
 
 const PlayerProfile = () => {
-  const { playerData } = usePlayer();
+  const { playerData, updatePlayerStats } = usePlayer();
   const { settings } = useSettings();
   const [stats, setStats] = useState(() => getPlayerStats());
   const [achievementProgress, setAchievementProgress] = useState({});
@@ -233,8 +233,7 @@ const PlayerProfile = () => {
   };
 
   const handleAvatarChange = (newAvatar) => {
-    setPlayerAvatar(newAvatar);
-    localStorage.setItem('playerAvatar', newAvatar);
+    updatePlayerStats({ ...playerData, avatar: newAvatar });
     setIsAvatarSelectorOpen(false);
   };
 

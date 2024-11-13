@@ -1,9 +1,149 @@
 import React, { useEffect, useRef } from 'react';
 import { useSettings } from '../Settings';
 
+// Helper function to get level data (move this to a game state manager in a real app)
+const getLevelData = (level) => {
+  // Simulated level data - replace with actual game data storage
+  const mockData = {
+    bestScore: Math.floor(Math.random() * 10000),
+    bestTime: Math.floor(Math.random() * 300), // in seconds
+    attempts: Math.floor(Math.random() * 10),
+    completed: true,
+  };
+  return mockData;
+};
+
+// Calculate stars based on actual metrics
+const getLevelStars = (level) => {
+  const { bestScore, bestTime } = getLevelData(level);
+  
+  // Example scoring criteria (adjust based on your game)
+  if (bestScore > 8000 && bestTime < 120) return 3;
+  if (bestScore > 5000 && bestTime < 180) return 2;
+  if (bestScore > 3000) return 1;
+  return 0;
+};
+
+// Determine difficulty using game mechanics
+const getDifficulty = (level) => {
+  // Example difficulty progression
+  if (level <= 5) return { type: 'easy', color: '#4ade80' }; // green
+  if (level <= 10) return { type: 'medium', color: '#fbbf24' }; // yellow
+  if (level <= 15) return { type: 'hard', color: '#ef4444' }; // red
+  return { type: 'expert', color: '#8b5cf6' }; // purple
+};
+
+// Format time for display
+const formatTime = (seconds) => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
+
+// Add this to your style section
+const additionalStyles = `
+  .level-tooltip {
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    width: 200px;
+    height: 120px;
+    transform: translate(-50%, -140%);
+  }
+  
+  .tooltip-content {
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(4px);
+    padding: 12px;
+    border-radius: 8px;
+    color: white;
+    font-size: 14px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .tooltip-content h3 {
+    margin: 0 0 8px 0;
+    color: #f3f4f6;
+    font-size: 16px;
+    font-weight: bold;
+  }
+  
+  .tooltip-content p {
+    margin: 4px 0;
+    color: #d1d5db;
+  }
+  
+  .tooltip-stats {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .star {
+    fill: none;
+    stroke: #fbbf24;
+    stroke-width: 2;
+    transition: fill 0.3s;
+  }
+  
+  .star.earned {
+    fill: #fbbf24;
+  }
+  
+  .difficulty-indicator {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+`;
+
+// Add these helper functions at the top
+const getLevelRequirements = (level) => {
+  return {
+    scoreTarget: 5000 + (level - 1) * 1000,
+    timeLimit: Math.max(60 - (level - 1) * 2, 30),
+    minMultiplier: Math.min(1 + Math.floor((level - 1) / 5), 5)
+  };
+};
+
+const getLevelProgress = (level) => {
+  const savedProgress = JSON.parse(localStorage.getItem('levelProgress') || '{}');
+  return savedProgress[level] || {
+    highScore: 0,
+    bestTime: null,
+    attempts: 0,
+    stars: 0
+  };
+};
+
 const LevelSelect = ({ currentLevel, maxLevel, onLevelSelect, onBack }) => {
   const svgRef = useRef(null);
   const { settings } = useSettings();
+
+  // Add handler for first level selection
+  const handleLevelSelect = (level) => {
+    if (level === 1) {
+      // Check if username exists
+      const username = localStorage.getItem('username');
+      if (!username) {
+        // Prompt for username if not set
+        const newUsername = prompt('Please enter your username to start:');
+        if (newUsername?.trim()) {
+          localStorage.setItem('username', newUsername.trim());
+          onLevelSelect(level);
+        }
+      } else {
+        onLevelSelect(level);
+      }
+    } else {
+      onLevelSelect(level);
+    }
+  };
 
   useEffect(() => {
     // Add class when component mounts
@@ -24,37 +164,71 @@ const LevelSelect = ({ currentLevel, maxLevel, onLevelSelect, onBack }) => {
       
       levels.forEach((level, index) => {
         const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        const requirements = getLevelRequirements(level);
+        const progress = getLevelProgress(level);
+        const difficulty = getDifficulty(level);
+        
+        // Create tooltip with level info
+        const tooltip = document.createElementNS("http://www.w3.org/2000/svg", "foreignObject");
+        tooltip.setAttribute('class', 'level-tooltip');
+        tooltip.innerHTML = `
+          <div class="tooltip-content">
+            <h3>Level ${level}</h3>
+            <div class="tooltip-stats">
+              <div>
+                <p>Target Score: ${requirements.scoreTarget.toLocaleString()}</p>
+                <p>Time Limit: ${requirements.timeLimit}s</p>
+                <p>Min Multiplier: ${requirements.minMultiplier}x</p>
+              </div>
+              ${progress.attempts > 0 ? `
+                <div class="progress-stats">
+                  <p>Best Score: ${progress.highScore.toLocaleString()}</p>
+                  <p>Best Time: ${progress.bestTime ? formatTime(progress.bestTime) : 'N/A'}</p>
+                  <p>Attempts: ${progress.attempts}</p>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `;
+        
+        // Update click handler to use new function
+        group.onclick = () => {
+          if (level <= currentLevel) {
+            handleLevelSelect(level);
+          }
+        };
+        
+        // Create main level circle
         const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        const glow = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        
-        // Add glow effect for completed levels
-        if (level <= currentLevel) {
-          glow.setAttribute('r', '25');
-          glow.setAttribute('class', 'glow');
-          group.appendChild(glow);
-        }
-        
         circle.setAttribute('r', '20');
         circle.setAttribute(level <= currentLevel ? 'done' : 'todo', '');
+        circle.style.stroke = difficulty.color;
+        circle.style.strokeWidth = '2';
         
+        // Add level number
+        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
         text.textContent = level;
         text.setAttribute('text-anchor', 'middle');
         text.setAttribute('alignment-baseline', 'middle');
         
+        // Add stars for completed levels
+        if (level < currentLevel) {
+          for (let i = 0; i < 3; i++) {
+            const star = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            star.setAttribute('class', `star ${i < getLevelStars(level) ? 'earned' : ''}`);
+            star.setAttribute('d', 'M0,-5 L2,-2 L5,-1 L2,1 L3,5 L0,3 L-3,5 L-2,1 L-5,-1 L-2,-2 Z');
+            star.setAttribute('transform', `translate(${(i-1)*15}, 25)`);
+            group.appendChild(star);
+          }
+        }
+        
+        // Add all elements to group
         group.appendChild(circle);
         group.appendChild(text);
         
-        // Add progress indicator for current level
-        if (level === currentLevel) {
-          const progressRing = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-          progressRing.setAttribute('r', '23');
-          progressRing.setAttribute('class', 'progress-ring');
-          group.appendChild(progressRing);
-        }
-        
+        // Add animations
         const animateMotion = document.createElementNS("http://www.w3.org/2000/svg", "animateMotion");
-        animateMotion.setAttribute('dur', `${0.5 + index * 0.1}s`); // Staggered animation
+        animateMotion.setAttribute('dur', `${0.5 + index * 0.1}s`);
         animateMotion.setAttribute('fill', 'freeze');
         animateMotion.setAttribute('keyPoints', `0;${index / (levels.length - 1)}`);
         animateMotion.setAttribute('keyTimes', '0;1');
@@ -65,15 +239,6 @@ const LevelSelect = ({ currentLevel, maxLevel, onLevelSelect, onBack }) => {
         
         animateMotion.appendChild(mpath);
         group.appendChild(animateMotion);
-        
-        // Add hover and click effects
-        group.onclick = () => {
-          if (level <= currentLevel) {
-            group.classList.add('click');
-            setTimeout(() => group.classList.remove('click'), 200);
-            onLevelSelect(level);
-          }
-        };
         
         svg.appendChild(group);
       });
@@ -99,6 +264,12 @@ const LevelSelect = ({ currentLevel, maxLevel, onLevelSelect, onBack }) => {
       for (let j = 1; j < basePath.length; j++) {
         fullPath.push(basePath[j]);
       }
+    }
+    
+    // Add optional paths
+    if (levelCount > 10) {
+      fullPath.push('M300 400 C350 450, 400 500, 450 500'); // Branch right
+      fullPath.push('M300 400 C250 450, 200 500, 150 500'); // Branch left
     }
     
     return fullPath.join(' ');
@@ -219,6 +390,34 @@ const LevelSelect = ({ currentLevel, maxLevel, onLevelSelect, onBack }) => {
                   stroke-dashoffset: -1000;
                 }
               }
+              .level-tooltip {
+                opacity: 0;
+                transition: opacity 0.3s;
+                pointer-events: none;
+              }
+              .level-tooltip .tooltip-content {
+                background: rgba(0,0,0,0.8);
+                padding: 8px;
+                border-radius: 4px;
+                color: white;
+              }
+              g:hover .level-tooltip {
+                opacity: 1;
+              }
+              .explosion {
+                r: 0;
+                fill: none;
+                stroke: gold;
+                stroke-width: 2;
+                animation: explode 0.5s ease-out forwards;
+              }
+              @keyframes explode {
+                0% { r: 20; opacity: 1; }
+                100% { r: 50; opacity: 0; }
+              }
+              [data-difficulty='easy'] { border: 2px solid green; }
+              [data-difficulty='medium'] { border: 2px solid yellow; }
+              [data-difficulty='hard'] { border: 2px solid red; }
             `}
           </style>
 

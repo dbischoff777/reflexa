@@ -1,49 +1,58 @@
 // PlayerContext.jsx
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+
+const DEFAULT_PLAYER_DATA = {
+  username: 'Player',
+  avatar: 'default',
+  coins: 0,
+  stats: {
+    totalGames: 0,
+    highScore: 0,
+    averageScore: 0,
+    totalPlayTime: 0,
+    averageAccuracy: 0,
+    bestStreak: 0,
+    averageReactionTime: 0
+  },
+  gameHistory: []
+};
 
 const PlayerContext = createContext();
-
-export const usePlayer = () => useContext(PlayerContext);
 
 export const PlayerProvider = ({ children }) => {
   const [playerData, setPlayerData] = useState(() => {
     const savedData = localStorage.getItem('playerData');
-    return savedData ? JSON.parse(savedData) : {
-      coins: 0,
-      dailyGamesPlayed: 0,
-      weeklyGamesPlayed: 0,
-      dailyHighScore: 0,
-      weeklyHighScore: 0,
-      dailyHighestMultiplier: 0,
-      weeklyHighestMultiplier: 0,
-      totalGamesPlayed: 0,
-      totalScore: 0,
-      bestScore: 0,
-      bestMultiplier: 0,
-      totalGameTime: 0,
-      averageScore: 0,
-      averageMultiplier: 0,
-    };
+    return savedData ? 
+      { ...DEFAULT_PLAYER_DATA, ...JSON.parse(savedData) } : 
+      DEFAULT_PLAYER_DATA;
   });
 
-  const updatePlayerData = (newData) => {
-    setPlayerData(prevData => {
-      const updatedData = { ...prevData, ...newData };
-      localStorage.setItem('playerData', JSON.stringify(updatedData));
-      return updatedData;
-    });
-  };
+  useEffect(() => {
+    localStorage.setItem('playerData', JSON.stringify(playerData));
+  }, [playerData]);
 
-  const addCoins = (amount) => {
+  const updatePlayerStats = (newStats) => {
     setPlayerData(prevData => ({
       ...prevData,
-      coins: prevData.coins + amount
+      ...newStats,
+      stats: {
+        ...prevData.stats,
+        ...newStats.stats
+      }
     }));
   };
 
   return (
-    <PlayerContext.Provider value={{ playerData, updatePlayerData, addCoins }}>
+    <PlayerContext.Provider value={{ playerData, updatePlayerStats }}>
       {children}
     </PlayerContext.Provider>
   );
+};
+
+export const usePlayer = () => {
+  const context = useContext(PlayerContext);
+  if (!context) {
+    throw new Error('usePlayer must be used within a PlayerProvider');
+  }
+  return context;
 };

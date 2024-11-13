@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import livesIcon from './assets/images/lives.png';
 import frenchieIcon from './assets/images/frenchie.png';
 import scoreIcon from './assets/images/score.png';
@@ -43,6 +43,7 @@ const GameContent = ({
 }) => {
   const { hasCompletedTutorial, startTutorial } = useTutorial();
   const { updateSettings } = useSettings();
+  const navigate = useNavigate();
   
   //quest buttons
   const [showDailyQuests, setShowDailyQuests] = useState(false);
@@ -50,10 +51,6 @@ const GameContent = ({
 
   const handleMusicToggle = () => {
     onMusicToggle();
-  };
-
-  const handleSoundToggle = () => {
-    updateSettings({ soundEnabled: !settings.soundEnabled });
   };
 
   const handleUsernameSubmit = (e) => {
@@ -1221,7 +1218,9 @@ const GameContent = ({
 
                   {/* Add Level Select Button */}
                   <button
-                    onClick={() => setGameState(GAME_STATES.LEVELSELECT)}
+                    onClick={() => {
+                      setGameState(GAME_STATES.LEVELSELECT);
+                    }}
                     className={`
                       w-full max-w-[280px] py-3 xs:py-3.5 px-4 xs:px-6 
                       rounded-xl

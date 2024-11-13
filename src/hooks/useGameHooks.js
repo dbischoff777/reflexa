@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useSettings } from '../Settings';
 import { usePlayer } from '../utils/PlayerContext';
 import soundManager from '../sounds/sound';
@@ -12,6 +12,7 @@ import {
   FAILURES_BEFORE_ANIMATION_CHANGE,
 } from '../constants/animations';
 import { GAME_STATES } from '../PopItGame';
+import { LevelProgressManager } from '../services/LevelProgressManager';
 
 // Add safety checks for animation constants
 const getDefaultAnimations = () => {
@@ -65,7 +66,7 @@ export const useGameHooks = (gameState, setGameState) => {
 
   // Game mechanics
   const [multiplier, setMultiplier] = useState(1);
-  const [lives, setLives] = useState(5);
+  const [lives, setLives] = useState(9);
   const [targetButton, setTargetButton] = useState(null);
   const [gridShake, setGridShake] = useState(false);
   const [flashRed, setFlashRed] = useState(false);
@@ -117,14 +118,9 @@ export const useGameHooks = (gameState, setGameState) => {
   const [maxMultiplier, setMaxMultiplier] = useState(1);
 
   // Level states
-  const [currentLevel, setCurrentLevel] = useState(1);
-  const [maxLevel, setMaxLevel] = useState(() => {
-    const saved = localStorage.getItem('maxLevel');
-    return saved ? parseInt(saved) : 1;
-  });
-
-  // Add timeLimit state
-  const [timeLimit, setTimeLimit] = useState(60); // Default 60 seconds
+  const [currentLevel, setCurrentLevel] = useState(parseInt(localStorage.getItem('currentLevel')) || 1);
+  const [maxLevel, setMaxLevel] = useState(parseInt(localStorage.getItem('maxLevel')) || 1);
+  const [timeLimit, setTimeLimit] = useState(60);
 
   // Helper functions
   const getAnimationConfig = useCallback((step) => {
@@ -168,37 +164,7 @@ export const useGameHooks = (gameState, setGameState) => {
     }
   }, [isMusicPlaying]);
 
-  // Calculate final stats
-  const calculateFinalStats = useCallback((endTime) => {
-    const duration = Math.floor((endTime - gameStats.startTime) / 1000);
-    const baseExperience = Math.floor(score / 10);
-    const timeBonus = Math.floor(duration / 10);
-    const multiplierBonus = Math.floor(maxMultiplier * 5);
-    const experienceGained = baseExperience + timeBonus + multiplierBonus;
-
-    const combos = gameStats.combos || [];
-    const reactionTimes = gameStats.reactionTimes || [];
-
-    const finalStats = {
-      ...gameStats,
-      score,
-      multiplier: maxMultiplier,
-      maxMultiplier,
-      duration,
-      gameTime,
-      averageCombo: combos.length > 0 ? combos.reduce((a, b) => a + b, 0) / combos.length : 0,
-      avgReactionTime: reactionTimes.length > 0 ? reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length : 0,
-      bestReactionTime: reactionTimes.length > 0 ? Math.min(...reactionTimes) : 0,
-      scorePerMinute: duration > 0 ? (score / (duration / 60)) : 0,
-      lives,
-      maxLives: 9,
-      experienceGained
-    };
-
-    return finalStats;
-  }, [gameStats, score, gameTime, lives, maxMultiplier]);
-
-  // Update functions
+  // Move these functions before calculateFinalStats
   const updateLeaderboard = useCallback((newScore) => {
     const leaderboard = JSON.parse(localStorage.getItem('leaderboard') || '[]');
     const newEntry = {
@@ -228,6 +194,57 @@ export const useGameHooks = (gameState, setGameState) => {
     recentGames.splice(10);
     localStorage.setItem('recentGames', JSON.stringify(recentGames));
   }, []);
+
+  // Now define calculateFinalStats after the update functions
+  const calculateFinalStats = useCallback(() => {
+    const gameEndTime = Date.now();
+    const gameDuration = (gameEndTime - startTime) / 1000;
+    const averageReactionTime = gameStats.reactionTimes.length > 0
+      ? gameStats.reactionTimes.reduce((a, b) => a + b, 0) / gameStats.reactionTimes.length / 1000
+      : 0;
+
+    const finalStats = {
+      score,
+      duration: gameDuration,
+      level: currentLevel,
+      maxMultiplier: maxMultiplier,
+      successfulClicks: gameStats.successfulClicks,
+      missedClicks: gameStats.missedClicks,
+      accuracy: gameStats.totalClicks > 0 
+        ? (gameStats.successfulClicks / gameStats.totalClicks * 100).toFixed(1) 
+        : 0,
+      averageReactionTime: averageReactionTime.toFixed(3),
+      longestStreak: gameStats.longestStreak,
+      timestamp: new Date().toISOString(),
+    };
+
+    // Save to local storage
+    const savedStats = JSON.parse(localStorage.getItem('gameHistory') || '[]');
+    savedStats.unshift(finalStats);
+    localStorage.setItem('gameHistory', JSON.stringify(savedStats.slice(0, 50)));
+
+    // Update leaderboard and recent games
+    updateLeaderboard(finalStats.score);
+    updateRecentGames(finalStats);
+
+    // Update level progress
+    LevelProgressManager.updateProgress(currentLevel, {
+      score: finalStats.score,
+      time: finalStats.duration,
+      accuracy: finalStats.accuracy,
+      multiplier: finalStats.maxMultiplier
+    });
+
+    return finalStats;
+  }, [
+    score,
+    startTime,
+    currentLevel,
+    maxMultiplier,
+    gameStats,
+    updateLeaderboard,
+    updateRecentGames
+  ]);
 
   // Message generators
   const getMascotMessage = useCallback((combos) => {
@@ -408,84 +425,73 @@ export const useGameHooks = (gameState, setGameState) => {
     return getRandomMessage(failureMessages);
   }, [consecutiveFailures]); // Add consecutiveFailures as dependency
 
-  // Game control functions
-  const handleGameOver = useCallback(() => {
-    const endTime = Date.now();
-    const finalStats = calculateFinalStats(endTime);
-
-    updatePlayerData({
-      dailyGamesPlayed: (playerData.dailyGamesPlayed || 0) + 1,
-      weeklyGamesPlayed: (playerData.weeklyGamesPlayed || 0) + 1,
-      dailyHighScore: Math.max(playerData.dailyHighScore || 0, finalStats.score),
-      weeklyHighScore: Math.max(playerData.weeklyHighScore || 0, finalStats.score),
-      dailyHighestMultiplier: Math.max(playerData.dailyHighestMultiplier || 0, finalStats.maxMultiplier),
-      weeklyHighestMultiplier: Math.max(playerData.weeklyHighestMultiplier || 0, finalStats.maxMultiplier),
-      totalGamesPlayed: (playerData.totalGamesPlayed || 0) + 1,
-      totalScore: (playerData.totalScore || 0) + finalStats.score,
-      bestScore: Math.max(playerData.bestScore || 0, finalStats.score),
-      bestMultiplier: Math.max(playerData.bestMultiplier || 0, finalStats.maxMultiplier),
-      totalGameTime: (playerData.totalGameTime || 0) + finalStats.duration,
-      averageScore: ((playerData.averageScore || 0) * (playerData.totalGamesPlayed || 0) + finalStats.score) / ((playerData.totalGamesPlayed || 0) + 1),
-      averageMultiplier: ((playerData.averageMultiplier || 0) * (playerData.totalGamesPlayed || 0) + finalStats.maxMultiplier) / ((playerData.totalGamesPlayed || 0) + 1),
-    });
-
-    const gameUIStats = {
-      score: score,
-      highScore: Math.max(score, finalStats.highScore || 0),
-      lives: lives,
-      multiplier: multiplier,
-      longestStreak: gameStats.longestStreak || 0
-    };
-    
-    setGameStats(gameUIStats);
-    updatePlayerStats(finalStats);
-    updateLeaderboard(finalStats.score);
-    updateRecentGames(finalStats);
-
-    const currentProgress = JSON.parse(localStorage.getItem('achievementProgress') || '{}');
-    const updatedProgress = {
-      ...currentProgress,
-      totalScore: (currentProgress.totalScore || 0),
-      highestScore: Math.max(finalStats.score, currentProgress.highestScore || 0),
-      highestMultiplier: Math.max(maxMultiplier, currentProgress.highestMultiplier || 0),
-    };
-    localStorage.setItem('achievementProgress', JSON.stringify(updatedProgress));
-    
-    const unlockedAchievements = checkAchievementsUnlocked(updatedProgress);
-    if (unlockedAchievements.length > 0) {
-      const previouslyUnlocked = new Set(JSON.parse(localStorage.getItem('unlockedAchievements') || '[]'));
-      const newlyUnlocked = unlockedAchievements.filter(id => !previouslyUnlocked.has(id));
-      
-      localStorage.setItem('unlockedAchievements', 
-        JSON.stringify(Array.from(new Set([...previouslyUnlocked, ...unlockedAchievements])))
-      );
-      
-      if (newlyUnlocked.length > 0) {
-        const achievementDetails = Object.values(ACHIEVEMENTS)
-          .flat()
-          .find(achievement => achievement.id === newlyUnlocked[0]);
-          
-        setNewAchievement(achievementDetails);
-      }
+  // Define handleLevelComplete first
+  const handleLevelComplete = useCallback(() => {
+    if (currentLevel === maxLevel) {
+      const newMaxLevel = maxLevel + 1;
+      setMaxLevel(newMaxLevel);
+      localStorage.setItem('maxLevel', newMaxLevel.toString());
     }
     
-    playSound('gameOver');
+    const newLevel = currentLevel + 1;
+    setCurrentLevel(newLevel);
+    localStorage.setItem('currentLevel', newLevel.toString());
+    
+    setMascotMessage(`Level ${currentLevel} Complete! 🎉`);
+  }, [currentLevel, maxLevel]);
+
+  // Handle level selection
+  const handleLevelSelect = useCallback((level) => {
+    if (level <= maxLevel) {
+      setCurrentLevel(level);
+      localStorage.setItem('currentLevel', level.toString());
+      
+      // Adjust game difficulty based on level
+      const baseSpeed = 1;
+      const speedIncrease = 0.1;
+      setGameSpeed(baseSpeed + (level - 1) * speedIncrease);
+      
+      // Adjust time limit based on level
+      const baseTime = 60;
+      const timeDecrease = 2;
+      setTimeLimit(Math.max(baseTime - (level - 1) * timeDecrease, 30));
+      
+      // Start the game
+      setGameState(GAME_STATES.COUNTDOWN);
+      setCountdown(3);
+    }
+  }, [maxLevel, setGameState, setGameSpeed, setCountdown]);
+
+  // Handle game over
+  const handleGameOver = useCallback(() => {
     setGameOver(true);
     setShowGameOver(true);
+    playSound('gameOver');
+    
+    // Calculate final stats
+    const finalStats = calculateFinalStats();
+    setGameStats(finalStats);
+    
+    // Update player context with new game stats
+    updatePlayerStats(finalStats);
+    
+    // Check if level is complete
+    const requirements = LevelProgressManager.getLevelRequirements(currentLevel);
+    if (score > requirements.scoreTarget) {
+      handleLevelComplete();
+    }
+    
     setGameState(GAME_STATES.OVER);
+
   }, [
+    score, 
+    currentLevel, 
+    maxMultiplier, 
+    startTime, 
+    handleLevelComplete,
     calculateFinalStats,
-    updatePlayerStats,
-    updateLeaderboard,
-    updateRecentGames,
     playSound,
-    score,
-    gameStats,
-    lives,
-    multiplier,
-    maxMultiplier,
-    updatePlayerData,
-    playerData
+    updatePlayerStats
   ]);
 
   const startGame = useCallback(() => {
@@ -577,167 +583,129 @@ export const useGameHooks = (gameState, setGameState) => {
     setShowGameOver(false);
     setGameState(GAME_STATES.MENU);
     setScore(0);
-    setLives(5);
+    setLives(9);
     setMultiplier(1);
     setGameSpeed(1);
     setParticleEffects([]);
   }, [setGameState]);
 
-  const handleButtonClick = useCallback((index) => {
-    if (gameOver || !gameStarted || gameState !== 'playing') return;
-  
-    const now = Date.now();
+  // Handle button clicks
+  const handleButtonClick = useCallback((buttonIndex) => {
+    if (gameState !== GAME_STATES.PLAYING) return;
+    
+    const currentTime = Date.now();
+    const reactionTime = currentTime - startTime;
+    
     setGameStats(prev => ({
       ...prev,
       totalClicks: prev.totalClicks + 1,
-      lastClickTime: now
+      reactionTimes: [...prev.reactionTimes, reactionTime]
     }));
-    
-    if (navigator.vibrate) {
-      navigator.vibrate(150);
-    }
 
-    if (index === targetButton) {
-      setIsAnimationPlaying(true);
-      soundManager.stop('trySound');
+    if (buttonIndex === targetButton) {
+      // Handle correct click
       playSound('success');
 
-      // Calculate grid position
-      const col = index % settings.gridColumns;
-      const row = settings.gridRows === 1 ? 0 : 
-        settings.gridRows - Math.floor(index / settings.gridColumns) - 1;
+      const pointsEarned = 100 * multiplier;
+      setScore(prev => prev + pointsEarned);
       
-      // Clear the current target immediately
-      setTargetButton(null);
-
-      // Update game step and animations
-      setGameStep(prev => {
-        const nextStep = prev >= 7 ? 4 : prev + 1; // Reset to step 4 after step 7
-        const config = getAnimationConfig(nextStep);
-        const stepIndex = (nextStep - 1) % 3; // 0, 1, or 2 for size selection
-        
-        const newSize = config.sizes[stepIndex];
-        setCurrentSize(newSize);
-        setCurrentDuration(config.duration);
-      
-        // Safely get new animations
-        const newSuccessAnimation = getAnimationForSize(newSize, 'success');
-        const newTryAnimation = getAnimationForSize(newSize, 'try');
-
-        if (newSuccessAnimation) {
-          setCurrentSuccessAnimation(newSuccessAnimation);
-        }
-        if (newTryAnimation) {
-          setCurrentTargetAnimation(newTryAnimation);
-        }
-      
-        return nextStep;
+      // Show success animation
+      setShowAnimation(true);
+      setAnimationPosition({ 
+        x: buttonIndex % settings.gridColumns, 
+        y: Math.floor(buttonIndex / settings.gridColumns) 
       });
 
-      setConsecutiveFailures(0); // Reset consecutive failures on success
+      // Update success animation
+      const randomSuccessAnimation = SUCCESS_ANIMATIONS_BY_SIZE[currentSize];
+      setCurrentSuccessAnimation(
+        randomSuccessAnimation[Math.floor(Math.random() * randomSuccessAnimation.length)]
+      );
 
-      // Randomly select a new success animation
-      const randomAnimation = SUCCESS_ANIMATIONS_BY_SIZE[currentSize];
-      setCurrentSuccessAnimation(randomAnimation[Math.floor(Math.random() * randomAnimation.length)]);
+      setTimeout(() => {
+        setShowAnimation(false);
+        // Update target animation after success animation ends
+        const randomAnimation = TRY_ANIMATIONS_BY_SIZE[currentSize];
+        setCurrentTargetAnimation(
+          randomAnimation[Math.floor(Math.random() * randomAnimation.length)]
+        );
+      }, currentDuration);
 
-      // Set animation position
-      setAnimationPosition({ row, col });
-      setShowAnimation(true);
-
-      // Update score and multiplier
-      const newMultiplier = Math.min(multiplier + 1, 10);
-      const newScore = score + Math.round(200 * multiplier);
-      setScore(newScore);
-      setMultiplier(newMultiplier);
-
-      if (particleEffects.length < maxParticleEffects) {
-        setParticleEffects(prev => [...prev, {
-          id: Date.now(),
-          row: row,
-          col: col
-        }]);
-      }
-  
       setGameStats(prev => ({
         ...prev,
         successfulClicks: prev.successfulClicks + 1,
-        highestCombo: Math.max(prev.highestCombo, newMultiplier),
-        reactionTimes: [...prev.reactionTimes, now - prev.lastClickTime]
+        currentStreak: prev.currentStreak + 1,
+        score: prev.score + pointsEarned
       }));
-      
-      setMascotMessage(getMascotMessage(newMultiplier));
-      
-      // Handle animation end and new target with a delay
-      setTimeout(() => {
-        setShowAnimation(false);
-        if (gameState === 'playing') {
-          setTargetButton(getRandomButton());  // This will trigger a new timeout in the game loop
-          // Add a small delay before playing the sound
-          setTimeout(() => {
-            playSound('trySound');
-          }, 100); // 100ms delay for the sound
-        }
-      }, 2000);
-      setIsAnimationPlaying(false);
+
+      const newStreak = gameStats.currentStreak + 1;
+      if (newStreak > gameStats.longestStreak) {
+        setGameStats(prev => ({ ...prev, longestStreak: newStreak }));
+      }
+
+      if (newStreak % 5 === 0) {
+        setMultiplier(prev => Math.min(prev + 1, 10));
+        setMascotMessage(getMascotMessage(newStreak));
+      }
+
+      setConsecutiveFailures(0);
+      setTargetButton(getRandomButton());
+      playSound('trySound');
 
     } else {
-      playSound('miss')
-      // Update consecutive failures and change animation if needed
-      setConsecutiveFailures(prev => {
-        const newFailures = prev + 1;
-        if (newFailures >= FAILURES_BEFORE_ANIMATION_CHANGE) {
-          // Change the target animation when failures threshold is reached
-          const tryAnims = TRY_ANIMATIONS_BY_SIZE[currentSize];
-          const currentIndex = tryAnims.indexOf(currentTargetAnimation);
-          const nextIndex = (currentIndex + 1) % tryAnims.length;
-          setCurrentTargetAnimation(tryAnims[nextIndex]);
-          return 0; // Reset failures after changing animation
-        }
-        return newFailures;
-      });
-
-      // Handle incorrect
-      setGameStep(1); // Reset to step 1 on failure
-      setCurrentSize('LARGE');
-      setCurrentDuration(ANIMATION_DURATIONS.LONG); 
-      setGridShake(true);
-      setFlashRed(true);
-      setTimeout(() => {
-        setGridShake(false);
-        setFlashRed(false);
-      }, 300);
-      
-      // Reset speed and multiplier on miss
-      setGameSpeed(1);
-      setLives(prev => prev - 1);
-      setMultiplier(1);
-      setMascotMessage(getFailureMessage());
-  
-      if (lives <= 1) {
-        handleGameOver();
-      }
+      // Handle incorrect click
+      handleIncorrectClick();
     }
   }, [
     gameState,
-    gameOver,
-    gameStarted,
-    getFailureMessage,
-    getAnimationConfig,
-    currentSize,
-    currentTargetAnimation,
     targetButton,
+    startTime,
     multiplier,
-    score,
-    lives,
-    handleGameOver,
-    getRandomButton,
-    getMascotMessage,
-    playSound,
-    particleEffects.length,
     settings.gridColumns,
-    settings.gridRows,
+    currentDuration,
+    currentSize,
+    gameStats.currentStreak,
+    gameStats.longestStreak,
+    playSound,
+    getRandomButton,
+    getMascotMessage
   ]);
 
+  // Handle incorrect clicks
+  const handleIncorrectClick = useCallback(() => {
+    playSound('failure');
+    setLives(prev => prev - 1);
+    setMultiplier(1);
+    setGameStats(prev => ({ ...prev, currentStreak: 0 }));
+
+    setConsecutiveFailures(prev => prev + 1);
+    if (consecutiveFailures >= FAILURES_BEFORE_ANIMATION_CHANGE) {
+      if (currentSize === 'SMALL') {
+        setCurrentSize('MEDIUM');
+      } else if (currentSize === 'MEDIUM') {
+        setCurrentSize('LARGE');
+      }
+      setConsecutiveFailures(0);
+    }
+
+    setGridShake(true);
+    setTimeout(() => setGridShake(false), 500);
+    setFlashRed(true);
+    setTimeout(() => setFlashRed(false), 100);
+
+    setMascotMessage(getFailureMessage());
+    setGameStats(prev => ({
+      ...prev,
+      missedClicks: prev.missedClicks + 1
+    }));
+  }, [
+    playSound,
+    consecutiveFailures,
+    currentSize,
+    getFailureMessage
+  ]);
+
+  // Render button
   const renderButton = useCallback((index) => {
     const isTarget = index === targetButton;
     
@@ -763,101 +731,23 @@ export const useGameHooks = (gameState, setGameState) => {
         )}
       </div>
     );
-  }, [targetButton, showAnimation, gameOver, currentTargetAnimation, handleButtonClick]);
+  }, [
+    targetButton,
+    showAnimation,
+    gameOver,
+    currentTargetAnimation,
+    handleButtonClick
+  ]);
 
-  const handleLevelComplete = useCallback(() => {
-    if (currentLevel === maxLevel) {
-      const newMaxLevel = maxLevel + 1;
-      setMaxLevel(newMaxLevel);
-      localStorage.setItem('maxLevel', newMaxLevel);
+  // Add animation update effect
+  useEffect(() => {
+    if (targetButton !== null) {
+      const randomAnimation = TRY_ANIMATIONS_BY_SIZE[currentSize];
+      setCurrentTargetAnimation(
+        randomAnimation[Math.floor(Math.random() * randomAnimation.length)]
+      );
     }
-  }, [currentLevel, maxLevel]);
-
-  const handleLevelSelect = useCallback((level) => {
-    // Input validation
-    if (!level || level < 1) {
-      console.warn('Invalid level selected');
-      return;
-    }
-
-    // Ensure level doesn't exceed maxLevel
-    if (level > maxLevel) {
-      console.warn('Selected level exceeds max level');
-      return;
-    }
-
-    // Initialize game stats first
-    const initialGameStats = {
-      score: 0,
-      duration: 0,
-      successfulClicks: 0,
-      missedClicks: 0,
-      totalClicks: 0,
-      longestStreak: 0,
-      currentStreak: 0,
-      highestCombo: 0,
-      combos: [],
-      reactionTimes: [],
-      maxMultiplier: 1,
-      lives: 9,
-      maxLives: 9,
-      startTime: Date.now(),
-      lastClickTime: null,
-      highScore: 0
-    };
-
-    // Safely initialize animations
-    const initialSuccessAnimation = SUCCESS_ANIMATIONS_BY_SIZE.LARGE?.[0] || null;
-    const initialTryAnimation = TRY_ANIMATIONS_BY_SIZE.LARGE?.[0] || null;
-
-    if (!initialSuccessAnimation || !initialTryAnimation) {
-      console.error('Failed to initialize animations');
-      return;
-    }
-
-    // Update states with proper validation
-    setCurrentLevel(level);
-    setGameStarted(true);
-    setGameOver(false);
-    setShowGameOver(false);
-    setGameState(GAME_STATES.COUNTDOWN);
-    
-    // Calculate size (ensure it stays within bounds)
-    const calculatedSize = Math.min(3 + Math.floor(level / 2), 8);
-    setCurrentSize('LARGE'); // Start with LARGE size
-    
-    // Calculate time limit (ensure it stays within bounds)
-    const calculatedTimeLimit = Math.max(60 - (level * 2), 30);
-    setTimeLimit(calculatedTimeLimit);
-
-    // Reset necessary game states
-    setScore(0);
-    setMultiplier(1);
-    setLives(9);
-    setGameSpeed(1);
-    setGameStep(1);
-    setConsecutiveFailures(0);
-    setCountdown(3);
-    
-    // Reset animations to initial state
-    setCurrentSuccessAnimation(initialSuccessAnimation);
-    setCurrentTargetAnimation(initialTryAnimation);
-    
-    // Clear any existing effects or messages
-    setParticleEffects([]);
-    setMascotMessage('');
-    setShowAnimation(false);
-    setGameStats(initialGameStats);
-
-    // Start countdown sound
-    playSound('countdown');
-    
-}, [
-    maxLevel,
-    GAME_STATES.COUNTDOWN,
-    playSound,
-    setGameState
-]);
+  }, [targetButton, currentSize]);
 
   return {
     // Game states

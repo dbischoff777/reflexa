@@ -10,9 +10,9 @@ import tryAnimation4 from '../assets/animations/try/tryMix2.gif';
 
 // Animation durations in milliseconds
 export const ANIMATION_DURATIONS = {
-  LONG: 5000,   // 5 seconds
-  MEDIUM: 4000, // 4 seconds
-  SHORT: 3000   // 3 seconds
+  LONG: 3000,   // 3 seconds
+  MEDIUM: 2000, // 2 seconds
+  SHORT: 1000   // 1 seconds
 };
 
 // Group animations by size
@@ -30,4 +30,4 @@ export const SUCCESS_ANIMATIONS_BY_SIZE = {
 };
 
 // Constants for game logic
-export const FAILURES_BEFORE_ANIMATION_CHANGE = 3;
+export const FAILURES_BEFORE_ANIMATION_CHANGE = 1;
