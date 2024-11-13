@@ -317,7 +317,10 @@ function App() {
   const [assetsLoaded, setAssetsLoaded] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [loadingMessage, setLoadingMessage] = useState('');
-  const [gameState, setGameState] = useState(GAME_STATES.MENU);
+  const [gameState, setGameState] = useState(() => {
+    const savedState = localStorage.getItem('gameState');
+    return savedState ? JSON.parse(savedState) : GAME_STATES.MENU;
+  });
 
   useEffect(() => {
     const loadGameAssets = async () => {

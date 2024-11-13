@@ -678,7 +678,7 @@ export const useGameHooks = (gameState, setGameState) => {
 
   // Handle incorrect clicks
   const handleIncorrectClick = useCallback(() => {
-    playSound('failure');
+    playSound('miss');
     setLives(prev => prev - 1);
     setMultiplier(1);
     setGameStats(prev => ({ ...prev, currentStreak: 0 }));
