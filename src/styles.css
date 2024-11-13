@@ -1,0 +1,16 @@
+@media (orientation: portrait) {
+  .landscape-container {
+    transform: rotate(90deg);
+    transform-origin: left top;
+    width: 100vh;
+    height: 100vw;
+    position: absolute;
+    top: 100%;
+    left: 0;
+  }
+
+  .landscape-content {
+    transform: rotate(-90deg);
+    transform-origin: center center;
+  }
+} 
