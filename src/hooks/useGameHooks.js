@@ -585,6 +585,8 @@ export const useGameHooks = (gameState, setGameState) => {
     setMultiplier(1);
     setGameSpeed(1);
     setParticleEffects([]);
+    setGameStarted(false);
+    setStartTime(null);
   }, [setGameState]);
 
   // Handle button clicks

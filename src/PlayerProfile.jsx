@@ -14,6 +14,8 @@ import { getAvatarImage } from './constants/avatars';
 import AvatarSelector from './components/avatar/AvatarSelector';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayer } from './utils/PlayerContext';
+import { useGameHooks } from './hooks/useGameHooks';
+import { GAME_STATES } from './PopItGame';
 
 const StatCard = ({ icon, label, value, theme }) => (
   <div className={`p-4 rounded-lg ${
@@ -133,6 +135,9 @@ const AchievementCard = ({ achievement, progress, unlocked, theme }) => (
 );
 
 const PlayerProfile = () => {
+  const [gameState, setGameState] = useState(GAME_STATES.MENU);
+  
+  const { handleExit } = useGameHooks(gameState, setGameState);
   const { playerData, updatePlayerStats } = usePlayer();
   const { settings } = useSettings();
   const [stats, setStats] = useState(() => getPlayerStats());
@@ -274,6 +279,10 @@ const PlayerProfile = () => {
         <div className="mb-4 xs:mb-6">
           <Link 
             to="/" 
+            onClick={() => {
+              updatePlayerStats({ ...playerData, gameState: 'menu' });
+              handleExit();
+            }}
             className={`
               inline-flex items-center 
               min-h-[44px]

@@ -915,6 +915,7 @@ const GameContent = ({
                       
                       <Link
                         to="/profile"
+                        onClick={() => setGameState(GAME_STATES.MENU)}
                         className={`
                           w-full px-4 xs:px-6 py-2 xs:py-3 
                           rounded-xl 
