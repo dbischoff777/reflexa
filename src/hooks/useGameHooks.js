@@ -439,26 +439,31 @@ export const useGameHooks = (gameState, setGameState) => {
   }, [currentLevel, maxLevel]);
 
   // Handle level selection
-  const handleLevelSelect = useCallback((level) => {
-    if (level <= maxLevel) {
-      setCurrentLevel(level);
-      localStorage.setItem('currentLevel', level.toString());
-      
-      // Adjust game difficulty based on level
-      const baseSpeed = 1;
-      const speedIncrease = 0.1;
-      setGameSpeed(baseSpeed + (level - 1) * speedIncrease);
-      
-      // Adjust time limit based on level
-      const baseTime = 60;
-      const timeDecrease = 2;
-      setTimeLimit(Math.max(baseTime - (level - 1) * timeDecrease, 30));
-      
-      // Start the game
-      setGameState(GAME_STATES.COUNTDOWN);
-      setCountdown(3);
-    }
-  }, [maxLevel, setGameState, setGameSpeed, setCountdown]);
+  const handleLevelSelect = useCallback(
+    (level) => {
+      if (level <= maxLevel) {
+        setCurrentLevel(level);
+        localStorage.setItem('currentLevel', level.toString());
+
+        // Adjust game difficulty based on level
+        const baseSpeed = 1;
+        const speedIncrease = 0.1;
+        setGameSpeed(baseSpeed + (level - 1) * speedIncrease);
+
+        // Adjust time limit based on level
+        const baseTime = 60;
+        const timeDecrease = 2;
+        setTimeLimit(Math.max(baseTime - (level - 1) * timeDecrease, 30));
+
+        // Start the game
+        setGameState(GAME_STATES.COUNTDOWN);
+        setCountdown(3);
+      } else {
+        console.warn(`Level ${level} is locked.`);
+      }
+    },
+    [maxLevel, setGameSpeed, setGameState, setCountdown]
+  );
 
   // Handle game over
   const handleGameOver = useCallback(() => {

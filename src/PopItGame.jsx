@@ -22,7 +22,11 @@ const PopItGame = ({ gameState, setGameState }) => {
   const { settings } = useSettings();
   const { playerAvatar, setPlayerAvatar } = useAvatar();
   const game = useGameHooks(gameState, setGameState);
-
+  const [currentLevel, setCurrentLevel] = useState(1);
+  const [maxLevel, setMaxLevel] = useState(() => {
+    const saved = localStorage.getItem('maxLevel');
+    return saved ? parseInt(saved) : 1;
+  });
   // Initialize screen protection
   useEffect(() => {
     let wakeLock = null;
@@ -142,6 +146,23 @@ const PopItGame = ({ gameState, setGameState }) => {
     }
   }, [game.targetButton, game.currentSize]);
 
+  const handleLevelComplete = () => {
+    if (currentLevel === maxLevel) {
+      const newMaxLevel = maxLevel + 1;
+      setMaxLevel(newMaxLevel);
+      localStorage.setItem('maxLevel', newMaxLevel);
+    }
+    // You might want to show a level complete screen here
+  };
+
+  const handleLevelSelect = (level) => {
+    setCurrentLevel(level);
+    game.setGameState(GAME_STATES.COUNTDOWN);
+    // Configure game difficulty based on level
+    game.setCurrentSize(Math.min(3 + Math.floor(level / 2), 8)); // Example: increase grid size with level
+    game.setTimeLimit(Math.max(60 - (level * 2), 30)); // Example: decrease time limit with level
+  };
+  
   // PopEffect component
   const PopEffect = ({ row, col, theme, gridRows, gridColumns, onComplete }) => {
     const particleColors = [
@@ -223,19 +244,14 @@ const PopItGame = ({ gameState, setGameState }) => {
   };
 
   return (
-    <>
+    <div>
       {gameState === GAME_STATES.LEVELSELECT ? (
         <LevelSelect
-          key="level-select"
-          currentLevel={game.currentLevel || 1}
-          maxLevel={game.maxLevel || 1}
+          currentLevel={currentLevel}
+          maxLevel={maxLevel}
+          onLevelSelect={handleLevelSelect}
           gameState={gameState}
           setGameState={setGameState}
-          onLevelSelect={(level) => {
-            if (typeof game.handleLevelSelect === 'function') {
-              game.handleLevelSelect(level);
-            }
-          }}
         />
       ) : (
         <PopItGameUI
@@ -278,11 +294,11 @@ const PopItGame = ({ gameState, setGameState }) => {
           stopMusic={() => MusicGenerator.pause()}
           isMusicPlaying={game.isMusicPlaying}
           onMusicToggle={game.toggleMusic}
-          currentLevel={game.currentLevel}
-          maxLevel={game.maxLevel}
+          currentLevel={currentLevel}
+          maxLevel={maxLevel}
         />
       )}
-    </>
+    </div>
   );
 };
 

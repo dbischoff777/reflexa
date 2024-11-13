@@ -33,92 +33,6 @@ const formatTime = (seconds) => {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
-// Add this to your style section
-const additionalStyles = `
-  .level-tooltip {
-    opacity: 0;
-    transition: opacity 0.3s;
-    pointer-events: none;
-    width: 200px;
-    height: 120px;
-    transform: translate(-50%, -140%);
-  }
-  
-  .tooltip-content {
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(4px);
-    padding: 12px;
-    border-radius: 8px;
-    color: white;
-    font-size: 14px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
-  
-  .tooltip-content h3 {
-    margin: 0 0 8px 0;
-    color: #f3f4f6;
-    font-size: 16px;
-    font-weight: bold;
-  }
-  
-  .tooltip-content p {
-    margin: 4px 0;
-    color: #d1d5db;
-  }
-  
-  .tooltip-stats {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-  }
-  
-  .star {
-    fill: none;
-    stroke: #fbbf24;
-    stroke-width: 2;
-    transition: fill 0.3s;
-  }
-  
-  .star.earned {
-    fill: #fbbf24;
-  }
-  
-  .difficulty-indicator {
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-  }
-  
-  // Add responsive tooltip styles
-  @media (max-width: 480px) {
-    .level-tooltip {
-      width: 160px;
-      height: 100px;
-      transform: translate(-50%, -130%);
-    }
-    
-    .tooltip-content {
-      padding: 8px;
-      font-size: 12px;
-    }
-    
-    .tooltip-content h3 {
-      font-size: 14px;
-      margin: 0 0 4px 0;
-    }
-    
-    .tooltip-stats {
-      margin-top: 4px;
-      padding-top: 4px;
-    }
-  }
-`;
-
 // Add these helper functions at the top
 const getLevelRequirements = (level) => {
   return {
@@ -148,26 +62,6 @@ const LevelSelect = ({
   const svgRef = useRef(null);
   const { settings } = useSettings();
   const navigate = useNavigate();
-
-  // Add handleLevelSelect function
-  const handleLevelSelect = (level) => {
-    if (level === 1) {
-      // Check if username exists
-      const username = localStorage.getItem('username');
-      if (!username) {
-        // Prompt for username if not set
-        const newUsername = prompt('Please enter your username to start:');
-        if (newUsername?.trim()) {
-          localStorage.setItem('username', newUsername.trim());
-          onLevelSelect(level);
-        }
-      } else {
-        onLevelSelect(level);
-      }
-    } else {
-      onLevelSelect(level);
-    }
-  };
 
   useEffect(() => {
     if (svgRef.current) {
@@ -219,13 +113,6 @@ const LevelSelect = ({
           </div>
         `;
         
-        // Update click handler to use handleLevelSelect
-        group.onclick = () => {
-          if (level <= currentLevel) {
-            handleLevelSelect(level);
-          }
-        };
-        
         // Create main level circle
         const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         circle.setAttribute('r', '20');
@@ -275,7 +162,7 @@ const LevelSelect = ({
         svg.appendChild(group);
       });
     }
-  }, [currentLevel, onLevelSelect, maxLevel, settings?.theme]);
+  }, [currentLevel, onLevelSelect, maxLevel, settings?.theme, setGameState]);
 
   const generatePath = (levelCount) => {
     // Adjust curve size and spacing based on screen width
@@ -307,6 +194,13 @@ const LevelSelect = ({
       setGameState(GAME_STATES.MENU);
     }
     navigate('/');
+  };
+
+  // Add click handler function
+  const handleLevelClick = (level) => {
+    if (typeof onLevelSelect === 'function') {
+      onLevelSelect(level);
+    }
   };
 
   return (
@@ -343,6 +237,16 @@ const LevelSelect = ({
           viewBox={`0 0 400 ${Math.max(800, 200 * Math.ceil(maxLevel / 4))}`}
           className="w-full max-w-[400px] mx-auto"
           style={{ overflow: 'visible' }}
+          onClick={(e) => {
+            // Find the closest level circle and trigger the handler
+            const circle = e.target.closest('circle');
+            if (circle) {
+              const level = parseInt(circle.nextSibling?.textContent);
+              if (!isNaN(level)) {
+                handleLevelClick(level);
+              }
+            }
+          }}
         >
           <defs>
             <linearGradient id="pathGradient" gradientUnits="userSpaceOnUse">
