@@ -20,7 +20,7 @@ const LevelSelect = ({ currentLevel, maxLevel, onLevelSelect, onBack }) => {
       const svg = svgRef.current;
       const path = svg.querySelector('#levelPath');
       
-      const levels = Array.from({ length: 10 }, (_, i) => i + 1);
+      const levels = Array.from({ length: 20 }, (_, i) => i + 1);
       
       levels.forEach((level, index) => {
         const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -78,7 +78,31 @@ const LevelSelect = ({ currentLevel, maxLevel, onLevelSelect, onBack }) => {
         svg.appendChild(group);
       });
     }
-  }, [currentLevel, onLevelSelect]);
+  }, [currentLevel, onLevelSelect, maxLevel]);
+
+  const generatePath = (levelCount) => {
+    const basePath = [
+      'M200 60',  // Starting point
+      'c80 40 120 80 120 120',  // Right curve
+      'c0 80 -240 80 -240 200', // Left curve
+      'c0 80 240 80 240 200',   // Right curve
+      'c0 80 -240 80 -240 200', // Left curve
+      'c0 80 240 80 240 200'    // Right curve
+    ];
+    
+    // Calculate how many complete sets we need
+    const segmentsNeeded = Math.ceil(levelCount / 12); // Each set fits about 12 levels
+    const fullPath = [basePath[0]]; // Start with initial M command
+    
+    for (let i = 0; i < segmentsNeeded; i++) {
+      // Add each segment from the base path (skipping the initial M command)
+      for (let j = 1; j < basePath.length; j++) {
+        fullPath.push(basePath[j]);
+      }
+    }
+    
+    return fullPath.join(' ');
+  };
 
   return (
     <div className="fixed inset-0 z-[5] overflow-auto bg-transparent">
@@ -105,9 +129,9 @@ const LevelSelect = ({ currentLevel, maxLevel, onLevelSelect, onBack }) => {
         {/* SVG content */}
         <svg 
           ref={svgRef} 
-          viewBox="0 0 400 800" 
+          viewBox={`0 0 400 ${Math.max(800, 1000 * Math.ceil(maxLevel / 12))}`}
           className="w-full h-[calc(100vh-8rem-64px)] sm:h-[calc(100vh-12rem-64px)]"
-          style={{ maxHeight: 'calc(100vh - 128px)' }}
+          style={{ maxHeight: 'calc(100vh - 128px)', overflow: 'visible' }}
         >
           <defs>
             {/* Add gradient and filter effects */}
@@ -176,12 +200,7 @@ const LevelSelect = ({ currentLevel, maxLevel, onLevelSelect, onBack }) => {
             stroke="url(#pathGradient)"
             strokeWidth="3" 
             filter="url(#glow)"
-            d="M200 60 
-               c80 40 120 80 120 120
-               c0 40 -240 40 -240 120
-               c0 40 240 40 240 120
-               c0 40 -240 40 -240 120
-               c0 40 240 40 240 120"
+            d={generatePath(maxLevel)}
           />
         </svg>
       </div>
