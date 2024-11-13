@@ -1220,6 +1220,7 @@ const GameContent = ({
                   <button
                     onClick={() => {
                       setGameState(GAME_STATES.LEVELSELECT);
+                      navigate('/levels');
                     }}
                     className={`
                       w-full max-w-[280px] py-3 xs:py-3.5 px-4 xs:px-6 

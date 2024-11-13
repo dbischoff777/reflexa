@@ -1,6 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useSettings } from '../Settings';
-import { usePlayer } from '../utils/PlayerContext';
 import soundManager from '../sounds/sound';
 import MusicGenerator from '../services/MusicGenerator';
 import { updatePlayerStats } from '../utils/playerStats';
@@ -48,7 +47,6 @@ export const useGameHooks = (gameState, setGameState) => {
 
   // Settings and player context
   const { settings } = useSettings();
-  const { playerData, updatePlayerData } = usePlayer();
 
   // Animation states
   const [showAnimation, setShowAnimation] = useState(false);
