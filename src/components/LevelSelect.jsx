@@ -134,22 +134,32 @@ const LevelSelect = ({ currentLevel, maxLevel, onLevelSelect, onBack }) => {
           style={{ maxHeight: 'calc(100vh - 128px)', overflow: 'visible' }}
         >
           <defs>
-            {/* Add gradient and filter effects */}
+            {/* Enhanced gradient with more stops */}
             <linearGradient id="pathGradient" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor={settings.theme === 'dark' ? '#9333EA' : '#8B5CF6'}/>
-              <stop offset="100%" stopColor={settings.theme === 'dark' ? '#7E22CE' : '#7C3AED'}/>
+              <stop offset="0%" stopColor={settings.theme === 'dark' ? '#9333EA' : '#8B5CF6'} />
+              <stop offset="50%" stopColor={settings.theme === 'dark' ? '#7E22CE' : '#7C3AED'} />
+              <stop offset="100%" stopColor={settings.theme === 'dark' ? '#6B21A8' : '#6D28D9'} />
             </linearGradient>
-            <filter id="glow">
-              <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+            
+            {/* Enhanced glow effect */}
+            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+              <feFlood floodColor={settings.theme === 'dark' ? '#9333EA' : '#8B5CF6'} floodOpacity="0.3"/>
+              <feComposite in2="coloredBlur" operator="in"/>
               <feMerge>
-                <feMergeNode in="coloredBlur"/>
+                <feMergeNode/>
                 <feMergeNode in="SourceGraphic"/>
               </feMerge>
             </filter>
           </defs>
+          
           <style>
             {`
-              circle { r: 15; cursor: pointer; transition: transform 0.2s; }
+              circle { 
+                r: 15; 
+                cursor: pointer; 
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+              }
               @media (min-width: 640px) { circle { r: 20; } }
               [done] { 
                 fill: url(#pathGradient);
@@ -157,6 +167,10 @@ const LevelSelect = ({ currentLevel, maxLevel, onLevelSelect, onBack }) => {
               }
               [todo] { 
                 fill: ${settings.theme === 'dark' ? '#4B5563' : '#E9D5FF'};
+                opacity: 0.5;
+                transition: opacity 0.3s;
+              }
+              [todo]:hover {
                 opacity: 0.7;
               }
               text { 
@@ -164,11 +178,12 @@ const LevelSelect = ({ currentLevel, maxLevel, onLevelSelect, onBack }) => {
                 font-weight: bold;
                 pointer-events: none;
                 font-size: 12px;
+                filter: url(#glow);
               }
               @media (min-width: 640px) { text { font-size: 16px; } }
               .glow {
                 fill: ${settings.theme === 'dark' ? 'rgba(147, 51, 234, 0.3)' : 'rgba(139, 92, 246, 0.3)'};
-                animation: pulse 2s infinite;
+                animation: pulse 3s ease-in-out infinite;
               }
               .progress-ring {
                 fill: none;
@@ -176,24 +191,38 @@ const LevelSelect = ({ currentLevel, maxLevel, onLevelSelect, onBack }) => {
                 stroke-width: 2;
                 stroke-dasharray: 145;
                 stroke-dashoffset: 145;
-                animation: progress 2s linear infinite;
+                animation: progress 2s ease-in-out infinite;
+                filter: url(#glow);
               }
               @keyframes pulse {
                 0% { opacity: 0.3; r: 20; }
-                50% { opacity: 0.6; r: 22; }
+                50% { opacity: 0.6; r: 23; }
                 100% { opacity: 0.3; r: 20; }
               }
               @keyframes progress {
-                to { stroke-dashoffset: 0; }
+                0% { stroke-dashoffset: 145; }
+                50% { stroke-dashoffset: 0; }
+                100% { stroke-dashoffset: 145; }
               }
               g:hover circle[done] {
-                transform: scale(1.1);
+                transform: scale(1.15);
               }
               .click circle[done] {
-                transform: scale(0.9);
+                transform: scale(0.85);
+              }
+              #levelPath {
+                stroke-dasharray: 10;
+                animation: pathDash 60s linear infinite;
+              }
+              @keyframes pathDash {
+                to {
+                  stroke-dashoffset: -1000;
+                }
               }
             `}
           </style>
+
+          {/* Path with enhanced styling */}
           <path 
             id="levelPath" 
             fill="none" 
@@ -201,6 +230,10 @@ const LevelSelect = ({ currentLevel, maxLevel, onLevelSelect, onBack }) => {
             strokeWidth="3" 
             filter="url(#glow)"
             d={generatePath(maxLevel)}
+            style={{
+              strokeLinecap: 'round',
+              strokeLinejoin: 'round'
+            }}
           />
         </svg>
       </div>
