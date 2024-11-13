@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useSettings } from '../Settings';
+import { useNavigate } from 'react-router-dom';
 
 // Helper function to get level data (move this to a game state manager in a real app)
 const getLevelData = (level) => {
@@ -145,9 +146,10 @@ const getLevelProgress = (level) => {
   };
 };
 
-const LevelSelect = ({ currentLevel = 1, maxLevel = 30, onLevelSelect, onBack }) => {
+const LevelSelect = ({ currentLevel = 1, maxLevel = 20, onLevelSelect }) => {
   const svgRef = useRef(null);
   const { settings } = useSettings();
+  const navigate = useNavigate();
 
   // Add this useEffect to inject the styles
   useEffect(() => {
@@ -316,9 +318,8 @@ const LevelSelect = ({ currentLevel = 1, maxLevel = 30, onLevelSelect, onBack })
           ? 'bg-gradient-to-b from-purple-800 to-purple-600' 
           : 'bg-gradient-to-b from-gray-100 to-gray-200'}`}
       >
-        {/* Back Button - Updated for better mobile visibility */}
         <button
-          onClick={onBack}
+          onClick={() => navigate('/')}
           className={`fixed top-2 xs:top-4 left-2 xs:left-4 sm:left-8 
                      px-2 py-1 xs:px-3 xs:py-1 sm:px-4 sm:py-2 
                      rounded-lg transition-all duration-300
