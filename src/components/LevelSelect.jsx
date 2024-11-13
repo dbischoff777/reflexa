@@ -26,15 +26,6 @@ const getLevelStars = (level) => {
   return 0;
 };
 
-// Determine difficulty using game mechanics
-const getDifficulty = (level) => {
-  // Example difficulty progression
-  if (level <= 5) return { type: 'easy', color: '#4ade80' }; // green
-  if (level <= 10) return { type: 'medium', color: '#fbbf24' }; // yellow
-  if (level <= 15) return { type: 'hard', color: '#ef4444' }; // red
-  return { type: 'expert', color: '#8b5cf6' }; // purple
-};
-
 // Format time for display
 const formatTime = (seconds) => {
   const mins = Math.floor(seconds / 60);
@@ -158,20 +149,7 @@ const LevelSelect = ({
   const { settings } = useSettings();
   const navigate = useNavigate();
 
-  // Add this useEffect to inject the styles
-  useEffect(() => {
-    // Create style element
-    const styleEl = document.createElement('style');
-    styleEl.innerHTML = additionalStyles;
-    document.head.appendChild(styleEl);
-
-    // Cleanup on unmount
-    return () => {
-      document.head.removeChild(styleEl);
-    };
-  }, []);
-
-  // Add handler for first level selection
+  // Add handleLevelSelect function
   const handleLevelSelect = (level) => {
     if (level === 1) {
       // Check if username exists
@@ -192,16 +170,6 @@ const LevelSelect = ({
   };
 
   useEffect(() => {
-    // Add class when component mounts
-    document.body.classList.add('level-select-open');
-    
-    // Remove class when component unmounts
-    return () => {
-      document.body.classList.remove('level-select-open');
-    };
-  }, []);
-
-  useEffect(() => {
     if (svgRef.current) {
       const svg = svgRef.current;
       const path = svg.querySelector('#levelPath');
@@ -212,7 +180,21 @@ const LevelSelect = ({
         const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
         const requirements = getLevelRequirements(level);
         const progress = getLevelProgress(level);
-        const difficulty = getDifficulty(level);
+        
+        // Get difficulty color based on current theme
+        const difficulty = (() => {
+          if (settings.theme === 'dark') {
+            if (level <= 5) return { type: 'easy', color: '#4ADE80' }; // Bright green
+            if (level <= 10) return { type: 'medium', color: '#FBB224' }; // Bright yellow/orange
+            if (level <= 15) return { type: 'hard', color: '#EF4444' }; // Bright red
+            return { type: 'expert', color: '#B975F9' }; // Bright neon purple
+          } else {
+            if (level <= 5) return { type: 'easy', color: '#22C55E' }; // Softer green
+            if (level <= 10) return { type: 'medium', color: '#F59E0B' }; // Softer orange
+            if (level <= 15) return { type: 'hard', color: '#DC2626' }; // Softer red
+            return { type: 'expert', color: '#7C3AED' }; // Softer purple
+          }
+        })();
         
         // Create tooltip with level info
         const tooltip = document.createElementNS("http://www.w3.org/2000/svg", "foreignObject");
@@ -237,7 +219,7 @@ const LevelSelect = ({
           </div>
         `;
         
-        // Update click handler to use new function
+        // Update click handler to use handleLevelSelect
         group.onclick = () => {
           if (level <= currentLevel) {
             handleLevelSelect(level);
@@ -293,7 +275,7 @@ const LevelSelect = ({
         svg.appendChild(group);
       });
     }
-  }, [currentLevel, onLevelSelect, maxLevel]);
+  }, [currentLevel, onLevelSelect, maxLevel, settings?.theme]);
 
   const generatePath = (levelCount) => {
     // Adjust curve size and spacing based on screen width
@@ -331,19 +313,23 @@ const LevelSelect = ({
     <div className="fixed inset-0 z-[5] overflow-auto scrollbar-hide">
       <div className={`flex flex-col items-center p-2 xs:p-4 sm:p-8 min-h-full
         ${settings.theme === 'dark' 
-          ? 'bg-gradient-to-b from-purple-800 to-purple-600' 
-          : 'bg-gradient-to-b from-gray-100 to-gray-200'}`}
+          ? 'bg-gradient-to-b from-[#1F2937] to-[#111827]' // Dark theme: Navy gradient
+          : 'bg-gradient-to-b from-gray-100 to-gray-200'   // Light theme: Light gray gradient
+        }`}
       >
         <button
           onClick={handleBackClick}
           className={`fixed top-2 xs:top-4 left-2 xs:left-4 sm:left-8 
                      px-2 py-1 xs:px-3 xs:py-1 sm:px-4 sm:py-2 
                      rounded-lg transition-all duration-300
-                     flex items-center gap-1 xs:gap-2 shadow-lg 
+                     flex items-center gap-1 xs:gap-2 
                      text-xs xs:text-sm sm:text-base w-fit
                      ${settings.theme === 'dark'
-                       ? 'bg-purple-700/20 hover:bg-purple-700/30 text-white backdrop-blur-sm'
-                       : 'bg-purple-600 hover:bg-purple-700 text-white'}`}
+                       ? 'bg-[#B975F9] hover:bg-[#9D5CF7] shadow-[0_0_10px_rgba(185,117,249,0.5)]'
+                       : 'bg-[#7C3AED] hover:bg-[#6D28D9] shadow-[0_0_10px_rgba(124,58,237,0.5)]'
+                     }
+                     text-white font-medium
+                     hover:shadow-[0_0_15px_rgba(124,58,237,0.6)]`}
         >
           <svg className="w-3 h-3 xs:w-4 xs:h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -359,17 +345,28 @@ const LevelSelect = ({
           style={{ overflow: 'visible' }}
         >
           <defs>
-            {/* Enhanced gradient with more stops */}
             <linearGradient id="pathGradient" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor={settings.theme === 'dark' ? '#9333EA' : '#8B5CF6'} />
-              <stop offset="50%" stopColor={settings.theme === 'dark' ? '#7E22CE' : '#7C3AED'} />
-              <stop offset="100%" stopColor={settings.theme === 'dark' ? '#6B21A8' : '#6D28D9'} />
+              {settings.theme === 'dark' ? (
+                <>
+                  <stop offset="0%" stopColor="#B975F9" />  // Dark theme: Bright neon purple
+                  <stop offset="50%" stopColor="#9D5CF7" /> // Dark theme: Medium neon purple
+                  <stop offset="100%" stopColor="#7B3AED" /> // Dark theme: Darker neon purple
+                </>
+              ) : (
+                <>
+                  <stop offset="0%" stopColor="#8B5CF6" />  // Light theme: Softer purple
+                  <stop offset="50%" stopColor="#7C3AED" /> // Light theme: Medium purple
+                  <stop offset="100%" stopColor="#6D28D9" /> // Light theme: Darker purple
+                </>
+              )}
             </linearGradient>
             
-            {/* Enhanced glow effect */}
             <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-              <feFlood floodColor={settings.theme === 'dark' ? '#9333EA' : '#8B5CF6'} floodOpacity="0.3"/>
+              <feFlood 
+                floodColor="#B975F9" 
+                floodOpacity="0.5"
+              />
               <feComposite in2="coloredBlur" operator="in"/>
               <feMerge>
                 <feMergeNode/>
@@ -412,15 +409,18 @@ const LevelSelect = ({
                 filter: url(#glow);
               }
               [todo] { 
-                fill: ${settings.theme === 'dark' ? '#4B5563' : '#E9D5FF'};
-                opacity: 0.5;
+                fill: ${settings.theme === 'dark' ? '#374151' : '#E5E7EB'}; // Adjust gray based on theme
+                opacity: ${settings.theme === 'dark' ? '0.6' : '0.8'};
                 transition: opacity 0.3s;
               }
               [todo]:hover {
-                opacity: 0.7;
+                opacity: ${settings.theme === 'dark' ? '0.8' : '0.9'};
               }
               .glow {
-                fill: ${settings.theme === 'dark' ? 'rgba(147, 51, 234, 0.3)' : 'rgba(139, 92, 246, 0.3)'};
+                fill: ${settings.theme === 'dark' 
+                  ? 'rgba(185, 117, 249, 0.3)' // Dark theme: Neon purple
+                  : 'rgba(124, 58, 237, 0.3)'  // Light theme: Softer purple
+                };
                 animation: pulse 3s ease-in-out infinite;
               }
               .progress-ring {
