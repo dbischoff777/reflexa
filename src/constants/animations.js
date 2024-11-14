@@ -1,12 +1,22 @@
-import successAnimation1 from '../assets/animations/success/successPurple.gif';
+/* import successAnimation1 from '../assets/animations/success/successPurple.gif';
 import successAnimation2 from '../assets/animations/success/snacksMix.gif';
 import successAnimation3 from '../assets/animations/success/successBlue.gif';
 import successAnimation4 from '../assets/animations/success/successBrownSilver.gif';
-import successAnimation5 from '../assets/animations/success/successMix.gif';
-import tryAnimation1 from '../assets/animations/try/Try.gif';
+import successAnimation5 from '../assets/animations/success/successMix.gif'; */
+import successAnimation1 from '../assets/animations/success/Success_Object 1.gif';
+import successAnimation2 from '../assets/animations/success/Success_Object 2.gif';
+import successAnimation3 from '../assets/animations/success/Success_Object 3.gif';
+import successAnimation4 from '../assets/animations/success/Success_Object 4.gif';
+import successAnimation5 from '../assets/animations/success/Success_Object 5.gif';
+/* import tryAnimation1 from '../assets/animations/try/Try.gif';
 import tryAnimation2 from '../assets/animations/try/tryBrownSilver.gif';
 import tryAnimation3 from '../assets/animations/try/tryMix.gif';
-import tryAnimation4 from '../assets/animations/try/tryMix2.gif';
+import tryAnimation4 from '../assets/animations/try/tryMix2.gif'; */
+import tryAnimation1 from '../assets/animations/try/Object_1.gif';
+import tryAnimation2 from '../assets/animations/try/Object_2.gif';
+import tryAnimation3 from '../assets/animations/try/Object_3.gif';
+import tryAnimation4 from '../assets/animations/try/Object_4.gif';
+import tryAnimation5 from '../assets/animations/try/Object_5.gif';
 
 // Animation durations in milliseconds
 export const ANIMATION_DURATIONS = {
@@ -18,8 +28,8 @@ export const ANIMATION_DURATIONS = {
 // Group animations by size
 export const TRY_ANIMATIONS_BY_SIZE = {
   LARGE: [tryAnimation1, tryAnimation2],
-  MEDIUM: [tryAnimation3],
-  SMALL: [tryAnimation4]
+  MEDIUM: [tryAnimation3, tryAnimation4],
+  SMALL: [tryAnimation5]
 };
 
 // Success animations by size

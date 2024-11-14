@@ -465,11 +465,11 @@ const GameContent = ({
               : 'bg-gray-100 text-gray-900'
           }
         `}
-        onTouchStart={(e) => {
+        /* onTouchStart={(e) => {
           if (gameState === GAME_STATES.PLAYING) {
             e.preventDefault();
           }
-        }}
+        }} */
         style={{
           WebkitTouchCallout: 'none', // Disable touch callout
           WebkitUserSelect: 'none', // Disable text selection
@@ -794,7 +794,7 @@ const GameContent = ({
                             </button>
                             
                             <button
-                              onClick={handleConfirmQuit}
+                              onClick={exitGame}
                               className={`
                                 flex-1 px-4 py-2 rounded-lg font-bold text-sm xs:text-base
                                 transition-all duration-200

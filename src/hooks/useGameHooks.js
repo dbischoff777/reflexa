@@ -46,7 +46,7 @@ const getRandomPosition = (buttonSize = 280) => {
 
   // Get container bounds
   const bounds = container.getBoundingClientRect();
-  const padding = 40; // Increased padding for larger button
+  const padding = 80; // Increased padding for larger button
 
   // Calculate available space
   const maxWidth = bounds.width - buttonSize - (padding * 2);
@@ -696,10 +696,7 @@ export const useGameHooks = (gameState, setGameState) => {
         <button
           className="relative flex items-center justify-center"
           onClick={handleButtonClick}
-          onTouchStart={(e) => {
-            e.preventDefault();
-            handleButtonClick();
-          }}
+          onTouchStart={handleButtonClick}
           style={{
             touchAction: 'none',
             userSelect: 'none',
