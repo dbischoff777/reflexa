@@ -631,7 +631,7 @@ export const useGameHooks = (gameState, setGameState) => {
   }, []);
 
   // 2. Then declare path-related state
-  const [pathDuration, setPathDuration] = useState(7000);
+  const [pathDuration, setPathDuration] = useState(8000);
   const [currentPath, setCurrentPath] = useState(generateRandomPath());
 
   // 3. Define updatePath
@@ -644,9 +644,6 @@ export const useGameHooks = (gameState, setGameState) => {
   // 4. Move handleButtonClick after updatePath is defined
   const handleButtonClick = useCallback(() => {
     if (gameState !== GAME_STATES.PLAYING) return;
-    
-    // Clear trail elements immediately
-    setTrailElements([]);
     
     const currentTime = Date.now();
     const reactionTime = currentTime - startTime;
@@ -664,9 +661,6 @@ export const useGameHooks = (gameState, setGameState) => {
     
     setShowAnimation(true);
     setAnimationPosition(buttonPosition);
-
-    // Reset last trail time
-    lastTrailTime.current = 0;
     
     const randomSuccessAnimation = SUCCESS_ANIMATIONS_BY_SIZE[currentSize];
     setCurrentSuccessAnimation(
@@ -680,7 +674,7 @@ export const useGameHooks = (gameState, setGameState) => {
             randomAnimation[Math.floor(Math.random() * randomAnimation.length)]
         );
         setButtonPosition(getRandomPosition());
-        updatePath(); // Moved updatePath() here
+        updatePath();
         playSound('trySound');
     }, currentDuration);
 
