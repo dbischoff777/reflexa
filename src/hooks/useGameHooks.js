@@ -644,7 +644,7 @@ export const useGameHooks = (gameState, setGameState) => {
   }, []);
 
   // 2. Then declare path-related state
-  const [pathDuration, setPathDuration] = useState(20000);
+  const [pathDuration, setPathDuration] = useState(30000);
   const [currentPath, setCurrentPath] = useState(generateRandomPath());
 
   // 3. Define updatePath
@@ -652,8 +652,8 @@ export const useGameHooks = (gameState, setGameState) => {
     setTrailElements([]); 
     
     setCurrentPath(generateRandomPath());
-    // Fixed duration of 20 seconds for consistent speed
-    setPathDuration(20000);
+    // Fixed duration of 30 seconds for consistent speed
+    setPathDuration(30000);
   }, [generateRandomPath]);
 
   // 4. Move handleButtonClick after updatePath is defined
@@ -774,9 +774,9 @@ export const useGameHooks = (gameState, setGameState) => {
 
   const [trailElements, setTrailElements] = useState([]);
   const lastTrailTime = useRef(0);
-  const TRAIL_INTERVAL = 300; // Increased to 600ms for more spacing
-  const TRAIL_DURATION = 2500; // 4 seconds fade duration
-  const MAX_TRAIL_ELEMENTS = 8; // Keep 8 elements max
+  const TRAIL_INTERVAL = 500; // Increased to 300ms for more spacing
+  const TRAIL_DURATION = 1500; // 25 seconds fade duration
+  const MAX_TRAIL_ELEMENTS = 6; // Keep 8 elements max
   const [lastPosition, setLastPosition] = useState({ x: 0, y: 0 });
 
   const updateTrail = useCallback((buttonElement) => {
