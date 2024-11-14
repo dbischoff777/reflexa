@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import livesIcon from './assets/images/lives.png';
@@ -14,6 +14,7 @@ import { TutorialProvider, useTutorial } from './contexts/TutorialContext';
 import Tutorial from './components/Tutorial';
 import { useSettings } from './Settings';
 import NavigationBar from './components/NavigationBar';
+import './styles.css';
 
 const GameContent = ({
   settings,
@@ -40,6 +41,7 @@ const GameContent = ({
   successAnimation,
   isMusicPlaying,
   onMusicToggle,
+  containerRef,
 }) => {
   const { hasCompletedTutorial, startTutorial } = useTutorial();
   const { updateSettings } = useSettings();
@@ -695,658 +697,487 @@ const GameContent = ({
       
           {/* Game Area Container */}
           {gameState !== 'menu' ? (
-            <div className="w-full flex flex-col items-center justify-center">
-              {/* Mascot Container */}
-              <div className="w-full flex justify-center mb-4 sm:mb-6 md:mb-8 mt-2 sm:mt-3 md:mt-4">
-                <div className={`mascot-container relative px-4 sm:px-6 md:px-8 ${
-                  settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
-                }`}>
-                  {showSpeechBubble && mascotMessage && (
-                  <div className={`
-                    speech-bubble 
-                    absolute left-1/2 -translate-x-1/2 
-                    -top-16 sm:-top-18 md:-top-20 
-                    ${settings.theme === 'dark'
-                      ? 'bg-purple-900/80 text-purple-200' 
-                      : 'bg-purple-100/80 text-purple-600'
-                    } 
-                    p-3 sm:p-4 rounded-2xl shadow-lg backdrop-blur-sm
-                    max-w-[160px] sm:max-w-[180px] md:max-w-[200px] 
-                    text-xs sm:text-sm z-10 whitespace-normal
-                    animate-float motion-reduce:animate-none scale-100 enter:animate-scaleIn
-                    hover:scale-105 transition-transform
-                    ring-1 ${settings.theme === 'dark' ? 'ring-white/10' : 'ring-purple-300/30'}
-                    drop-shadow-[0_0_15px_rgba(168,85,247,0.2)]
-                    before:content-['']
-                    before:absolute before:bottom-[-12px] before:left-1/2 before:-translate-x-1/2
-                    before:border-[12px] before:border-transparent
-                    ${settings.theme === 'dark'
-                      ? 'before:border-t-purple-900/80'
-                      : 'before:border-t-purple-100/80'
-                    }
-                    after:content-['']
-                    after:absolute after:bottom-[-8px] after:left-[calc(50%-6px)]
-                    after:border-[6px] after:border-transparent
-                    ${settings.theme === 'dark'
-                      ? 'after:border-t-purple-900/80'
-                      : 'after:border-t-purple-100/80'
-                    }
-                    border
-                    ${settings.theme === 'dark'
-                      ? 'border-purple-700/50'
-                      : 'border-purple-300/50'
-                    }
-                  `}>
-                    {mascotMessage}
-                  </div>
-                )}
-                  <img 
-                    src={mascotImage}
-                    alt="Game Mascot"
-                    className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 object-contain animate-bounce relative z-0"
-                  />
-                </div>
-              </div>
-              {/* Countdown Overlay */}
-              {gameState === 'countdown' && settings.countdownTimer && (
-              <div className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-[1000]">
-                <div className={`
-                  relative
-                  flex items-center justify-center
-                  w-32 h-32 sm:w-40 sm:h-40
-                  rounded-full
-                  ${settings.theme === 'dark' ? 'bg-purple-900/40' : 'bg-purple-100/40'}
-                  shadow-lg
-                  before:absolute before:inset-0
-                  before:rounded-full
-                  before:animate-ping
-                  before:bg-purple-500/20
-                `}>
-                  <div className={`
-                    text-7xl sm:text-8xl font-bold
-                    ${settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'}
-                    animate-bounce
-                    drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]
-                  `}>
-                    {countdown}
-                  </div>
-                </div>
-              </div>
-              )}
-
-              {/* Game Over Overlay */}
-              {showGameOver && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-[1000] p-2 xs:p-4">
-                  <div className={`
-                    p-3 xs:p-4 sm:p-6 
-                    rounded-xl 
-                    text-center 
-                    shadow-2xl
-                    transform transition-all duration-300 ease-out
-                    animate-fadeIn scale-100 
-                    w-full
-                    max-w-[280px] xs:max-w-[320px] sm:max-w-[360px]
-                    mx-auto
-                    overflow-y-auto
-                    max-h-[95vh]
-                    ${settings.theme === 'dark' 
-                      ? 'bg-gray-800/95 border border-purple-500/20' 
-                      : 'bg-white/95 border border-purple-200'
-                    }
-                  `}>
-                    <h2 className={`
-                      text-3xl xs:text-4xl sm:text-5xl font-bold 
-                      mb-3 xs:mb-4 sm:mb-6
-                      bg-gradient-to-r from-purple-400 to-pink-400 
-                      bg-clip-text text-transparent
-                      drop-shadow-lg
-                    `}>
-                      Game Over!
-                    </h2>
-                    
-                    <div className={`
-                      mb-4 xs:mb-6 sm:mb-8 space-y-2 xs:space-y-3
-                      ${settings.theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}
-                    `}>
-                      <p className="text-xl xs:text-2xl font-semibold">
-                        Final Score: <span className="text-purple-500">{gameStats.score}</span>
-                      </p>
-                      <p className="text-lg xs:text-xl">
-                        High Score: <span className="text-purple-500">{gameStats.highscore}</span>
-                      </p>
-                    </div>
-
-                    {/* Share Score Section */}
-                    <div className="flex flex-col gap-3 xs:gap-4 mb-4 xs:mb-6">
-                      {/* Main Share Button */}
+            <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-black">
+              <div 
+                className="game-container absolute inset-0 w-full h-full"
+                ref={containerRef}
+                style={{
+                  backgroundImage: `url(${floorBackground})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat',
+                }}
+              >
+                {/* Quit Button - Only show during PLAYING state */}
+                {gameState === GAME_STATES.PLAYING && (
+                  <>
+                    <div className="absolute top-2 right-2 xs:top-3 xs:right-3 sm:top-4 sm:right-4 z-50">
                       <button
-                        onClick={async () => {
-                          const shareText = `🎮 I just scored ${score} points in Fetch & Feast! Can you beat my score? 🏆`;
-                          
-                          try {
-                            if (navigator.share) {
-                              await navigator.share({
-                                title: 'Fetch & Feast Game Score',
-                                text: shareText,
-                                url: window.location.href
-                              });
-                            } else {
-                              await navigator.clipboard.writeText(shareText + '\n' + window.location.href);
-                            }
-                          } catch (error) {
-                            try {
-                              await navigator.clipboard.writeText(shareText + '\n' + window.location.href);
-                            } catch (clipboardError) {
-                              console.error('Share failed:', error);
-                            }
-                          }
-                        }}
+                        onClick={handleQuitClick}
                         className={`
-                          w-full px-4 xs:px-6 py-2 xs:py-3 
-                          rounded-xl font-bold 
-                          text-base xs:text-lg
-                          transform transition-all duration-200
-                          hover:scale-105 active:scale-95
+                          group relative 
+                          px-3 py-2 xs:px-4 xs:py-2.5
+                          rounded-xl
+                          font-medium 
+                          transition-all duration-300 ease-out
+                          hover:scale-105
+                          flex items-center gap-2
                           ${settings.theme === 'dark'
-                            ? 'bg-gradient-to-r from-blue-600 to-blue-400 text-white shadow-lg hover:shadow-blue-500/30'
-                            : 'bg-gradient-to-r from-blue-500 to-blue-400 text-white shadow-lg hover:shadow-blue-500/30'
+                            ? 'bg-red-900/40 text-red-300 hover:text-red-200'
+                            : 'bg-red-100/40 text-red-600 hover:text-red-500'
                           }
                         `}
+                        aria-label="Quit Game"
                       >
-                        Share Score
+                        <X className="h-5 w-5" />
+                        <span className="text-sm font-medium">Quit</span>
+                        
+                        {/* Link Glow Effect */}
+                        <div className={`
+                          absolute inset-0
+                          rounded-xl
+                          transition-all duration-300
+                          opacity-0 group-hover:opacity-100
+                          ${settings.theme === 'dark'
+                            ? 'bg-red-500/15 shadow-[0_0_25px_rgba(239,68,68,0.6)] border border-red-400/20' 
+                            : 'bg-red-500/10 shadow-[0_0_25px_rgba(239,68,68,0.4)] border border-red-500/20'
+                          }
+                        `} />
                       </button>
-
-                      {/* Social Media Share Buttons */}
-                      <div className="flex justify-center gap-2 xs:gap-4">
-                        {/* Social Media Buttons */}
-                        {['facebook', 'twitter', 'whatsapp'].map((platform) => (
-                          <button
-                            key={platform}
-                            onClick={() => {
-                              const shareText = encodeURIComponent(
-                                `🎮 I just scored ${score} points in Fetch & Feast! Can you beat my score? 🏆`
-                              );
-                              const url = encodeURIComponent(window.location.href);
-                              const shareUrls = {
-                                facebook: `https://facebook.com/sharer/sharer.php?u=${url}&quote=${shareText}`,
-                                twitter: `https://twitter.com/intent/tweet?text=${shareText}&url=${url}`,
-                                whatsapp: `https://api.whatsapp.com/send?text=${shareText}\n${url}`
-                              };
-                              window.open(shareUrls[platform]);
-                            }}
-                            className={`
-                              p-2 xs:p-3 rounded-xl 
-                              transition-all duration-200
-                              hover:scale-110 active:scale-95
-                              shadow-lg
-                              ${platform === 'facebook' ? 'bg-[#1877f2] hover:bg-[#0d6ce4] hover:shadow-[#1877f2]/30' :
-                                platform === 'twitter' ? 'bg-black hover:bg-gray-800 hover:shadow-black/30' :
-                                'bg-[#25D366] hover:bg-[#20bd5a] hover:shadow-[#25D366]/30'}
-                              text-white
-                            `}
-                          >
-                            {platform === 'facebook' ? <FacebookIcon className="w-5 h-5 xs:w-7 xs:h-7" /> :
-                             platform === 'twitter' ? <TwitterIcon className="w-5 h-5 xs:w-7 xs:h-7" /> :
-                             <WhatsAppIcon className="w-5 h-5 xs:w-7 xs:h-7" />}
-                          </button>
-                        ))}
-                      </div>
                     </div>
 
-                    {/* Game Control Buttons */}
-                    <div className="flex flex-col gap-2 xs:gap-3">
-                      <button
-                        onClick={startGame}
-                        className={`
-                          w-full px-4 xs:px-6 py-2 xs:py-3 
-                          rounded-lg xs:rounded-xl 
-                          font-bold 
-                          text-base xs:text-lg
-                          transform transition-all duration-200
-                          hover:scale-105 active:scale-95
-                          ${settings.theme === 'dark'
-                            ? 'bg-gradient-to-r from-purple-600 to-purple-400 text-white shadow-lg hover:shadow-purple-500/30'
-                            : 'bg-gradient-to-r from-purple-500 to-purple-400 text-white shadow-lg hover:shadow-purple-500/30'
-                          }
-                        `}
-                      >
-                        Play Again
-                      </button>
-                      
-                      <Link
-                        to="/profile"
-                        onClick={() => setGameState(GAME_STATES.MENU)}
-                        className={`
-                          w-full px-4 xs:px-6 py-2 xs:py-3 
+                    {/* Quit Confirmation Dialog - Only show when showQuitConfirm is true */}
+                    {showQuitConfirm && (
+                      <div className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-[1000]">
+                        <div className={`
+                          p-4 xs:p-5 sm:p-6 
                           rounded-xl 
-                          font-bold 
-                          text-base xs:text-lg
-                          transform transition-all duration-200
-                          hover:scale-105 active:scale-95
-                          ${settings.theme === 'dark'
-                            ? 'bg-gradient-to-r from-gray-600 to-gray-500 text-white shadow-lg hover:shadow-gray-500/30'
-                            : 'bg-gradient-to-r from-gray-500 to-gray-400 text-white shadow-lg hover:shadow-gray-500/30'
+                          text-center 
+                          shadow-2xl
+                          transform transition-all duration-300 ease-out
+                          animate-fadeIn scale-100 
+                          max-w-[320px] xs:max-w-[360px] w-full 
+                          mx-4
+                          ${settings.theme === 'dark' 
+                            ? 'bg-gray-800/95 border border-red-500/20' 
+                            : 'bg-white/95 border border-red-200'
                           }
-                        `}
-                      >
-                        Profile
-                      </Link>
-                      
-                      <button
-                        onClick={exitGame}
-                        className={`
-                          w-full px-4 xs:px-6 py-2 xs:py-3 
-                          rounded-xl 
-                          font-bold 
-                          text-base xs:text-lg
-                          transform transition-all duration-200
-                          hover:scale-105 active:scale-95
-                          ${settings.theme === 'dark'
-                            ? 'bg-gradient-to-r from-gray-600 to-gray-500 text-white shadow-lg hover:shadow-gray-500/30'
-                            : 'bg-gradient-to-r from-gray-500 to-gray-400 text-white shadow-lg hover:shadow-gray-500/30'
-                          }
-                        `}
-                      >
-                        Exit
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-              {/* Responsive Grid Container */}
-              <div className="w-full flex justify-center px-2 sm:px-4">
-                <div className="w-full max-w-[95vw] sm:max-w-[80vw] md:max-w-[60vw] lg:max-w-[50vw] xl:max-w-[800px]">
-                  {/* Add Quit Button */}
-                  {gameState === GAME_STATES.PLAYING && (
-                    <>
-                      <div className="absolute top-2 right-2 xs:top-3 xs:right-3 sm:top-4 sm:right-4">
-                        <button
-                          onClick={handleQuitClick}
-                          className={`
-                            group relative 
-                            px-3 py-2 xs:px-4 xs:py-2.5
-                            rounded-xl
-                            font-medium 
-                            transition-all duration-300 ease-out
-                            hover:scale-105
-                            flex items-center gap-2
-                            ${settings.theme === 'dark'
-                              ? 'bg-red-900/40 text-red-300 hover:text-red-200'
-                              : 'bg-red-100/40 text-red-600 hover:text-red-500'
-                            }
-                          `}
-                          aria-label="Quit Game"
-                        >
-                          <X className="h-5 w-5" />
-                          <span className="text-sm font-medium">Quit</span>
-                          
-                          {/* Link Glow Effect */}
-                          <div className={`
-                            absolute inset-0
-                            rounded-xl
-                            transition-all duration-300
-                            opacity-0 group-hover:opacity-100
-                            ${settings.theme === 'dark'
-                              ? 'bg-red-500/15 shadow-[0_0_25px_rgba(239,68,68,0.6)] border border-red-400/20' 
-                              : 'bg-red-500/10 shadow-[0_0_25px_rgba(239,68,68,0.4)] border border-red-500/20'
-                            }
-                          `} />
-                        </button>
-                      </div>
-
-                      {/* Quit Confirmation Dialog */}
-                      {showQuitConfirm && (
-                        <div className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-[1000]">
-                          <div className={`
-                            p-4 xs:p-5 sm:p-6 
-                            rounded-xl 
-                            text-center 
-                            shadow-2xl
-                            transform transition-all duration-300 ease-out
-                            animate-fadeIn scale-100 
-                            max-w-[320px] xs:max-w-[360px] w-full 
-                            mx-4
-                            ${settings.theme === 'dark' 
-                              ? 'bg-gray-800/95 border border-red-500/20' 
-                              : 'bg-white/95 border border-red-200'
-                            }
+                        `}>
+                          <h2 className={`
+                            text-xl xs:text-2xl font-bold mb-4
+                            ${settings.theme === 'dark' ? 'text-red-300' : 'text-red-600'}
                           `}>
-                            <h2 className={`
-                              text-xl xs:text-2xl font-bold mb-4
-                              ${settings.theme === 'dark' ? 'text-red-300' : 'text-red-600'}
-                            `}>
-                              Quit Game?
-                            </h2>
-                            
-                            <p className={`
-                              mb-6 text-sm xs:text-base
-                              ${settings.theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}
-                            `}>
-                              Are you sure you want to quit? Your current progress will be lost.
-                            </p>
+                            Quit Game?
+                          </h2>
+                          
+                          <p className={`
+                            mb-6 text-sm xs:text-base
+                            ${settings.theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}
+                          `}>
+                            Are you sure you want to quit? Your current progress will be lost.
+                          </p>
 
-                            <div className="flex gap-3">
-                              <button
-                                onClick={() => setShowQuitConfirm(false)}
-                                className={`
-                                  flex-1 px-4 py-2 rounded-lg font-bold text-sm xs:text-base
-                                  transition-all duration-200
-                                  hover:scale-105 active:scale-95
-                                  ${settings.theme === 'dark'
-                                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                  }
-                                `}
-                              >
-                                Cancel
-                              </button>
-                              
-                              <button
-                                onClick={handleConfirmQuit}
-                                className={`
-                                  flex-1 px-4 py-2 rounded-lg font-bold text-sm xs:text-base
-                                  transition-all duration-200
-                                  hover:scale-105 active:scale-95
-                                  ${settings.theme === 'dark'
-                                    ? 'bg-red-600 text-white hover:bg-red-500'
-                                    : 'bg-red-500 text-white hover:bg-red-400'
-                                  }
-                                `}
-                              >
-                                Quit Game
-                              </button>
-                            </div>
+                          <div className="flex gap-3">
+                            <button
+                              onClick={() => setShowQuitConfirm(false)}
+                              className={`
+                                flex-1 px-4 py-2 rounded-lg font-bold text-sm xs:text-base
+                                transition-all duration-200
+                                hover:scale-105 active:scale-95
+                                ${settings.theme === 'dark'
+                                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                }
+                              `}
+                            >
+                              Cancel
+                            </button>
+                            
+                            <button
+                              onClick={handleConfirmQuit}
+                              className={`
+                                flex-1 px-4 py-2 rounded-lg font-bold text-sm xs:text-base
+                                transition-all duration-200
+                                hover:scale-105 active:scale-95
+                                ${settings.theme === 'dark'
+                                  ? 'bg-red-600 text-white hover:bg-red-500'
+                                  : 'bg-red-500 text-white hover:bg-red-400'
+                                }
+                              `}
+                            >
+                              Quit Game
+                            </button>
                           </div>
                         </div>
-                      )}
-                    </>
-                  )}
+                      </div>
+                    )}
+                  </>
+                )}
 
-                  <div className="flex justify-between items-center mb-4 sm:mb-6 flex-wrap gap-2 sm:gap-4">
-                    <StatBox theme={settings.theme} extraClasses="hover:scale-105 transition-transform">
-                      <div className="flex items-center gap-0.5 xs:gap-1 sm:gap-2">
-                        <LivesIcons lives={1} theme={settings.theme} />
-                        <span className="text-base xs:text-lg sm:text-xl font-bold tracking-tight">×{lives}</span>
+                {/* Countdown Overlay */}
+                {gameState === GAME_STATES.COUNTDOWN && countdown > 0 && (
+                  <div className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-[1000]">
+                    <div className={`
+                      relative
+                      flex items-center justify-center
+                      w-32 h-32 sm:w-40 sm:h-40
+                      rounded-full
+                      ${settings.theme === 'dark' ? 'bg-purple-900/40' : 'bg-purple-100/40'}
+                      shadow-lg
+                      before:absolute before:inset-0
+                      before:rounded-full
+                      before:animate-ping
+                      before:bg-purple-500/20
+                    `}>
+                      <div className={`
+                        text-7xl sm:text-8xl font-bold
+                        ${settings.theme === 'dark' ? 'text-purple-300' : 'text-purple-600'}
+                        animate-bounce
+                        drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]
+                      `}>
+                        {countdown}
                       </div>
-                    </StatBox>
-                    <StatBox theme={settings.theme} extraClasses="hover:scale-105 transition-transform">
-                      <div className="flex items-center gap-1 sm:gap-2">
-                        <span className="text-lg sm:text-xl font-bold tracking-tight">Score: {score.toLocaleString()}</span>
-                        <StatIcon src={scoreIcon} alt="Score" theme={settings.theme} />
-                      </div>
-                    </StatBox>
-                    
-                    {gameState === 'playing' && multiplier > 1 && (
-                      <StatBox 
-                        theme={settings.theme} 
-                        extraClasses={`
-                          ${multiplier > 1 ? 'animate-pulse' : ''}
-                          hover:scale-105 transition-transform
-                          ${multiplier >= 3 ? 'ring-2 ring-purple-400' : ''}
-                        `}
-                      >
-                        <div className="flex items-center gap-1 sm:gap-2">
-                          <span className="text-lg sm:text-xl font-bold tracking-tight">×{multiplier.toFixed(1)}</span>
-                          <MultiplierIcon theme={settings.theme} />
-                        </div>
-                      </StatBox>
-                    )}
-                  </div>
-                </div>
-              </div>
-                {/* Square Aspect Ratio Container */}
-                <div className="relative w-[95vw] xs:w-[90vw] sm:w-[85vw] md:w-[75vw] lg:w-[65vw] max-w-[800px] mx-auto">
-                  <div 
-                    className={`
-                      relative aspect-square rounded-lg overflow-hidden
-                      ${transitionClasses.base}
-                      transform-gpu
-                    `}
-                    style={{
-                      backgroundImage: `url(${floorBackground})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                      backgroundRepeat: 'no-repeat',
-                      willChange: 'transform',
-                    }}
-                  >
-                    {/* Animation Overlay */}
-                    {showAnimation && (
-                      <div 
-                        className={`
-                          absolute pointer-events-none
-                          ${transitionClasses.fade}
-                          transform-gpu
-                        `}
-                        style={{
-                          left: '50%',
-                          top: '50%',
-                          transform: 'translate(-50%, -50%)',
-                          width: '300px',
-                          height: '300px',
-                          pointerEvents: 'none',
-                          zIndex: 50,
-                          willChange: 'transform, opacity',
-                        }}
-                      >
-                        <div className="absolute inset-0 flex items-center justify-center rounded-lg">
-                          <img
-                            src={successAnimation}
-                            alt="Success Animation"
-                            className="w-2/3 2xs:w-[70%] xs:w-[72%] sm:w-3/4 object-contain pointer-events-none mix-blend-screen"
-                            style={{
-                              imageRendering: 'pixelated',  // Optional: helps with GIF quality
-                              WebkitMaskImage: '-webkit-radial-gradient(white, black)'  // Helps with Safari transparency
-                            }}
-                            draggable="false"
-                          />
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* Game Elements Container */}
-                    <div className="absolute inset-0 z-10 grid gap-[2px] xs:gap-1 sm:gap-1.5 p-1.5 xs:p-2 sm:p-2.5"
-                         style={{
-                           gridTemplateColumns: `repeat(${settings.gridColumns}, 1fr)`,
-                           gridTemplateRows: `repeat(${settings.gridRows}, 1fr)`,
-                           touchAction: 'none', // Prevent default touch behaviors
-                         }}>
-                      {Array.from({ length: settings.gridColumns * settings.gridRows }).map((_, index) => (
-                        <div 
-                          key={index} 
-                          className="relative w-full h-full flex items-center justify-center"
-                          style={{
-                            touchAction: 'none',
-                          }}
-                        >
-                          {renderButton(index)}
-                        </div>
-                      ))}
                     </div>
                   </div>
+                )}
+
+                {/* Game Over Overlay */}
+                {showGameOver && (
+                  <div className="fixed inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-[1000] p-2 xs:p-4">
+                    <div className={`
+                      p-3 xs:p-4 sm:p-6 
+                      rounded-xl 
+                      text-center 
+                      shadow-2xl
+                      transform transition-all duration-300 ease-out
+                      animate-fadeIn scale-100 
+                      w-full
+                      max-w-[280px] xs:max-w-[320px] sm:max-w-[360px]
+                      mx-auto
+                      overflow-y-auto
+                      max-h-[95vh]
+                      ${settings.theme === 'dark' 
+                        ? 'bg-gray-800/95 border border-purple-500/20' 
+                        : 'bg-white/95 border border-purple-200'
+                      }
+                    `}>
+                      <h2 className={`
+                        text-3xl xs:text-4xl sm:text-5xl font-bold 
+                        mb-3 xs:mb-4 sm:mb-6
+                        bg-gradient-to-r from-purple-400 to-pink-400 
+                        bg-clip-text text-transparent
+                        drop-shadow-lg
+                      `}>
+                        Game Over!
+                      </h2>
+                      
+                      <div className={`
+                        mb-4 xs:mb-6 sm:mb-8 space-y-2 xs:space-y-3
+                        ${settings.theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}
+                      `}>
+                        <p className="text-xl xs:text-2xl font-semibold">
+                          Final Score: <span className="text-purple-500">{gameStats.score}</span>
+                        </p>
+                        <p className="text-lg xs:text-xl">
+                          High Score: <span className="text-purple-500">{gameStats.highscore}</span>
+                        </p>
+                      </div>
+
+                      {/* Share Score Section */}
+                      <div className="flex flex-col gap-3 xs:gap-4 mb-4 xs:mb-6">
+                        {/* Main Share Button */}
+                        <button
+                          onClick={async () => {
+                            const shareText = `🎮 I just scored ${score} points in Fetch & Feast! Can you beat my score? 🏆`;
+                            
+                            try {
+                              if (navigator.share) {
+                                await navigator.share({
+                                  title: 'Fetch & Feast Game Score',
+                                  text: shareText,
+                                  url: window.location.href
+                                });
+                              } else {
+                                await navigator.clipboard.writeText(shareText + '\n' + window.location.href);
+                              }
+                            } catch (error) {
+                              try {
+                                await navigator.clipboard.writeText(shareText + '\n' + window.location.href);
+                              } catch (clipboardError) {
+                                console.error('Share failed:', error);
+                              }
+                            }
+                          }}
+                          className={`
+                            w-full px-4 xs:px-6 py-2 xs:py-3 
+                            rounded-xl font-bold 
+                            text-base xs:text-lg
+                            transform transition-all duration-200
+                            hover:scale-105 active:scale-95
+                            ${settings.theme === 'dark'
+                              ? 'bg-gradient-to-r from-blue-600 to-blue-400 text-white shadow-lg hover:shadow-blue-500/30'
+                              : 'bg-gradient-to-r from-blue-500 to-blue-400 text-white shadow-lg hover:shadow-blue-500/30'
+                            }
+                          `}
+                        >
+                          Share Score
+                        </button>
+
+                        {/* Social Media Share Buttons */}
+                        <div className="flex justify-center gap-2 xs:gap-4">
+                          {/* Social Media Buttons */}
+                          {['facebook', 'twitter', 'whatsapp'].map((platform) => (
+                            <button
+                              key={platform}
+                              onClick={() => {
+                                const shareText = encodeURIComponent(
+                                  `🎮 I just scored ${score} points in Fetch & Feast! Can you beat my score? 🏆`
+                                );
+                                const url = encodeURIComponent(window.location.href);
+                                const shareUrls = {
+                                  facebook: `https://facebook.com/sharer/sharer.php?u=${url}&quote=${shareText}`,
+                                  twitter: `https://twitter.com/intent/tweet?text=${shareText}&url=${url}`,
+                                  whatsapp: `https://api.whatsapp.com/send?text=${shareText}\n${url}`
+                                };
+                                window.open(shareUrls[platform]);
+                              }}
+                              className={`
+                                p-2 xs:p-3 rounded-xl 
+                                transition-all duration-200
+                                hover:scale-110 active:scale-95
+                                shadow-lg
+                                ${platform === 'facebook' ? 'bg-[#1877f2] hover:bg-[#0d6ce4] hover:shadow-[#1877f2]/30' :
+                                  platform === 'twitter' ? 'bg-black hover:bg-gray-800 hover:shadow-black/30' :
+                                  'bg-[#25D366] hover:bg-[#20bd5a] hover:shadow-[#25D366]/30'}
+                                text-white
+                              `}
+                            >
+                              {platform === 'facebook' ? <FacebookIcon className="w-5 h-5 xs:w-7 xs:h-7" /> :
+                               platform === 'twitter' ? <TwitterIcon className="w-5 h-5 xs:w-7 xs:h-7" /> :
+                               <WhatsAppIcon className="w-5 h-5 xs:w-7 xs:h-7" />}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Animation Overlay */}
+                {showAnimation && (
+                  <div 
+                    className="absolute inset-0 pointer-events-none flex items-center justify-center"
+                    style={{
+                      zIndex: 50,
+                    }}
+                  >
+                    <div className="w-full max-w-[300px] aspect-square flex items-center justify-center">
+                      <img
+                        src={successAnimation}
+                        alt="Success Animation"
+                        className="w-2/3 object-contain pointer-events-none mix-blend-screen"
+                        style={{
+                          imageRendering: 'pixelated',
+                          WebkitMaskImage: '-webkit-radial-gradient(white, black)'
+                        }}
+                        draggable="false"
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                {/* Game Area Container */}
+                <div 
+                  className="absolute inset-0 p-4"
+                  style={{
+                    touchAction: 'none',
+                  }}
+                >
+                  {renderButton()}
                 </div>
               </div>
-            ) : (
-              <div className={`flex flex-col items-center justify-center gap-2 xs:gap-3 sm:gap-4 my-2 xs:my-4 p-2 xs:p-4 rounded-lg ${
-                settings.theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'
-              }`}>
-                {showUsernameInput && !localStorage.getItem('username') ? (
-                  <form onSubmit={handleUsernameSubmit} className="w-full max-w-xs">
-                    <input
-                      type="text"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      placeholder="Enter your username"
-                      className={`w-full px-4 py-2 rounded-lg mb-4 ${
-                        settings.theme === 'dark'
-                          ? 'bg-gray-600 text-white border-gray-500'
-                          : 'bg-white text-gray-900 border-purple-300'
-                      }`}
-                      maxLength={15}
-                    />
-                    <button
-                      type="submit"
-                      className={`w-full py-2 px-4 rounded-lg font-semibold ${
-                        settings.theme === 'dark'
-                          ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                          : 'bg-purple-600 hover:bg-purple-700 text-white'
-                      }`}
-                    >
-                      Start Game
-                    </button>
-                  </form>
-                ) : (
-                  <div className="flex flex-col gap-2 xs:gap-3 items-center">
+            </div>
+          ) : (
+            <div className={`flex flex-col items-center justify-center gap-2 xs:gap-3 sm:gap-4 my-2 xs:my-4 p-2 xs:p-4 rounded-lg ${
+              settings.theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'
+            }`}>
+              {showUsernameInput && !localStorage.getItem('username') ? (
+                <form onSubmit={handleUsernameSubmit} className="w-full max-w-xs">
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Enter your username"
+                    className={`w-full px-4 py-2 rounded-lg mb-4 ${
+                      settings.theme === 'dark'
+                        ? 'bg-gray-600 text-white border-gray-500'
+                        : 'bg-white text-gray-900 border-purple-300'
+                    }`}
+                    maxLength={15}
+                  />
                   <button
-                    onClick={handleStartGame}
-                    className={`
-                      w-full max-w-[280px] py-3 xs:py-3.5 px-4 xs:px-6 
-                      rounded-xl
-                      font-bold text-base xs:text-lg
-                      transition-all duration-200 transform 
-                      hover:scale-[1.02] active:scale-[0.98]
-                      flex items-center justify-center gap-2
-                      shadow-lg hover:shadow-xl
-                      ${settings.theme === 'dark'
-                        ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white'
-                        : 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white'
-                      }
-                    `}
+                    type="submit"
+                    className={`w-full py-2 px-4 rounded-lg font-semibold ${
+                      settings.theme === 'dark'
+                        ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                        : 'bg-purple-600 hover:bg-purple-700 text-white'
+                    }`}
                   >
-                    <LucidePlay className="h-5 w-5" />
-                    Quick Play
+                    Start Game
                   </button>
+                </form>
+              ) : (
+                <div className="flex flex-col gap-2 xs:gap-3 items-center">
+                <button
+                  onClick={handleStartGame}
+                  className={`
+                    w-full max-w-[280px] py-3 xs:py-3.5 px-4 xs:px-6 
+                    rounded-xl
+                    font-bold text-base xs:text-lg
+                    transition-all duration-200 transform 
+                    hover:scale-[1.02] active:scale-[0.98]
+                    flex items-center justify-center gap-2
+                    shadow-lg hover:shadow-xl
+                    ${settings.theme === 'dark'
+                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white'
+                      : 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white'
+                    }
+                  `}
+                >
+                  <LucidePlay className="h-5 w-5" />
+                  Quick Play
+                </button>
 
-                  {/* Add Level Select Button */}
+                {/* Add Level Select Button */}
+                <button
+                  onClick={() => {
+                    setGameState(GAME_STATES.LEVELSELECT);
+                    navigate('/levels');
+                  }}
+                  className={`
+                    w-full max-w-[280px] py-3 xs:py-3.5 px-4 xs:px-6 
+                    rounded-xl
+                    font-bold text-base xs:text-lg
+                    transition-all duration-200 transform 
+                    hover:scale-[1.02] active:scale-[0.98]
+                    flex items-center justify-center gap-2
+                    shadow-lg hover:shadow-xl
+                    ${settings.theme === 'dark'
+                      ? 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white'
+                      : 'bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white'
+                    }
+                  `}
+                >
+                  <Layers className="h-5 w-5" />
+                  Select Level
+                </button>
+
+                {/* Shop Button */}
+                <Link
+                  to="/shop"
+                  className={`w-full max-w-xs py-2 xs:py-3 px-4 xs:px-6 rounded-lg font-semibold text-center 
+                    transition-all duration-200 transform hover:scale-105
+                    flex items-center justify-center gap-2
+                    shadow-lg hover:shadow-xl
+                    ${settings.theme === 'dark'
+                      ? 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white'
+                      : 'bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white'
+                    }`}
+                >
+                  <ShoppingCart className="h-5 w-5" />
+                  Shop
+                </Link>
+
+                {/* Header for Quests */}
+                <h3 className={`
+                  text-base xs:text-lg sm:text-xl
+                  font-bold
+                  mt-2 xs:mt-3 mb-1 xs:mb-2
+                  text-center
+                  ${settings.theme === 'dark' ? 'text-purple-200' : 'text-purple-700'}
+                `}>
+                  Your Puppies Quests
+                </h3>
+
+                <div className="flex w-full max-w-xs gap-2">
+                  {/* Daily Quests Button */}
                   <button
-                    onClick={() => {
-                      setGameState(GAME_STATES.LEVELSELECT);
-                      navigate('/levels');
-                    }}
+                    onClick={() => setShowDailyQuests(true)}
                     className={`
-                      w-full max-w-[280px] py-3 xs:py-3.5 px-4 xs:px-6 
-                      rounded-xl
-                      font-bold text-base xs:text-lg
-                      transition-all duration-200 transform 
-                      hover:scale-[1.02] active:scale-[0.98]
-                      flex items-center justify-center gap-2
-                      shadow-lg hover:shadow-xl
-                      ${settings.theme === 'dark'
-                        ? 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white'
-                        : 'bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white'
-                      }
-                    `}
-                  >
-                    <Layers className="h-5 w-5" />
-                    Select Level
-                  </button>
-
-                  {/* Shop Button */}
-                  <Link
-                    to="/shop"
-                    className={`w-full max-w-xs py-2 xs:py-3 px-4 xs:px-6 rounded-lg font-semibold text-center 
+                      flex-1 py-2 px-3 rounded-lg font-bold
+                      text-sm xs:text-base
                       transition-all duration-200 transform hover:scale-105
-                      flex items-center justify-center gap-2
+                      flex items-center justify-center gap-1 xs:gap-2
                       shadow-lg hover:shadow-xl
+                      min-w-[100px] w-1/2
                       ${settings.theme === 'dark'
-                        ? 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white'
-                        : 'bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white'
-                      }`}
+                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white'
+                        : 'bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-500 hover:to-orange-500 text-white'
+                      }
+                    `}
                   >
-                    <ShoppingCart className="h-5 w-5" />
-                    Shop
-                  </Link>
+                    <Clock className="h-4 w-4 xs:h-5 xs:w-5" />
+                    Daily
+                  </button>
 
-                  {/* Header for Quests */}
-                  <h3 className={`
-                    text-base xs:text-lg sm:text-xl
-                    font-bold
-                    mt-2 xs:mt-3 mb-1 xs:mb-2
-                    text-center
-                    ${settings.theme === 'dark' ? 'text-purple-200' : 'text-purple-700'}
-                  `}>
-                    Your Puppies Quests
-                  </h3>
-
-                  <div className="flex w-full max-w-xs gap-2">
-                    {/* Daily Quests Button */}
-                    <button
-                      onClick={() => setShowDailyQuests(true)}
-                      className={`
-                        flex-1 py-2 px-3 rounded-lg font-bold
-                        text-sm xs:text-base
-                        transition-all duration-200 transform hover:scale-105
-                        flex items-center justify-center gap-1 xs:gap-2
-                        shadow-lg hover:shadow-xl
-                        min-w-[100px] w-1/2
-                        ${settings.theme === 'dark'
-                          ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white'
-                          : 'bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-500 hover:to-orange-500 text-white'
-                        }
-                      `}
-                    >
-                      <Clock className="h-4 w-4 xs:h-5 xs:w-5" />
-                      Daily
-                    </button>
-
-                    {/* Weekly Quests Button */}
-                    <button
-                      onClick={() => setShowWeeklyQuests(true)}
-                      className={`
-                        flex-1 py-2 px-3 rounded-lg font-bold
-                        text-sm xs:text-base
-                        transition-all duration-200 transform hover:scale-105
-                        flex items-center justify-center gap-1 xs:gap-2
-                        shadow-lg hover:shadow-xl
-                        min-w-[100px] w-1/2
-                        ${settings.theme === 'dark'
-                          ? 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white'
-                          : 'bg-gradient-to-r from-blue-400 to-indigo-400 hover:from-blue-500 hover:to-indigo-500 text-white'
-                        }
-                      `}
-                    >
-                      <LucideCalendar className="h-4 w-4 xs:h-5 xs:w-5" />
-                      Weekly
-                    </button>
-                  </div>
-
-                  {showDailyQuests && (
-                    <DailyQuests 
-                      onClose={() => setShowDailyQuests(false)} 
-                      theme={settings.theme}
-                    />
-                  )}
-                  {showWeeklyQuests && (
-                    <WeeklyQuests 
-                      onClose={() => setShowWeeklyQuests(false)} 
-                      theme={settings.theme}
-                    />
-                  )}
-
-                  {/* Tutorial trigger button */}
-                  {!hasCompletedTutorial && (
-                    <button
-                      onClick={startTutorial}
-                      className={`
-                        w-full max-w-xs py-2 px-4
-                        text-sm xs:text-base
-                        rounded-lg font-bold
-                        transition-all duration-200 
-                        transform hover:scale-105
-                        mt-1 xs:mt-2
-                        ${settings.theme === 'dark'
-                          ? 'bg-purple-600 hover:bg-purple-500 text-white'
-                          : 'bg-purple-500 hover:bg-purple-400 text-white'
-                        }
-                      `}
-                    >
-                      Start Tutorial
-                    </button>
-                  )}
+                  {/* Weekly Quests Button */}
+                  <button
+                    onClick={() => setShowWeeklyQuests(true)}
+                    className={`
+                      flex-1 py-2 px-3 rounded-lg font-bold
+                      text-sm xs:text-base
+                      transition-all duration-200 transform hover:scale-105
+                      flex items-center justify-center gap-1 xs:gap-2
+                      shadow-lg hover:shadow-xl
+                      min-w-[100px] w-1/2
+                      ${settings.theme === 'dark'
+                        ? 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white'
+                        : 'bg-gradient-to-r from-blue-400 to-indigo-400 hover:from-blue-500 hover:to-indigo-500 text-white'
+                      }
+                    `}
+                  >
+                    <LucideCalendar className="h-4 w-4 xs:h-5 xs:w-5" />
+                    Weekly
+                  </button>
                 </div>
+
+                {showDailyQuests && (
+                  <DailyQuests 
+                    onClose={() => setShowDailyQuests(false)} 
+                    theme={settings.theme}
+                  />
+                )}
+                {showWeeklyQuests && (
+                  <WeeklyQuests 
+                    onClose={() => setShowWeeklyQuests(false)} 
+                    theme={settings.theme}
+                  />
+                )}
+
+                {/* Tutorial trigger button */}
+                {!hasCompletedTutorial && (
+                  <button
+                    onClick={startTutorial}
+                    className={`
+                      w-full max-w-xs py-2 px-4
+                      text-sm xs:text-base
+                      rounded-lg font-bold
+                      transition-all duration-200 
+                      transform hover:scale-105
+                      mt-1 xs:mt-2
+                      ${settings.theme === 'dark'
+                        ? 'bg-purple-600 hover:bg-purple-500 text-white'
+                        : 'bg-purple-500 hover:bg-purple-400 text-white'
+                      }
+                    `}
+                  >
+                    Start Tutorial
+                  </button>
                 )}
               </div>
-            )}
+              )}
+            </div>
+          )}
             {/* Exit Confirmation Dialog - Position it in the center of the viewport */}
             {showExitConfirm && (
               <div className="fixed top-0 left-0 right-0 bottom-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-[99999]" style={{ position: 'fixed', zIndex: 99999 }}>

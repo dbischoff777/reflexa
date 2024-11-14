@@ -1,13 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import PopItGameUI from './PopItGameUI';
-import soundManager from './sounds/sound';
 import { useSettings } from './Settings';
 import { useAvatar } from './hooks/useAvatar';
 import { useGameHooks } from './hooks/useGameHooks';
-import MusicGenerator from './services/MusicGenerator';
-import Particles from "react-tsparticles";
 import mascotImage from './assets/images/cute-mascot.png';
 import LevelSelect from './components/LevelSelect';
+import MusicGenerator from './services/MusicGenerator';
+import Particles from "react-tsparticles";
 
 // Game state constants
 export const GAME_STATES = {
@@ -22,148 +21,8 @@ const PopItGame = ({ gameState, setGameState }) => {
   const { settings } = useSettings();
   const { playerAvatar, setPlayerAvatar } = useAvatar();
   const game = useGameHooks(gameState, setGameState);
-  const [currentLevel, setCurrentLevel] = useState(1);
-  const [maxLevel, setMaxLevel] = useState(() => {
-    const saved = localStorage.getItem('maxLevel');
-    return saved ? parseInt(saved) : 1;
-  });
-  // Initialize screen protection
-  useEffect(() => {
-    let wakeLock = null;
 
-    const requestWakeLock = async () => {
-      try {
-        wakeLock = await navigator.wakeLock.request('screen');
-        game.setWakeLockActive(true);
-        console.log('Wake Lock is active');
-      } catch (err) {
-        game.setWakeLockActive(false);
-        console.log('Wake Lock request failed:', err.message);
-      }
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        requestWakeLock();
-      }
-    };
-
-    requestWakeLock();
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      if (wakeLock) {
-        wakeLock.release()
-          .then(() => {
-            game.setWakeLockActive(false);
-            console.log('Wake Lock released');
-          })
-          .catch((err) => console.log('Error releasing Wake Lock:', err));
-      }
-    };
-  }, []);
-
-  // Initialize music generator
-  useEffect(() => {
-    MusicGenerator.generateMusic();
-    return () => {
-      MusicGenerator.pause();
-    };
-  }, []);
-
-  // Sync settings with SoundManager
-  useEffect(() => {
-    if (settings.soundEnabled !== !soundManager.isMuted()) {
-      soundManager.toggleMute();
-    }
-  }, [settings.soundEnabled]);
-
-  // Handle mascot messages
-  useEffect(() => {
-    if (game.mascotMessage) {
-      game.setShowSpeechBubble(true);
-      const timer = setTimeout(() => {
-        game.setShowSpeechBubble(false);
-      }, 8000);
-      return () => clearTimeout(timer);
-    }
-  }, [game.mascotMessage]);
-
-  // Handle achievement notifications
-  useEffect(() => {
-    if (game.newAchievement) {
-      game.playSound('achievement');
-      const timer = setTimeout(() => {
-        game.setNewAchievement(null);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [game.newAchievement]);
-
-  // Update maxMultiplier
-  useEffect(() => {
-    if (game.multiplier > game.maxMultiplier) {
-      game.setMaxMultiplier(game.multiplier);
-    }
-  }, [game.multiplier, game.maxMultiplier]);
-
-  // Game loop effects
-  useEffect(() => {
-    if (game.gameState === GAME_STATES.COUNTDOWN && game.countdown > 0) {
-      const timer = setTimeout(() => {
-        game.setCountdown(prev => prev - 1);
-        game.playSound('countdown');
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-
-    if (game.gameState === GAME_STATES.COUNTDOWN && game.countdown === 0) {
-      game.setGameState(GAME_STATES.PLAYING);
-      game.setTargetButton(game.getRandomButton());
-      game.setStartTime(Date.now());
-      game.playSound('trySound');
-    }
-  }, [game.gameState, game.countdown]);
-
-  // Handle game over condition
-  useEffect(() => {
-    if (game.lives <= 0 && !game.gameOver) {
-      game.handleGameOver();
-    }
-  }, [game.lives, game.gameOver]);
-
-  // Save music state
-  useEffect(() => {
-    localStorage.setItem('isMusicPlaying', JSON.stringify(game.isMusicPlaying));
-  }, [game.isMusicPlaying]);
-
-  // Update target animation
-  useEffect(() => {
-    if (game.targetButton !== null) {
-      const randomAnimation = game.TRY_ANIMATIONS_BY_SIZE[game.currentSize];
-      game.setCurrentTargetAnimation(randomAnimation[Math.floor(Math.random() * randomAnimation.length)]);
-    }
-  }, [game.targetButton, game.currentSize]);
-
-  const handleLevelComplete = () => {
-    if (currentLevel === maxLevel) {
-      const newMaxLevel = maxLevel + 1;
-      setMaxLevel(newMaxLevel);
-      localStorage.setItem('maxLevel', newMaxLevel);
-    }
-    // You might want to show a level complete screen here
-  };
-
-  const handleLevelSelect = (level) => {
-    setCurrentLevel(level);
-    game.setGameState(GAME_STATES.COUNTDOWN);
-    // Configure game difficulty based on level
-    game.setCurrentSize(Math.min(3 + Math.floor(level / 2), 8)); // Example: increase grid size with level
-    game.setTimeLimit(Math.max(60 - (level * 2), 30)); // Example: decrease time limit with level
-  };
-  
-  // PopEffect component
+  // PopEffect component (keep this as it's UI specific)
   const PopEffect = ({ row, col, theme, gridRows, gridColumns, onComplete }) => {
     const particleColors = [
       "#9333EA", "#A855F7", "#C084FC",
@@ -223,18 +82,18 @@ const PopItGame = ({ gameState, setGameState }) => {
                 }
               },
               number: {
-                value: Math.min(Math.max(15, (100 / gridColumns) * 2), 30) // Adaptive particle count
+                value: Math.min(Math.max(15, (100 / gridColumns) * 2), 30)
               },
               move: {
                 ...options.particles.move,
-                speed: Math.min(Math.max(15, (100 / gridColumns) * 1.5), 25) // Adaptive speed
+                speed: Math.min(Math.max(15, (100 / gridColumns) * 1.5), 25)
               }
             },
             emitters: {
               ...options.emitters,
               rate: {
                 ...options.emitters.rate,
-                quantity: Math.min(Math.max(10, (100 / gridColumns) * 1.5), 20) // Adaptive emission rate
+                quantity: Math.min(Math.max(10, (100 / gridColumns) * 1.5), 20)
               }
             }
           }}
@@ -247,9 +106,9 @@ const PopItGame = ({ gameState, setGameState }) => {
     <div>
       {gameState === GAME_STATES.LEVELSELECT ? (
         <LevelSelect
-          currentLevel={currentLevel}
-          maxLevel={maxLevel}
-          onLevelSelect={handleLevelSelect}
+          currentLevel={game.currentLevel}
+          maxLevel={game.maxLevel}
+          onLevelSelect={game.handleLevelSelect}
           gameState={gameState}
           setGameState={setGameState}
         />
@@ -294,8 +153,12 @@ const PopItGame = ({ gameState, setGameState }) => {
           stopMusic={() => MusicGenerator.pause()}
           isMusicPlaying={game.isMusicPlaying}
           onMusicToggle={game.toggleMusic}
-          currentLevel={currentLevel}
-          maxLevel={maxLevel}
+          currentLevel={game.currentLevel}
+          maxLevel={game.maxLevel}
+          containerRef={game.containerRef}
+          buttonPosition={game.buttonPosition}
+          setButtonPosition={game.setButtonPosition}
+          getRandomPosition={game.getRandomPosition}
         />
       )}
     </div>

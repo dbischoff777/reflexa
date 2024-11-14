@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useSettings } from '../Settings';
 import soundManager from '../sounds/sound';
 import MusicGenerator from '../services/MusicGenerator';
@@ -36,6 +36,27 @@ const getAnimationForSize = (size, type) => {
     (SUCCESS_ANIMATIONS_BY_SIZE[size] || []) : 
     (TRY_ANIMATIONS_BY_SIZE[size] || []);
   return animations.length > 0 ? animations[0] : null;
+};
+
+// Add these helper functions at the top level
+const getRandomPosition = (buttonSize = 280) => {
+  // Get the game container element
+  const container = document.querySelector('.game-container');
+  if (!container) return { x: 0, y: 0 };
+
+  // Get container bounds
+  const bounds = container.getBoundingClientRect();
+  const padding = 40; // Increased padding for larger button
+
+  // Calculate available space
+  const maxWidth = bounds.width - buttonSize - (padding * 2);
+  const maxHeight = bounds.height - buttonSize - (padding * 2);
+  
+  // Generate random position within bounds
+  return {
+    x: bounds.left + padding + Math.random() * maxWidth,
+    y: bounds.top + padding + Math.random() * maxHeight
+  };
 };
 
 export const useGameHooks = (gameState, setGameState) => {
@@ -120,6 +141,9 @@ export const useGameHooks = (gameState, setGameState) => {
   const [maxLevel, setMaxLevel] = useState(parseInt(localStorage.getItem('maxLevel')) || 1);
   const [timeLimit, setTimeLimit] = useState(60);
 
+  // Add new state for button position
+  const [buttonPosition, setButtonPosition] = useState(getRandomPosition());
+  
   // Helper functions
   const getAnimationConfig = useCallback((step) => {
     if (step <= 3) {
@@ -139,11 +163,6 @@ export const useGameHooks = (gameState, setGameState) => {
       };
     }
   }, []);
-
-  const getRandomButton = useCallback(() => {
-    const totalButtons = settings.gridRows * settings.gridColumns;
-    return Math.floor(Math.random() * totalButtons);
-  }, [settings.gridRows, settings.gridColumns]);
 
   // Sound functions
   const playSound = useCallback((soundName) => {
@@ -534,8 +553,8 @@ export const useGameHooks = (gameState, setGameState) => {
       longestStreak: 0,
       currentStreak: 0,
       highestCombo: 0,
-      combos: [], // Initialize empty array
-      reactionTimes: [], // Initialize empty array
+      combos: [],
+      reactionTimes: [],
       maxMultiplier: 1,
       lives: 9,
       maxLives: 9,
@@ -550,12 +569,12 @@ export const useGameHooks = (gameState, setGameState) => {
       playSound('countdown');
     } else {
       setGameState(GAME_STATES.PLAYING);
-      setTargetButton(getRandomButton());
+      setButtonPosition(getRandomPosition());
       setStartTime(Date.now());
       playSound('trySound');
     }
 
-    // Reset all game states with proper initialization and safety checks
+    // Reset all game states
     setScore(0);
     setLives(9);
     setMultiplier(1);
@@ -566,19 +585,18 @@ export const useGameHooks = (gameState, setGameState) => {
     setConsecutiveFailures(0);
     setCurrentSuccessAnimation(initialSuccessAnimation);
     setCurrentTargetAnimation(initialTryAnimation);
-    setParticleEffects([]); // Initialize empty array
+    setParticleEffects([]);
     setMascotMessage('');
     setShowAnimation(false);
     setGameStats(initialGameStats);
     setMaxMultiplier(1);
     
-}, [
+  }, [
     username,
     playSound,
     settings.countdownTimer,
-    getRandomButton,
     setGameState
-]);
+  ]);
 
   const handleExit = useCallback(() => {
     setTargetButton(null);
@@ -594,8 +612,8 @@ export const useGameHooks = (gameState, setGameState) => {
     setStartTime(null);
   }, [setGameState]);
 
-  // Handle button clicks
-  const handleButtonClick = useCallback((buttonIndex) => {
+  // Define handleButtonClick first
+  const handleButtonClick = useCallback(() => {
     if (gameState !== GAME_STATES.PLAYING) return;
     
     const currentTime = Date.now();
@@ -607,152 +625,159 @@ export const useGameHooks = (gameState, setGameState) => {
       reactionTimes: [...prev.reactionTimes, reactionTime]
     }));
 
-    if (buttonIndex === targetButton) {
-      // Handle correct click
-      playSound('success');
+    playSound('success');
 
-      const pointsEarned = 100 * multiplier;
-      setScore(prev => prev + pointsEarned);
-      
-      // Show success animation
-      setShowAnimation(true);
-      setAnimationPosition({ 
-        x: buttonIndex % settings.gridColumns, 
-        y: Math.floor(buttonIndex / settings.gridColumns) 
-      });
-
-      // Update success animation
-      const randomSuccessAnimation = SUCCESS_ANIMATIONS_BY_SIZE[currentSize];
-      setCurrentSuccessAnimation(
-        randomSuccessAnimation[Math.floor(Math.random() * randomSuccessAnimation.length)]
-      );
-
-      setTimeout(() => {
-        setShowAnimation(false);
-        // Update target animation after success animation ends
-        const randomAnimation = TRY_ANIMATIONS_BY_SIZE[currentSize];
-        setCurrentTargetAnimation(
-          randomAnimation[Math.floor(Math.random() * randomAnimation.length)]
-        );
-      }, currentDuration);
-
-      setGameStats(prev => ({
-        ...prev,
-        successfulClicks: prev.successfulClicks + 1,
-        currentStreak: prev.currentStreak + 1,
-        score: prev.score + pointsEarned
-      }));
-
-      const newStreak = gameStats.currentStreak + 1;
-      if (newStreak > gameStats.longestStreak) {
-        setGameStats(prev => ({ ...prev, longestStreak: newStreak }));
-      }
-
-      if (newStreak % 5 === 0) {
-        setMultiplier(prev => Math.min(prev + 1, 10));
-        setMascotMessage(getMascotMessage(newStreak));
-      }
-
-      setConsecutiveFailures(0);
-      setTargetButton(getRandomButton());
-      playSound('trySound');
-
-    } else {
-      // Handle incorrect click
-      handleIncorrectClick();
-    }
-  }, [
-    gameState,
-    targetButton,
-    startTime,
-    multiplier,
-    settings.gridColumns,
-    currentDuration,
-    currentSize,
-    gameStats.currentStreak,
-    gameStats.longestStreak,
-    playSound,
-    getRandomButton,
-    getMascotMessage
-  ]);
-
-  // Handle incorrect clicks
-  const handleIncorrectClick = useCallback(() => {
-    playSound('miss');
-    setLives(prev => prev - 1);
-    setMultiplier(1);
-    setGameStats(prev => ({ ...prev, currentStreak: 0 }));
-
-    setConsecutiveFailures(prev => prev + 1);
-    if (consecutiveFailures >= FAILURES_BEFORE_ANIMATION_CHANGE) {
-      if (currentSize === 'SMALL') {
-        setCurrentSize('MEDIUM');
-      } else if (currentSize === 'MEDIUM') {
-        setCurrentSize('LARGE');
-      }
-      setConsecutiveFailures(0);
-    }
-
-    setGridShake(true);
-    setTimeout(() => setGridShake(false), 500);
-    setFlashRed(true);
-    setTimeout(() => setFlashRed(false), 100);
-
-    setMascotMessage(getFailureMessage());
-    setGameStats(prev => ({
-      ...prev,
-      missedClicks: prev.missedClicks + 1
-    }));
-  }, [
-    playSound,
-    consecutiveFailures,
-    currentSize,
-    getFailureMessage
-  ]);
-
-  // Render button
-  const renderButton = useCallback((index) => {
-    const isTarget = index === targetButton;
+    const pointsEarned = 100 * multiplier;
+    setScore(prev => prev + pointsEarned);
     
-    return (
-      <div
-        key={index}
-        className="relative aspect-square w-full"
-        onClick={() => handleButtonClick(index)}
-        onTouchStart={(e) => {
-          e.preventDefault();
-          handleButtonClick(index);
-        }}
-      >
-        {!showAnimation && !gameOver && isTarget && (
-          <div className="absolute inset-0 flex items-center justify-center filter drop-shadow-lg">
-            <img
-              src={currentTargetAnimation}
-              alt="Target Animation"
-              className="w-4/5 2xs:w-[85%] xs:w-[87%] sm:w-[90%] object-contain pointer-events-none mix-blend-screen"
-              draggable="false"
-            />
-          </div>
-        )}
-      </div>
-    );
-  }, [
-    targetButton,
-    showAnimation,
-    gameOver,
-    currentTargetAnimation,
-    handleButtonClick
-  ]);
+    setShowAnimation(true);
+    setAnimationPosition(buttonPosition);
 
-  // Add animation update effect
-  useEffect(() => {
-    if (targetButton !== null) {
+    const randomSuccessAnimation = SUCCESS_ANIMATIONS_BY_SIZE[currentSize];
+    setCurrentSuccessAnimation(
+      randomSuccessAnimation[Math.floor(Math.random() * randomSuccessAnimation.length)]
+    );
+
+    setTimeout(() => {
+      setShowAnimation(false);
       const randomAnimation = TRY_ANIMATIONS_BY_SIZE[currentSize];
       setCurrentTargetAnimation(
         randomAnimation[Math.floor(Math.random() * randomAnimation.length)]
       );
+    }, currentDuration);
+
+    setGameStats(prev => ({
+      ...prev,
+      successfulClicks: prev.successfulClicks + 1,
+      currentStreak: prev.currentStreak + 1,
+      score: prev.score + pointsEarned
+    }));
+
+    const newStreak = gameStats.currentStreak + 1;
+    if (newStreak > gameStats.longestStreak) {
+      setGameStats(prev => ({ ...prev, longestStreak: newStreak }));
     }
-  }, [targetButton, currentSize]);
+
+    if (newStreak % 5 === 0) {
+      setMultiplier(prev => Math.min(prev + 0.1, 2.0));
+      setMascotMessage(getMascotMessage(newStreak));
+    }
+
+    setConsecutiveFailures(0);
+    setButtonPosition(getRandomPosition()); // Set new position
+    playSound('trySound');
+  }, [
+    gameState,
+    startTime,
+    multiplier,
+    currentSize,
+    currentDuration,
+    gameStats.currentStreak,
+    buttonPosition,
+    playSound,
+    getMascotMessage
+  ]);
+
+  // Then define renderButton
+  const renderButton = useCallback(() => {
+    if (gameState !== GAME_STATES.PLAYING || gameOver) return null;
+
+    return (
+      <div
+        className="absolute transform -translate-x-1/2 -translate-y-1/2"
+        style={{
+          left: `${buttonPosition.x}px`,
+          top: `${buttonPosition.y}px`,
+          touchAction: 'none',
+          willChange: 'transform',
+          zIndex: 10,
+        }}
+      >
+        <button
+          className="relative flex items-center justify-center"
+          onClick={handleButtonClick}
+          onTouchStart={(e) => {
+            e.preventDefault();
+            handleButtonClick();
+          }}
+          style={{
+            touchAction: 'none',
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
+          }}
+        >
+          {!showAnimation && (
+            <img
+              src={currentTargetAnimation}
+              alt="Target"
+              className="w-[200px] h-[200px] xs:w-[240px] xs:h-[240px] sm:w-[280px] sm:h-[280px] object-contain pointer-events-none mix-blend-screen"
+              style={{
+                imageRendering: 'pixelated',
+                WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+                willChange: 'transform',
+              }}
+              draggable="false"
+            />
+          )}
+        </button>
+      </div>
+    );
+  }, [
+    gameState,
+    gameOver,
+    buttonPosition,
+    showAnimation,
+    currentTargetAnimation,
+    handleButtonClick
+  ]);
+
+  // Effect to set initial position
+  useEffect(() => {
+    if (gameState === GAME_STATES.PLAYING) {
+      setButtonPosition(getRandomPosition());
+    }
+  }, [gameState]);
+
+  // Add ref for container measurements
+  const containerRef = useRef(null);
+
+  // Update button position when container size changes
+  useEffect(() => {
+    const updatePosition = () => {
+      if (gameState === GAME_STATES.PLAYING) {
+        setButtonPosition(getRandomPosition());
+      }
+    };
+
+    const resizeObserver = new ResizeObserver(updatePosition);
+    const container = document.querySelector('.game-container');
+    
+    if (container) {
+      resizeObserver.observe(container);
+    }
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [gameState]);
+
+  // Game loop effects
+  useEffect(() => {
+    if (gameState === GAME_STATES.COUNTDOWN && countdown > 0) {
+      const timer = setTimeout(() => {
+        setCountdown(prev => prev - 1);
+        playSound('countdown');
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+
+    if (gameState === GAME_STATES.COUNTDOWN && countdown === 0) {
+      setGameState(GAME_STATES.PLAYING);
+      setButtonPosition(getRandomPosition());
+      setStartTime(Date.now());
+      playSound('trySound');
+    }
+  }, [gameState, countdown, playSound, setGameState]);
 
   return {
     // Game states
@@ -793,6 +818,7 @@ export const useGameHooks = (gameState, setGameState) => {
     currentLevel,
     maxLevel,
     timeLimit,
+    buttonPosition,
 
     // Setters
     setWakeLockActive,
@@ -832,10 +858,10 @@ export const useGameHooks = (gameState, setGameState) => {
     setCurrentLevel,
     setMaxLevel,
     setTimeLimit,
+    setButtonPosition,
 
     // Functions
     getAnimationConfig,
-    getRandomButton,
     playSound,
     toggleMusic,
     calculateFinalStats,
@@ -869,5 +895,6 @@ export const useGameHooks = (gameState, setGameState) => {
     // Game state
     gameState,
     setGameState,
+    containerRef,
   };
 }; 
