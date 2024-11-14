@@ -631,7 +631,7 @@ export const useGameHooks = (gameState, setGameState) => {
   }, []);
 
   // 2. Then declare path-related state
-  const [pathDuration, setPathDuration] = useState(8000);
+  const [pathDuration, setPathDuration] = useState(7000);
   const [currentPath, setCurrentPath] = useState(generateRandomPath());
 
   // 3. Define updatePath
@@ -645,13 +645,16 @@ export const useGameHooks = (gameState, setGameState) => {
   const handleButtonClick = useCallback(() => {
     if (gameState !== GAME_STATES.PLAYING) return;
     
+    // Clear trail elements immediately
+    setTrailElements([]);
+    
     const currentTime = Date.now();
     const reactionTime = currentTime - startTime;
     
     setGameStats(prev => ({
-      ...prev,
-      totalClicks: prev.totalClicks + 1,
-      reactionTimes: [...prev.reactionTimes, reactionTime]
+        ...prev,
+        totalClicks: prev.totalClicks + 1,
+        reactionTimes: [...prev.reactionTimes, reactionTime]
     }));
 
     playSound('success');
@@ -662,40 +665,43 @@ export const useGameHooks = (gameState, setGameState) => {
     setShowAnimation(true);
     setAnimationPosition(buttonPosition);
 
+    // Reset last trail time
+    lastTrailTime.current = 0;
+    
     const randomSuccessAnimation = SUCCESS_ANIMATIONS_BY_SIZE[currentSize];
     setCurrentSuccessAnimation(
-      randomSuccessAnimation[Math.floor(Math.random() * randomSuccessAnimation.length)]
+        randomSuccessAnimation[Math.floor(Math.random() * randomSuccessAnimation.length)]
     );
 
     setTimeout(() => {
-      setShowAnimation(false);
-      const randomAnimation = TRY_ANIMATIONS_BY_SIZE[currentSize];
-      setCurrentTargetAnimation(
-        randomAnimation[Math.floor(Math.random() * randomAnimation.length)]
-      );
+        setShowAnimation(false);
+        const randomAnimation = TRY_ANIMATIONS_BY_SIZE[currentSize];
+        setCurrentTargetAnimation(
+            randomAnimation[Math.floor(Math.random() * randomAnimation.length)]
+        );
+        setButtonPosition(getRandomPosition());
+        updatePath(); // Moved updatePath() here
+        playSound('trySound');
     }, currentDuration);
 
     setGameStats(prev => ({
-      ...prev,
-      successfulClicks: prev.successfulClicks + 1,
-      currentStreak: prev.currentStreak + 1,
-      score: prev.score + pointsEarned
+        ...prev,
+        successfulClicks: prev.successfulClicks + 1,
+        currentStreak: prev.currentStreak + 1,
+        score: prev.score + pointsEarned
     }));
 
     const newStreak = gameStats.currentStreak + 1;
     if (newStreak > gameStats.longestStreak) {
-      setGameStats(prev => ({ ...prev, longestStreak: newStreak }));
+        setGameStats(prev => ({ ...prev, longestStreak: newStreak }));
     }
 
     if (newStreak % 5 === 0) {
-      setMultiplier(prev => Math.min(prev + 1, 10));
-      setMascotMessage(getMascotMessage(newStreak));
+        setMultiplier(prev => Math.min(prev + 1, 10));
+        setMascotMessage(getMascotMessage(newStreak));
     }
 
     setConsecutiveFailures(0);
-    setButtonPosition(getRandomPosition());
-    updatePath(); // Now this reference is valid
-    playSound('trySound');
   }, [
     gameState,
     startTime,
@@ -781,12 +787,9 @@ export const useGameHooks = (gameState, setGameState) => {
   // Then define renderButton
   const renderButton = useCallback(() => {
     return (
-      <div 
-        className="absolute inset-0"
-      
-      >
-        {/* Trail elements with rotation */}
-        {trailElements.map(element => (
+      <div className="absolute inset-0">
+        {/* Only show trail elements when not showing success animation */}
+        {!showAnimation && trailElements.map(element => (
           <div
             key={element.id}
             className="absolute pointer-events-none"
@@ -816,7 +819,7 @@ export const useGameHooks = (gameState, setGameState) => {
           className="absolute transform -translate-x-1/2 -translate-y-1/2 button-animation"
           style={{
             offsetPath: `path("${currentPath}")`,
-            animation: `moveAlongPath ${pathDuration}ms ease-in-out infinite`,
+            animation: !showAnimation ? `moveAlongPath ${pathDuration}ms ease-in-out infinite` : 'none',
             touchAction: 'none',
             willChange: 'transform',
             zIndex: 10,
