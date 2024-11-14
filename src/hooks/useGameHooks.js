@@ -659,7 +659,7 @@ export const useGameHooks = (gameState, setGameState) => {
     }
 
     if (newStreak % 5 === 0) {
-      setMultiplier(prev => Math.min(prev + 0.1, 2.0));
+        setMultiplier(prev => Math.min(prev + 1, 10));
       setMascotMessage(getMascotMessage(newStreak));
     }
 
