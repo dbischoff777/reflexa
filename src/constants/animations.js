@@ -20,7 +20,7 @@ export const ANIMATION_DURATIONS = {
   MEDIUM: 2000,  // 2 seconds
   SHORT: 1000,   // 1 second
   CLICK_WINDOW: 10000, // 10 seconds for clicking window
-  FADE_OUT: 1000  // 500ms for fade out animation
+  FADE_OUT: 1000  // 1000ms for fade out animation
 };
 
 // Group animations by size

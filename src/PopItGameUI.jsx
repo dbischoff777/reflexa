@@ -962,29 +962,6 @@ const GameContent = ({
                     </div>
                   </div>
                 )}
-
-                {/* Animation Overlay */}
-                {showAnimation && (
-                  <div 
-                    className="absolute inset-0 pointer-events-none flex items-center justify-center"
-                    style={{
-                      zIndex: 50,
-                    }}
-                  >
-                    <div className="w-full max-w-[300px] aspect-square flex items-center justify-center">
-                      <img
-                        src={successAnimation}
-                        alt="Success Animation"
-                        className="w-2/3 object-contain pointer-events-none mix-blend-screen"
-                        style={{
-                          imageRendering: 'pixelated',
-                          WebkitMaskImage: '-webkit-radial-gradient(white, black)'
-                        }}
-                        draggable="false"
-                      />
-                    </div>
-                  </div>
-                )}
                 
                 {/* Game Area Container */}
                 <div 

@@ -700,9 +700,19 @@ export const useGameHooks = (gameState, setGameState) => {
     
     // Clear existing timer first
     if (animationTimer) {
-      clearTimeout(animationTimer);
-      setAnimationTimer(null);
+        clearTimeout(animationTimer);
+        setAnimationTimer(null);
     }
+
+    // Get click coordinates from the button element
+    const buttonElement = buttonRef.current;
+    if (!buttonElement) return;
+
+    const rect = buttonElement.getBoundingClientRect();
+    const clickPosition = {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2
+    };
 
     const currentTime = Date.now();
     const reactionTime = currentTime - startTime;
@@ -710,21 +720,22 @@ export const useGameHooks = (gameState, setGameState) => {
 
     // Batch state updates
     setGameStats(prev => ({
-      ...prev,
-      totalClicks: prev.totalClicks + 1,
-      reactionTimes: [...prev.reactionTimes, reactionTime],
-      successfulClicks: prev.successfulClicks + 1,
-      currentStreak: prev.currentStreak + 1,
-      score: prev.score + pointsEarned
+        ...prev,
+        totalClicks: prev.totalClicks + 1,
+        reactionTimes: [...prev.reactionTimes, reactionTime],
+        successfulClicks: prev.successfulClicks + 1,
+        currentStreak: prev.currentStreak + 1,
+        score: prev.score + pointsEarned
     }));
 
     setScore(prev => prev + pointsEarned);
     setShowAnimation(true);
-    setAnimationPosition(buttonPosition);
+    // Update animation position to click coordinates
+    setAnimationPosition(clickPosition);
 
     // Show success animation
     const randomSuccessAnimation = SUCCESS_ANIMATIONS_BY_SIZE[currentSize][
-      Math.floor(Math.random() * SUCCESS_ANIMATIONS_BY_SIZE[currentSize].length)
+        Math.floor(Math.random() * SUCCESS_ANIMATIONS_BY_SIZE[currentSize].length)
     ];
     setCurrentSuccessAnimation(randomSuccessAnimation);
 
@@ -774,7 +785,7 @@ export const useGameHooks = (gameState, setGameState) => {
 
   const [trailElements, setTrailElements] = useState([]);
   const lastTrailTime = useRef(0);
-  const TRAIL_INTERVAL = 500; // Increased to 300ms for more spacing
+  const TRAIL_INTERVAL = 400; // Increased to 300ms for more spacing
   const TRAIL_DURATION = 1500; // 25 seconds fade duration
   const MAX_TRAIL_ELEMENTS = 6; // Keep 8 elements max
   const [lastPosition, setLastPosition] = useState({ x: 0, y: 0 });
@@ -847,6 +858,28 @@ export const useGameHooks = (gameState, setGameState) => {
   const renderButton = useCallback(() => {
     return (
       <div className="absolute inset-0">
+        {/* Show success animation at click position */}
+        {showAnimation && (
+          <div
+            className="absolute transform -translate-x-1/2 -translate-y-1/2"
+            style={{
+              left: animationPosition.x,
+              top: animationPosition.y,
+              zIndex: 20,
+            }}
+          >
+            <img
+              src={currentSuccessAnimation}
+              alt="Success"
+              className="w-[200px] h-[200px] xs:w-[240px] xs:h-[240px] sm:w-[280px] sm:h-[280px] object-contain pointer-events-none mix-blend-screen"
+              style={{
+                imageRendering: 'pixelated',
+                willChange: 'transform',
+              }}
+            />
+          </div>
+        )}
+
         {/* Only show trail elements when animation is rendered and not showing success animation */}
         {gameState === GAME_STATES.PLAYING && !showAnimation && trailElements.map(element => (
           <div
@@ -933,7 +966,9 @@ export const useGameHooks = (gameState, setGameState) => {
     handleButtonClick,
     trailElements,
     isFadingOut,
-    failureOverlay
+    failureOverlay,
+    animationPosition,
+    currentSuccessAnimation,
   ]);
 
   // Effect to set initial position
