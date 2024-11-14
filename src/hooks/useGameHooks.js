@@ -8,28 +8,11 @@ import {
   SUCCESS_ANIMATIONS_BY_SIZE, 
   TRY_ANIMATIONS_BY_SIZE,
   ANIMATION_DURATIONS,
-  FAILURES_BEFORE_ANIMATION_CHANGE,
+  FAILURE_OVERLAY
 } from '../constants/animations';
 import { GAME_STATES } from '../PopItGame';
 import { LevelProgressManager } from '../services/LevelProgressManager';
 import TrailElement from '../components/TrailElement';
-
-// Add safety checks for animation constants
-const getDefaultAnimations = () => {
-  const defaultLargeAnimation = '/path/to/default/animation.gif'; // Replace with actual default animation path
-  return {
-    SUCCESS_ANIMATIONS_BY_SIZE: {
-      LARGE: [defaultLargeAnimation],
-      MEDIUM: [defaultLargeAnimation],
-      SMALL: [defaultLargeAnimation]
-    },
-    TRY_ANIMATIONS_BY_SIZE: {
-      LARGE: [defaultLargeAnimation],
-      MEDIUM: [defaultLargeAnimation],
-      SMALL: [defaultLargeAnimation]
-    }
-  };
-};
 
 // Add safety checks when accessing animations
 const getAnimationForSize = (size, type) => {
@@ -618,101 +601,181 @@ export const useGameHooks = (gameState, setGameState) => {
     const width = window.innerWidth;
     const height = window.innerHeight;
     
-    // Generate random control points for a smooth curve
-    const x1 = Math.random() * width;
-    const y1 = Math.random() * height;
-    const x2 = Math.random() * width;
-    const y2 = Math.random() * height;
-    const x3 = Math.random() * width;
-    const y3 = Math.random() * height;
+    // Use 70% of width and 80% of height for better vertical coverage
+    const usableWidth = width * 0.9;
+    const usableHeight = height * 0.7;
     
-    // Create a cubic bezier curve path
-    return `M ${x1},${y1} C ${x2},${y2} ${x3},${y3} ${x1},${y1}`;
+    // Center the usable area
+    const offsetX = (width - usableWidth) / 2;
+    const offsetY = (height - usableHeight) / 2;
+    
+    // Create wave-like vertical path
+    const numWaves = 6; // Number of vertical waves
+    const points = [];
+    
+    // Generate points for a wave pattern
+    for (let i = 0; i <= numWaves * 2; i++) {
+      const progress = i / (numWaves * 2);
+      points.push({
+        x: offsetX + (i % 2 === 0 ? usableWidth * 0.2 : usableWidth * 0.8),
+        y: offsetY + (progress * usableHeight)
+      });
+    }
+    
+    // Create the path
+    let path = `M ${points[0].x},${points[0].y}`;
+    
+    // Connect points with smooth curves
+    for (let i = 0; i < points.length - 1; i++) {
+      const current = points[i];
+      const next = points[i + 1];
+      
+      // Control points for smooth vertical waves
+      const midY = (current.y + next.y) / 2;
+      const cp1x = current.x;
+      const cp1y = midY;
+      const cp2x = next.x;
+      const cp2y = midY;
+      
+      path += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${next.x},${next.y}`;
+    }
+    
+    return path;
   }, []);
 
   // 2. Then declare path-related state
-  const [pathDuration, setPathDuration] = useState(8000);
+  const [pathDuration, setPathDuration] = useState(20000);
   const [currentPath, setCurrentPath] = useState(generateRandomPath());
 
   // 3. Define updatePath
   const updatePath = useCallback(() => {
+    setTrailElements([]); 
+    
     setCurrentPath(generateRandomPath());
-    // Random duration between 7-9 seconds
-    setPathDuration(Math.random() * 2000 + 5000);
+    // Fixed duration of 20 seconds for consistent speed
+    setPathDuration(20000);
   }, [generateRandomPath]);
 
   // 4. Move handleButtonClick after updatePath is defined
+  const [animationTimer, setAnimationTimer] = useState(null);
+  const [failureOverlay, setFailureOverlay] = useState(false);
+  const [isFadingOut, setIsFadingOut] = useState(false);
+  const [currentObjectIndex, setCurrentObjectIndex] = useState(0);
+
+  // 1. First define startObjectTimer with minimal dependencies
+  const startObjectTimer = useCallback(() => {
+    if (animationTimer) {
+      clearTimeout(animationTimer);
+    }
+
+    const newTimer = setTimeout(() => {
+      // Start fade out animation
+      setIsFadingOut(true);
+      setFailureOverlay(true);
+
+      // After fade out, switch to next object
+      setTimeout(() => {
+        setFailureOverlay(false);
+        setIsFadingOut(false);
+        setCurrentObjectIndex(prev => (prev + 1) % TRY_ANIMATIONS_BY_SIZE[currentSize].length);
+        
+        // Get next animation outside of state updates
+        const nextIndex = (currentObjectIndex + 1) % TRY_ANIMATIONS_BY_SIZE[currentSize].length;
+        const nextAnimation = TRY_ANIMATIONS_BY_SIZE[currentSize][nextIndex];
+        setCurrentTargetAnimation(nextAnimation);
+        setButtonPosition(getRandomPosition());
+      }, ANIMATION_DURATIONS.FADE_OUT);
+    }, ANIMATION_DURATIONS.CLICK_WINDOW);
+
+    setAnimationTimer(newTimer);
+  }, [
+    currentSize,
+    currentObjectIndex,
+    animationTimer // Only include essential dependencies
+  ]);
+
+  // 2. Update handleButtonClick to avoid circular dependencies
   const handleButtonClick = useCallback(() => {
-    if (gameState !== GAME_STATES.PLAYING) return;
+    if (gameState !== GAME_STATES.PLAYING || isFadingOut) return;
     
+    // Clear existing timer first
+    if (animationTimer) {
+      clearTimeout(animationTimer);
+      setAnimationTimer(null);
+    }
+
     const currentTime = Date.now();
     const reactionTime = currentTime - startTime;
-    
+    const pointsEarned = 100 * multiplier;
+
+    // Batch state updates
     setGameStats(prev => ({
-        ...prev,
-        totalClicks: prev.totalClicks + 1,
-        reactionTimes: [...prev.reactionTimes, reactionTime]
+      ...prev,
+      totalClicks: prev.totalClicks + 1,
+      reactionTimes: [...prev.reactionTimes, reactionTime],
+      successfulClicks: prev.successfulClicks + 1,
+      currentStreak: prev.currentStreak + 1,
+      score: prev.score + pointsEarned
     }));
+
+    setScore(prev => prev + pointsEarned);
+    setShowAnimation(true);
+    setAnimationPosition(buttonPosition);
+
+    // Show success animation
+    const randomSuccessAnimation = SUCCESS_ANIMATIONS_BY_SIZE[currentSize][
+      Math.floor(Math.random() * SUCCESS_ANIMATIONS_BY_SIZE[currentSize].length)
+    ];
+    setCurrentSuccessAnimation(randomSuccessAnimation);
 
     playSound('success');
 
-    const pointsEarned = 100 * multiplier;
-    setScore(prev => prev + pointsEarned);
-    
-    setShowAnimation(true);
-    setAnimationPosition(buttonPosition);
-    
-    const randomSuccessAnimation = SUCCESS_ANIMATIONS_BY_SIZE[currentSize];
-    setCurrentSuccessAnimation(
-        randomSuccessAnimation[Math.floor(Math.random() * randomSuccessAnimation.length)]
-    );
-
+    // Use a single timeout for transitions
     setTimeout(() => {
-        setShowAnimation(false);
-        const randomAnimation = TRY_ANIMATIONS_BY_SIZE[currentSize];
-        setCurrentTargetAnimation(
-            randomAnimation[Math.floor(Math.random() * randomAnimation.length)]
-        );
-        setButtonPosition(getRandomPosition());
-        updatePath();
-        playSound('trySound');
-    }, currentDuration);
+      setShowAnimation(false);
+      const nextIndex = (currentObjectIndex + 1) % TRY_ANIMATIONS_BY_SIZE[currentSize].length;
+      setCurrentObjectIndex(nextIndex);
+      setCurrentTargetAnimation(TRY_ANIMATIONS_BY_SIZE[currentSize][nextIndex]);
+      setButtonPosition(getRandomPosition());
+      updatePath();
+      playSound('trySound');
 
-    setGameStats(prev => ({
-        ...prev,
-        successfulClicks: prev.successfulClicks + 1,
-        currentStreak: prev.currentStreak + 1,
-        score: prev.score + pointsEarned
-    }));
+      // Start new timer after state updates are complete
+      requestAnimationFrame(startObjectTimer);
+    }, ANIMATION_DURATIONS.MEDIUM);
 
+    // Update streak and multiplier
     const newStreak = gameStats.currentStreak + 1;
     if (newStreak > gameStats.longestStreak) {
-        setGameStats(prev => ({ ...prev, longestStreak: newStreak }));
+      setGameStats(prev => ({ ...prev, longestStreak: newStreak }));
     }
 
     if (newStreak % 5 === 0) {
-        setMultiplier(prev => Math.min(prev + 1, 10));
-        setMascotMessage(getMascotMessage(newStreak));
+      setMultiplier(prev => Math.min(prev + 1, 10));
+      setMascotMessage(getMascotMessage(newStreak));
     }
 
     setConsecutiveFailures(0);
   }, [
     gameState,
+    isFadingOut,
     startTime,
     multiplier,
     currentSize,
-    currentDuration,
-    gameStats.currentStreak,
+    currentObjectIndex,
     buttonPosition,
+    gameStats.currentStreak,
     playSound,
     getMascotMessage,
-    updatePath
+    updatePath,
+    startObjectTimer,
+    animationTimer
   ]);
 
   const [trailElements, setTrailElements] = useState([]);
   const lastTrailTime = useRef(0);
-  const TRAIL_INTERVAL = 600; // Increased to 600ms for more spacing
-  const TRAIL_DURATION = 4000; // 4 seconds fade duration
+  const TRAIL_INTERVAL = 300; // Increased to 600ms for more spacing
+  const TRAIL_DURATION = 2500; // 4 seconds fade duration
   const MAX_TRAIL_ELEMENTS = 8; // Keep 8 elements max
   const [lastPosition, setLastPosition] = useState({ x: 0, y: 0 });
 
@@ -780,7 +843,7 @@ export const useGameHooks = (gameState, setGameState) => {
     };
   }, [updateTrail]);
 
-  // Then define renderButton
+  // 3. Then define renderButton which uses handleButtonClick
   const renderButton = useCallback(() => {
     return (
       <div className="absolute inset-0">
@@ -812,7 +875,8 @@ export const useGameHooks = (gameState, setGameState) => {
         
         <div
           ref={buttonRef}
-          className="absolute transform -translate-x-1/2 -translate-y-1/2 button-animation"
+          className={`absolute transform -translate-x-1/2 -translate-y-1/2 button-animation
+            ${isFadingOut ? 'opacity-0' : 'opacity-100'}`}
           style={{
             offsetPath: `path("${currentPath}")`,
             animation: !showAnimation ? `moveAlongPath ${pathDuration}ms ease-in-out infinite` : 'none',
@@ -820,6 +884,7 @@ export const useGameHooks = (gameState, setGameState) => {
             willChange: 'transform',
             zIndex: 10,
             offsetRotate: "0deg",
+            transition: 'opacity 0.5s ease-out',
           }}
         >
           <button
@@ -832,17 +897,29 @@ export const useGameHooks = (gameState, setGameState) => {
             }}
           >
             {!showAnimation && (
-              <img
-                src={currentTargetAnimation}
-                alt="Target"
-                className="w-[200px] h-[200px] xs:w-[240px] xs:h-[240px] sm:w-[280px] sm:h-[280px] object-contain pointer-events-none mix-blend-screen"
-                style={{
-                  imageRendering: 'pixelated',
-                  WebkitMaskImage: '-webkit-radial-gradient(white, black)',
-                  willChange: 'transform',
-                }}
-                draggable="false"
-              />
+              <>
+                <img
+                  src={currentTargetAnimation}
+                  alt="Target"
+                  className="w-[200px] h-[200px] xs:w-[240px] xs:h-[240px] sm:w-[280px] sm:h-[280px] object-contain pointer-events-none mix-blend-screen"
+                  style={{
+                    imageRendering: 'pixelated',
+                    WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+                    willChange: 'transform',
+                  }}
+                  draggable="false"
+                />
+                {failureOverlay && (
+                  <img
+                    src={FAILURE_OVERLAY.IMAGE}
+                    alt="Failure"
+                    className="absolute top-0 left-0 w-full h-full object-contain pointer-events-none"
+                    style={{
+                      zIndex: 20,
+                    }}
+                  />
+                )}
+              </>
             )}
           </button>
         </div>
@@ -854,7 +931,9 @@ export const useGameHooks = (gameState, setGameState) => {
     showAnimation,
     currentTargetAnimation,
     handleButtonClick,
-    trailElements
+    trailElements,
+    isFadingOut,
+    failureOverlay
   ]);
 
   // Effect to set initial position
@@ -905,6 +984,33 @@ export const useGameHooks = (gameState, setGameState) => {
     }
   }, [gameState, countdown, playSound, setGameState]);
 
+  // 3. Update the game state effect
+  useEffect(() => {
+    let timeoutId;
+    
+    if (gameState === GAME_STATES.PLAYING && !animationTimer) {
+      timeoutId = setTimeout(startObjectTimer, 100); // Small delay to avoid immediate updates
+    }
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      if (animationTimer) {
+        clearTimeout(animationTimer);
+        setAnimationTimer(null);
+      }
+    };
+  }, [gameState, animationTimer, startObjectTimer]);
+
+  // 4. Add a cleanup effect for animations
+  useEffect(() => {
+    return () => {
+      if (animationTimer) {
+        clearTimeout(animationTimer);
+        setAnimationTimer(null);
+      }
+    };
+  }, [animationTimer]);
+
   return {
     // Game states
     wakeLockActive,
@@ -945,6 +1051,9 @@ export const useGameHooks = (gameState, setGameState) => {
     maxLevel,
     timeLimit,
     buttonPosition,
+    failureOverlay,
+    isFadingOut,
+    currentObjectIndex,
 
     // Setters
     setWakeLockActive,
@@ -985,6 +1094,9 @@ export const useGameHooks = (gameState, setGameState) => {
     setMaxLevel,
     setTimeLimit,
     setButtonPosition,
+    setFailureOverlay,
+    setIsFadingOut,
+    setCurrentObjectIndex,
 
     // Functions
     getAnimationConfig,
@@ -1022,5 +1134,6 @@ export const useGameHooks = (gameState, setGameState) => {
     gameState,
     setGameState,
     containerRef,
+    startObjectTimer,
   };
 }; 

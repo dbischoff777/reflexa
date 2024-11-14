@@ -98,3 +98,12 @@ html, body {
     opacity: 0;
   }
 } 
+
+@keyframes followPath {
+  from {
+    stroke-dashoffset: var(--path-length);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+} 
