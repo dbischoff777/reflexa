@@ -781,7 +781,10 @@ export const useGameHooks = (gameState, setGameState) => {
   // Then define renderButton
   const renderButton = useCallback(() => {
     return (
-      <div className="absolute inset-0">
+      <div 
+        className="absolute inset-0"
+      
+      >
         {/* Trail elements with rotation */}
         {trailElements.map(element => (
           <div

@@ -794,7 +794,7 @@ const GameContent = ({
                             </button>
                             
                             <button
-                              onClick={exitGame}
+                              onClick={handleConfirmQuit}
                               className={`
                                 flex-1 px-4 py-2 rounded-lg font-bold text-sm xs:text-base
                                 transition-all duration-200
