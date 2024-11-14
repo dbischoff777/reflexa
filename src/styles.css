@@ -52,7 +52,7 @@ html, body {
 
 .button-animation {
   offset-rotate: 0deg;
-  animation-timing-function: ease-in-out;
+  animation-timing-function: cubic-bezier(0.4, 0.0, 0.2, 1);
   animation-iteration-count: infinite;
 } 
 
@@ -107,3 +107,23 @@ html, body {
     stroke-dashoffset: 0;
   }
 } 
+@keyframes moveAlongPathWithPause {
+  0% {
+    offset-distance: 0%;
+  }
+  46.15% { /* 6 seconds out of 13 total seconds */
+    offset-distance: 50%;
+  }
+  53.85% { /* 1 second pause at midpoint */
+    offset-distance: 50%;
+  }
+  100% {
+    offset-distance: 100%;
+  }
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
