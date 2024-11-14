@@ -711,7 +711,9 @@ export const useGameHooks = (gameState, setGameState) => {
 
   const [trailElements, setTrailElements] = useState([]);
   const lastTrailTime = useRef(0);
-  const TRAIL_INTERVAL = 400; // Draw paw every 400ms
+  const TRAIL_INTERVAL = 600; // Increased to 600ms for more spacing
+  const TRAIL_DURATION = 4000; // 4 seconds fade duration
+  const MAX_TRAIL_ELEMENTS = 8; // Keep 8 elements max
   const [lastPosition, setLastPosition] = useState({ x: 0, y: 0 });
 
   const updateTrail = useCallback((buttonElement) => {
@@ -736,19 +738,19 @@ export const useGameHooks = (gameState, setGameState) => {
           id: Date.now() + Math.random(),
           x,
           y,
-          angle: angle + 90, // Add 90 degrees to align paw with movement
+          angle: angle + 90,
           opacity: 1,
           timestamp: currentTime
         };
         
-        // Keep only last 4 paws
+        // Keep more elements and fade them out over longer duration
         const updatedElements = prevElements
-          .filter(element => currentTime - element.timestamp < 2000)
+          .filter(element => currentTime - element.timestamp < TRAIL_DURATION)
           .map(element => ({
             ...element,
-            opacity: 1 - (currentTime - element.timestamp) / 2000
+            opacity: 1 - (currentTime - element.timestamp) / TRAIL_DURATION
           }))
-          .slice(-3);
+          .slice(-MAX_TRAIL_ELEMENTS);
 
         return [...updatedElements, newElement];
       });
@@ -782,8 +784,8 @@ export const useGameHooks = (gameState, setGameState) => {
   const renderButton = useCallback(() => {
     return (
       <div className="absolute inset-0">
-        {/* Only show trail elements when not showing success animation */}
-        {!showAnimation && trailElements.map(element => (
+        {/* Only show trail elements when animation is rendered and not showing success animation */}
+        {gameState === GAME_STATES.PLAYING && !showAnimation && trailElements.map(element => (
           <div
             key={element.id}
             className="absolute pointer-events-none"
