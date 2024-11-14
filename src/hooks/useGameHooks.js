@@ -12,6 +12,7 @@ import {
 } from '../constants/animations';
 import { GAME_STATES } from '../PopItGame';
 import { LevelProgressManager } from '../services/LevelProgressManager';
+import styles from '../styles.css';
 
 // Add safety checks for animation constants
 const getDefaultAnimations = () => {
@@ -678,51 +679,153 @@ export const useGameHooks = (gameState, setGameState) => {
     getMascotMessage
   ]);
 
+  const [pathDuration, setPathDuration] = useState(8000); // Increased to 8 seconds default
+
+  const generateRandomPath = useCallback(() => {
+    const padding = 100; // Keep away from edges
+    const height = window.innerHeight;
+    const width = window.innerWidth;
+    
+    // Define possible path types
+    const pathTypes = [
+      'leftToRight',
+      'rightToLeft',
+      'bottomLeftToTopRight',
+      'bottomRightToTopLeft'
+    ];
+    
+    const selectedPath = pathTypes[Math.floor(Math.random() * pathTypes.length)];
+    let startPoint, endPoint, controlPoint;
+    
+    switch (selectedPath) {
+      case 'leftToRight':
+        startPoint = {
+          x: padding,
+          y: height / 2 + (Math.random() * 200 - 100) // Slight vertical variation
+        };
+        endPoint = {
+          x: width - padding,
+          y: height / 2 + (Math.random() * 200 - 100)
+        };
+        controlPoint = {
+          x: width / 2,
+          y: height / 2 + (Math.random() * 300 - 150) // More vertical variation in middle
+        };
+        break;
+        
+      case 'rightToLeft':
+        startPoint = {
+          x: width - padding,
+          y: height / 2 + (Math.random() * 200 - 100)
+        };
+        endPoint = {
+          x: padding,
+          y: height / 2 + (Math.random() * 200 - 100)
+        };
+        controlPoint = {
+          x: width / 2,
+          y: height / 2 + (Math.random() * 300 - 150)
+        };
+        break;
+        
+      case 'bottomLeftToTopRight':
+        startPoint = {
+          x: padding,
+          y: height - padding
+        };
+        endPoint = {
+          x: width - padding,
+          y: padding
+        };
+        controlPoint = {
+          x: width / 2,
+          y: height / 2 + (Math.random() * 200 - 100)
+        };
+        break;
+        
+      case 'bottomRightToTopLeft':
+        startPoint = {
+          x: width - padding,
+          y: height - padding
+        };
+        endPoint = {
+          x: padding,
+          y: padding
+        };
+        controlPoint = {
+          x: width / 2,
+          y: height / 2 + (Math.random() * 200 - 100)
+        };
+        break;
+    }
+    
+    // Create a quadratic bezier curve path
+    return `M ${startPoint.x} ${startPoint.y} Q ${controlPoint.x} ${controlPoint.y}, ${endPoint.x} ${endPoint.y}`;
+  }, []);
+
+  const [currentPath, setCurrentPath] = useState(generateRandomPath());
+
+  // Update path when button is clicked
+  const updatePath = useCallback(() => {
+    setCurrentPath(generateRandomPath());
+    // Random duration between 7-9 seconds
+    setPathDuration(Math.random() * 2000 + 7000);
+  }, [generateRandomPath]);
+
   // Then define renderButton
   const renderButton = useCallback(() => {
-    if (gameState !== GAME_STATES.PLAYING || gameOver) return null;
-
     return (
-      <div
-        className="absolute transform -translate-x-1/2 -translate-y-1/2"
-        style={{
-          left: `${buttonPosition.x}px`,
-          top: `${buttonPosition.y}px`,
-          touchAction: 'none',
-          willChange: 'transform',
-          zIndex: 10,
-        }}
+      <div 
+        className="absolute inset-0"
+        onClick={handleButtonClick}
       >
-        <button
-          className="relative flex items-center justify-center"
-          onClick={handleButtonClick}
-          onTouchStart={handleButtonClick}
+        <svg className="absolute inset-0 w-full h-full pointer-events-none">
+          <path
+            d={currentPath}
+            fill="none"
+            stroke="transparent"
+            id="motionPath"
+          />
+        </svg>
+        
+        <div
+          className="absolute transform -translate-x-1/2 -translate-y-1/2"
           style={{
+            offsetPath: `path("${currentPath}")`,
+            animation: `moveAlongPath ${pathDuration}ms linear infinite`,
             touchAction: 'none',
-            userSelect: 'none',
-            WebkitUserSelect: 'none',
+            willChange: 'transform',
+            zIndex: 10,
           }}
         >
-          {!showAnimation && (
-            <img
-              src={currentTargetAnimation}
-              alt="Target"
-              className="w-[200px] h-[200px] xs:w-[240px] xs:h-[240px] sm:w-[280px] sm:h-[280px] object-contain pointer-events-none mix-blend-screen"
-              style={{
-                imageRendering: 'pixelated',
-                WebkitMaskImage: '-webkit-radial-gradient(white, black)',
-                willChange: 'transform',
-              }}
-              draggable="false"
-            />
-          )}
-        </button>
+          <button
+            className="game-button relative flex items-center justify-center"
+            style={{
+              touchAction: 'none',
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
+            }}
+          >
+            {!showAnimation && (
+              <img
+                src={currentTargetAnimation}
+                alt="Target"
+                className="w-[200px] h-[200px] xs:w-[240px] xs:h-[240px] sm:w-[280px] sm:h-[280px] object-contain pointer-events-none mix-blend-screen"
+                style={{
+                  imageRendering: 'pixelated',
+                  WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+                  willChange: 'transform',
+                }}
+                draggable="false"
+              />
+            )}
+          </button>
+        </div>
       </div>
     );
   }, [
-    gameState,
-    gameOver,
-    buttonPosition,
+    currentPath,
+    pathDuration,
     showAnimation,
     currentTargetAnimation,
     handleButtonClick

@@ -40,3 +40,18 @@ html, body {
 * {
   -ms-overflow-style: none;
 } 
+
+@keyframes moveAlongPath {
+  0% {
+    offset-distance: 0%;
+  }
+  100% {
+    offset-distance: 100%;
+  }
+} 
+
+.button-animation {
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate; /* Makes it go back and forth */
+} 
