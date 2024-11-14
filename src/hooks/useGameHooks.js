@@ -12,7 +12,7 @@ import {
 } from '../constants/animations';
 import { GAME_STATES } from '../PopItGame';
 import { LevelProgressManager } from '../services/LevelProgressManager';
-import styles from '../styles.css';
+import TrailElement from '../components/TrailElement';
 
 // Add safety checks for animation constants
 const getDefaultAnimations = () => {
@@ -613,7 +613,35 @@ export const useGameHooks = (gameState, setGameState) => {
     setStartTime(null);
   }, [setGameState]);
 
-  // Define handleButtonClick first
+  // 1. First define generateRandomPath
+  const generateRandomPath = useCallback(() => {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    
+    // Generate random control points for a smooth curve
+    const x1 = Math.random() * width;
+    const y1 = Math.random() * height;
+    const x2 = Math.random() * width;
+    const y2 = Math.random() * height;
+    const x3 = Math.random() * width;
+    const y3 = Math.random() * height;
+    
+    // Create a cubic bezier curve path
+    return `M ${x1},${y1} C ${x2},${y2} ${x3},${y3} ${x1},${y1}`;
+  }, []);
+
+  // 2. Then declare path-related state
+  const [pathDuration, setPathDuration] = useState(8000);
+  const [currentPath, setCurrentPath] = useState(generateRandomPath());
+
+  // 3. Define updatePath
+  const updatePath = useCallback(() => {
+    setCurrentPath(generateRandomPath());
+    // Random duration between 7-9 seconds
+    setPathDuration(Math.random() * 2000 + 5000);
+  }, [generateRandomPath]);
+
+  // 4. Move handleButtonClick after updatePath is defined
   const handleButtonClick = useCallback(() => {
     if (gameState !== GAME_STATES.PLAYING) return;
     
@@ -660,12 +688,13 @@ export const useGameHooks = (gameState, setGameState) => {
     }
 
     if (newStreak % 5 === 0) {
-        setMultiplier(prev => Math.min(prev + 1, 10));
+      setMultiplier(prev => Math.min(prev + 1, 10));
       setMascotMessage(getMascotMessage(newStreak));
     }
 
     setConsecutiveFailures(0);
-    setButtonPosition(getRandomPosition()); // Set new position
+    setButtonPosition(getRandomPosition());
+    updatePath(); // Now this reference is valid
     playSound('trySound');
   }, [
     gameState,
@@ -676,101 +705,78 @@ export const useGameHooks = (gameState, setGameState) => {
     gameStats.currentStreak,
     buttonPosition,
     playSound,
-    getMascotMessage
+    getMascotMessage,
+    updatePath
   ]);
 
-  const [pathDuration, setPathDuration] = useState(8000); // Increased to 8 seconds default
+  const [trailElements, setTrailElements] = useState([]);
+  const lastTrailTime = useRef(0);
+  const TRAIL_INTERVAL = 400; // Draw paw every 400ms
+  const [lastPosition, setLastPosition] = useState({ x: 0, y: 0 });
 
-  const generateRandomPath = useCallback(() => {
-    const padding = 100; // Keep away from edges
-    const height = window.innerHeight;
-    const width = window.innerWidth;
+  const updateTrail = useCallback((buttonElement) => {
+    if (!buttonElement) return;
+
+    const currentTime = Date.now();
     
-    // Define possible path types
-    const pathTypes = [
-      'leftToRight',
-      'rightToLeft',
-      'bottomLeftToTopRight',
-      'bottomRightToTopLeft'
-    ];
-    
-    const selectedPath = pathTypes[Math.floor(Math.random() * pathTypes.length)];
-    let startPoint, endPoint, controlPoint;
-    
-    switch (selectedPath) {
-      case 'leftToRight':
-        startPoint = {
-          x: padding,
-          y: height / 2 + (Math.random() * 200 - 100) // Slight vertical variation
+    // Only create new paw if enough time has passed
+    if (currentTime - lastTrailTime.current >= TRAIL_INTERVAL) {
+      const rect = buttonElement.getBoundingClientRect();
+      const x = rect.left + rect.width / 2;
+      const y = rect.top + rect.height / 2;
+
+      // Calculate angle based on movement direction
+      const angle = Math.atan2(
+        y - lastPosition.y,
+        x - lastPosition.x
+      ) * (180 / Math.PI);
+
+      setTrailElements(prevElements => {
+        const newElement = {
+          id: Date.now() + Math.random(),
+          x,
+          y,
+          angle: angle + 90, // Add 90 degrees to align paw with movement
+          opacity: 1,
+          timestamp: currentTime
         };
-        endPoint = {
-          x: width - padding,
-          y: height / 2 + (Math.random() * 200 - 100)
-        };
-        controlPoint = {
-          x: width / 2,
-          y: height / 2 + (Math.random() * 300 - 150) // More vertical variation in middle
-        };
-        break;
         
-      case 'rightToLeft':
-        startPoint = {
-          x: width - padding,
-          y: height / 2 + (Math.random() * 200 - 100)
-        };
-        endPoint = {
-          x: padding,
-          y: height / 2 + (Math.random() * 200 - 100)
-        };
-        controlPoint = {
-          x: width / 2,
-          y: height / 2 + (Math.random() * 300 - 150)
-        };
-        break;
-        
-      case 'bottomLeftToTopRight':
-        startPoint = {
-          x: padding,
-          y: height - padding
-        };
-        endPoint = {
-          x: width - padding,
-          y: padding
-        };
-        controlPoint = {
-          x: width / 2,
-          y: height / 2 + (Math.random() * 200 - 100)
-        };
-        break;
-        
-      case 'bottomRightToTopLeft':
-        startPoint = {
-          x: width - padding,
-          y: height - padding
-        };
-        endPoint = {
-          x: padding,
-          y: padding
-        };
-        controlPoint = {
-          x: width / 2,
-          y: height / 2 + (Math.random() * 200 - 100)
-        };
-        break;
+        // Keep only last 4 paws
+        const updatedElements = prevElements
+          .filter(element => currentTime - element.timestamp < 2000)
+          .map(element => ({
+            ...element,
+            opacity: 1 - (currentTime - element.timestamp) / 2000
+          }))
+          .slice(-3);
+
+        return [...updatedElements, newElement];
+      });
+
+      lastTrailTime.current = currentTime;
+      setLastPosition({ x, y });
     }
+  }, [lastPosition]);
+
+  // Reference to the animated button
+  const buttonRef = useRef(null);
+
+  // Set up animation frame for trail updates
+  useEffect(() => {
+    let animationFrameId;
     
-    // Create a quadratic bezier curve path
-    return `M ${startPoint.x} ${startPoint.y} Q ${controlPoint.x} ${controlPoint.y}, ${endPoint.x} ${endPoint.y}`;
-  }, []);
+    const animate = () => {
+      if (buttonRef.current) {
+        updateTrail(buttonRef.current);
+      }
+      animationFrameId = requestAnimationFrame(animate);
+    };
 
-  const [currentPath, setCurrentPath] = useState(generateRandomPath());
-
-  // Update path when button is clicked
-  const updatePath = useCallback(() => {
-    setCurrentPath(generateRandomPath());
-    // Random duration between 7-9 seconds
-    setPathDuration(Math.random() * 2000 + 7000);
-  }, [generateRandomPath]);
+    animate();
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [updateTrail]);
 
   // Then define renderButton
   const renderButton = useCallback(() => {
@@ -779,6 +785,23 @@ export const useGameHooks = (gameState, setGameState) => {
         className="absolute inset-0"
         onClick={handleButtonClick}
       >
+        {/* Trail elements with rotation */}
+        {trailElements.map(element => (
+          <div
+            key={element.id}
+            className="absolute pointer-events-none"
+            style={{
+              left: element.x,
+              top: element.y,
+              transform: `translate(-50%, -50%) rotate(${element.angle}deg)`,
+              opacity: element.opacity,
+              transition: 'opacity 1s ease-out',
+            }}
+          >
+            <TrailElement type="paw" />
+          </div>
+        ))}
+
         <svg className="absolute inset-0 w-full h-full pointer-events-none">
           <path
             d={currentPath}
@@ -789,13 +812,15 @@ export const useGameHooks = (gameState, setGameState) => {
         </svg>
         
         <div
-          className="absolute transform -translate-x-1/2 -translate-y-1/2"
+          ref={buttonRef}
+          className="absolute transform -translate-x-1/2 -translate-y-1/2 button-animation"
           style={{
             offsetPath: `path("${currentPath}")`,
-            animation: `moveAlongPath ${pathDuration}ms linear infinite`,
+            animation: `moveAlongPath ${pathDuration}ms ease-in-out infinite`,
             touchAction: 'none',
             willChange: 'transform',
             zIndex: 10,
+            offsetRotate: "0deg", // Prevent rotation along the path
           }}
         >
           <button
@@ -828,7 +853,8 @@ export const useGameHooks = (gameState, setGameState) => {
     pathDuration,
     showAnimation,
     currentTargetAnimation,
-    handleButtonClick
+    handleButtonClick,
+    trailElements
   ]);
 
   // Effect to set initial position
