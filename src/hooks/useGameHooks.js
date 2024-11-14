@@ -781,10 +781,7 @@ export const useGameHooks = (gameState, setGameState) => {
   // Then define renderButton
   const renderButton = useCallback(() => {
     return (
-      <div 
-        className="absolute inset-0"
-        onClick={handleButtonClick}
-      >
+      <div className="absolute inset-0">
         {/* Trail elements with rotation */}
         {trailElements.map(element => (
           <div
@@ -820,11 +817,12 @@ export const useGameHooks = (gameState, setGameState) => {
             touchAction: 'none',
             willChange: 'transform',
             zIndex: 10,
-            offsetRotate: "0deg", // Prevent rotation along the path
+            offsetRotate: "0deg",
           }}
         >
           <button
             className="game-button relative flex items-center justify-center"
+            onClick={handleButtonClick}
             style={{
               touchAction: 'none',
               userSelect: 'none',
