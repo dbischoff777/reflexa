@@ -417,7 +417,7 @@ const GameContent = ({
           rotate: [0, 45, 90]                     // Reduced rotation range
         }}
         transition={{
-          duration: 1.2,                          // Reduced duration
+          duration: 3,                          // Reduced duration
           repeat: Infinity,
           delay: i * 0.25,                        // Reduced delay between sparkles
           ease: "easeInOut",
