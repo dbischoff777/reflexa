@@ -146,7 +146,7 @@ html, body {
         opacity: 0;
     }
     50% {
-        transform: scale(1.5);
+        transform: scale(1);
         opacity: 1;
     }
     100% {
@@ -161,7 +161,7 @@ html, body {
         opacity: 1;
     }
     50% {
-        transform: scale(1.5);
+        transform: scale(1);
         opacity: 1;
     }
     100% {

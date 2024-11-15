@@ -49,7 +49,7 @@ const RAF_TIMESTAMP = typeof performance !== 'undefined'
 
 // Update timing constants to be in sync
 const ANIMATION_WINDOW = 3000;  // Time window for clicking (3 seconds)
-const FADE_DURATION = 800;      // Duration of fade out animation
+const FADE_DURATION = 2000;      // Duration of fade out animation
 const FAILURE_INTERVAL = 10000; // Set to 10 seconds
 const FAILURE_DURATION = FADE_DURATION;    // Match the fade duration
 
