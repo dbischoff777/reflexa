@@ -1116,7 +1116,8 @@ export const useGameHooks = (gameState, setGameState) => {
         {failureOverlay && !showAnimation && (
           <div
             className={`absolute transform -translate-x-1/2 -translate-y-1/2 button-animation
-              ${isPathPaused ? 'paused' : ''}`}
+              ${isPathPaused ? 'paused' : ''}
+              ${isFadingOut ? 'failure-overlay-exit' : 'failure-overlay'}`}
             style={{
               offsetPath: `path("${currentPath}")`,
               offsetDistance: `${currentProgress * 100}%`,
@@ -1124,7 +1125,7 @@ export const useGameHooks = (gameState, setGameState) => {
               touchAction: 'none',
               willChange: 'transform',
               zIndex: 30,
-              transition: isPathPaused ? 'none' : 'offset-distance 0.016s linear',
+              //transition: isPathPaused ? 'none' : 'offset-distance 0.016s linear',
             }}
           >
             <img
