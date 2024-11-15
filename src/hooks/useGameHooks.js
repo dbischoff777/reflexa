@@ -49,7 +49,7 @@ const RAF_TIMESTAMP = typeof performance !== 'undefined'
 
 // Update timing constants to be in sync
 const ANIMATION_WINDOW = 3000;  // Time window for clicking (3 seconds)
-const FADE_DURATION = 2000;      // Duration of fade out animation
+const FADE_DURATION = 4000;      // Duration of fade out animation
 const FAILURE_INTERVAL = 10000; // Set to 10 seconds
 const FAILURE_DURATION = FADE_DURATION;    // Match the fade duration
 
@@ -949,7 +949,7 @@ export const useGameHooks = (gameState, setGameState) => {
 
   const [trailElements, setTrailElements] = useState([]);
   const lastTrailTime = useRef(0);
-  const TRAIL_INTERVAL = 400; // Increased to 400ms for more spacing
+  const TRAIL_INTERVAL = 250; // Increased to 400ms for more spacing
   const TRAIL_DURATION = 1500; // 1.5 seconds fade duration
   const MAX_TRAIL_ELEMENTS = 6; // Keep 6 elements max
   const [lastPosition, setLastPosition] = useState({ x: 0, y: 0 });

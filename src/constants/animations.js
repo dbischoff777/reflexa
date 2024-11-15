@@ -25,14 +25,14 @@ export const ANIMATION_DURATIONS = {
 
 // Group animations by size
 export const TRY_ANIMATIONS_BY_SIZE = {
-  LARGE: [tryAnimation1, tryAnimation2],
+  LARGE: [tryAnimation1, tryAnimation2, tryAnimation3, tryAnimation4, tryAnimation5], //bowl #1, hamburger #2, 
   MEDIUM: [tryAnimation3, tryAnimation4],
   SMALL: [tryAnimation5]
 };
 
 // Success animations by size
 export const SUCCESS_ANIMATIONS_BY_SIZE = {
-  LARGE: [successAnimation1, successAnimation2],
+  LARGE: [successAnimation1, successAnimation2], //add fireworks for every success animation 2-3seconds //paw as cursor
   MEDIUM: [successAnimation3, successAnimation4],
   SMALL: [successAnimation4]
 };

@@ -172,10 +172,10 @@ html, body {
 
 /* Class for the failure overlay when it appears */
 .failure-overlay {
-    animation: scaleIn 1s forwards; /* Animation for appearing */
+    animation: scaleIn 2s forwards; /* Animation for appearing */
 }
 
 /* Class for the failure overlay when it disappears */
 .failure-overlay-exit {
-    animation: scaleOut 1s forwards; /* Animation for disappearing */
+    animation: scaleOut 2s forwards; /* Animation for disappearing */
 }
