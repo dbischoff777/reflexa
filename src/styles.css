@@ -45,25 +45,27 @@ html, body {
   0% {
     offset-distance: 0%;
   }
-  25% {
-    offset-distance: 15%;
-  }
-  50% {
+  44.44% { /* 4 seconds of movement */
     offset-distance: 50%;
   }
-  75% {
-    offset-distance: 75%;
+  55.55% { /* 1 second pause at midpoint */
+    offset-distance: 50%;
   }
-  100% {
+  100% { /* 4 seconds to complete movement */
     offset-distance: 100%;
   }
 } 
 
 .button-animation {
-  offset-rotate: 0deg;
-  animation-timing-function: cubic-bezier(0.4, 0.0, 0.2, 1);
-  animation-iteration-count: infinite;
-} 
+  backface-visibility: hidden;
+  perspective: 1000px;
+  transform-style: preserve-3d;
+  will-change: transform, offset-distance;
+}
+
+.button-animation.paused {
+  transition: none !important;
+}
 
 @keyframes glow {
   0% {

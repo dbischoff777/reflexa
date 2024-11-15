@@ -43,6 +43,16 @@ const getRandomPosition = (buttonSize = 280) => {
   };
 };
 
+const RAF_TIMESTAMP = typeof performance !== 'undefined' 
+  ? () => performance.now() 
+  : () => Date.now();
+
+// Update timing constants to be in sync
+const ANIMATION_WINDOW = 3000;  // Time window for clicking (3 seconds)
+const FADE_DURATION = 800;      // Duration of fade out animation
+const FAILURE_INTERVAL = ANIMATION_WINDOW; // Match the animation window
+const FAILURE_DURATION = FADE_DURATION;    // Match the fade duration
+
 export const useGameHooks = (gameState, setGameState) => {
   // Wake Lock state
   const [wakeLockActive, setWakeLockActive] = useState(false);
@@ -653,12 +663,14 @@ export const useGameHooks = (gameState, setGameState) => {
   const [animationTimer, setAnimationTimer] = useState(null);
 
   // Constants
-  const FULL_DURATION = 30000;  // Total duration (30 seconds)
+  const FULL_DURATION = 30000;  // Base total duration (30 seconds)
   const NUM_SEGMENTS = 5;       // Number of movement segments
-  const SEGMENT_TIME = 4800;    // Time for each movement segment (4.8 seconds)
-  const PAUSE_TIME = 1200;      // Pause time between segments (1.2 seconds)
+  const SEGMENT_TIME = 3000;    // 3 seconds per segment
+  const PAUSE_TIME = 800;    // 0.8 seconds pause between segments
   const FAILURE_INTERVAL = 10000; // Show failure overlay every 10 seconds
   const MAX_TIME = FULL_DURATION; // Time until complete reset (30 seconds)
+  const MIN_SPEED = 0.3;        // Minimum speed multiplier
+  const MAX_SPEED = 0.6;        // Maximum speed multiplier
 
   // Each segment will move 20% of the path (1/NUM_SEGMENTS)
   const SEGMENT_PROGRESS = 1 / NUM_SEGMENTS;
@@ -672,88 +684,67 @@ export const useGameHooks = (gameState, setGameState) => {
   const startNewSegmentRef = useRef();
   const updatePathRef = useRef();
 
-  // Define the functions using refs to break the dependency cycle
-  animateRef.current = (startTime, startProgress, endProgress) => {
-    const elapsed = Date.now() - startTime;
-    const totalElapsed = Date.now() - startTimeRef.current;
-    const progress = elapsed / SEGMENT_TIME;
-    const newProgress = startProgress + (progress * SEGMENT_PROGRESS);
+  // Add new state for segment speeds
+  const [segmentSpeeds, setSegmentSpeeds] = useState([]);
 
-    // Check for 10-second intervals to show failure overlay
-    const timeBlock = Math.floor(totalElapsed / FAILURE_INTERVAL);
-    const timeInBlock = totalElapsed % FAILURE_INTERVAL;
+  // Add this function to generate random speeds for each segment
+  const generateSegmentSpeeds = useCallback(() => {
+    return Array(NUM_SEGMENTS).fill(0).map(() => 
+      MIN_SPEED + Math.random() * (MAX_SPEED - MIN_SPEED)
+    );
+  }, []);
+
+  // Update the animate function to be simpler and smoother
+  animateRef.current = (startTimestamp, startProgress, endProgress, segmentIndex) => {
+    const now = RAF_TIMESTAMP();
+    const elapsed = now - startTimestamp;
+    const duration = SEGMENT_TIME / segmentSpeeds[segmentIndex];
     
-    // Show failure overlay at the start of each 10-second block
-    if (timeInBlock < 2000 && !failureOverlay) { // Show for 2 seconds
-      setFailureOverlay(true);
-      setIsFadingOut(true);
-
-      // Hide failure overlay after 2 seconds
-      fadeTimerRef.current = setTimeout(() => {
-        setFailureOverlay(false);
-        setIsFadingOut(false);
-      }, 3000);
-    }
-
-    // Check if total time exceeded (30 seconds)
-    if (totalElapsed >= MAX_TIME) {
-      setFailureOverlay(true);
-      setIsFadingOut(true);
-
-      // Complete reset after fade out
-      fadeTimerRef.current = setTimeout(() => {
-        setFailureOverlay(false);
-        setIsFadingOut(false);
-        setCurrentObjectIndex(prev => (prev + 1) % TRY_ANIMATIONS_BY_SIZE[currentSize].length);
-        setCurrentPath(generateRandomPath());
-        setCurrentProgress(0);
-        setIsPathPaused(false);
-        startTimeRef.current = Date.now();
-        
-        // Get next animation
-        const nextIndex = (currentObjectIndex + 1) % TRY_ANIMATIONS_BY_SIZE[currentSize].length;
-        const nextAnimation = TRY_ANIMATIONS_BY_SIZE[currentSize][nextIndex];
-        setCurrentTargetAnimation(nextAnimation);
-        
-        startNewSegmentRef.current(0);
-      }, ANIMATION_DURATIONS.FADE_OUT);
-      return;
-    }
+    // Calculate progress with simple linear interpolation
+    const progress = Math.min(elapsed / duration, 1);
+    const newProgress = startProgress + (progress * SEGMENT_PROGRESS);
 
     if (progress < 1) {
       setCurrentProgress(newProgress);
       animationFrameRef.current = requestAnimationFrame(() => 
-        animateRef.current(startTime, startProgress, endProgress)
+        animateRef.current(startTimestamp, startProgress, endProgress, segmentIndex)
       );
     } else {
       setCurrentProgress(endProgress);
       
-      // If we haven't reached the end of the path
       if (endProgress < 1) {
         setIsPathPaused(true);
         pauseTimerRef.current = setTimeout(() => {
           setIsPathPaused(false);
-          startNewSegmentRef.current(endProgress);
+          startNewSegmentRef.current(endProgress, segmentIndex + 1);
         }, PAUSE_TIME);
       } else {
-        // We've completed the path, start over
+        // Reset path and generate new speeds
         setCurrentPath(generateRandomPath());
+        setSegmentSpeeds(generateSegmentSpeeds());
         setCurrentProgress(0);
-        startTimeRef.current = Date.now();
-        startNewSegmentRef.current(0);
+        startTimeRef.current = now;
+        startNewSegmentRef.current(0, 0);
       }
     }
   };
 
-  startNewSegmentRef.current = (startProgress) => {
+  // Update startNewSegment to handle timestamps correctly
+  startNewSegmentRef.current = (startProgress, segmentIndex) => {
+    const now = RAF_TIMESTAMP();
+    
     if (startProgress === 0) {
-      startTimeRef.current = Date.now();
+      startTimeRef.current = now;
     }
+    
     const endProgress = Math.min(startProgress + SEGMENT_PROGRESS, 1);
-    const startTime = Date.now();
-    animateRef.current(startTime, startProgress, endProgress);
+    animateRef.current(now, startProgress, endProgress, segmentIndex);
   };
 
+  // Add this to track the failure overlay timer
+  const failureTimerRef = useRef(null);
+
+  // Update updatePath to include failure overlay logic
   updatePathRef.current = () => {
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
@@ -762,13 +753,15 @@ export const useGameHooks = (gameState, setGameState) => {
       clearTimeout(pauseTimerRef.current);
     }
 
-    startTimeRef.current = Date.now();
+    startTimeRef.current = RAF_TIMESTAMP();
     setTrailElements([]);
     setCurrentPath(generateRandomPath());
+    setSegmentSpeeds(generateSegmentSpeeds());
     setIsPathPaused(false);
     setCurrentProgress(0);
+    setFailureOverlay(false);
     
-    startNewSegmentRef.current(0); // Start first segment
+    startNewSegmentRef.current(0, 0);
 
     return () => {
       if (animationFrameRef.current) {
@@ -785,7 +778,7 @@ export const useGameHooks = (gameState, setGameState) => {
   const startNewSegment = useCallback((...args) => startNewSegmentRef.current(...args), []);
   const updatePath = useCallback((...args) => updatePathRef.current(...args), []);
 
-  // Effect to start animation when game starts
+  // Add cleanup in the main effect
   useEffect(() => {
     if (gameState === GAME_STATES.PLAYING) {
       updatePath();
@@ -794,23 +787,12 @@ export const useGameHooks = (gameState, setGameState) => {
     return () => {
       setIsPathPaused(true);
       setCurrentProgress(0);
+      setFailureOverlay(false);
+      if (failureTimerRef.current) {
+        clearTimeout(failureTimerRef.current);
+      }
     };
   }, [gameState, updatePath]);
-
-  // Add cleanup effect for the animation timers
-  useEffect(() => {
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-      if (pauseTimerRef.current) {
-        clearTimeout(pauseTimerRef.current);
-      }
-      if (fadeTimerRef.current) {
-        clearTimeout(fadeTimerRef.current);
-      }
-    };
-  }, []);
 
   // 1. First define startObjectTimer with minimal dependencies
   const startObjectTimer = useCallback(() => {
@@ -818,30 +800,34 @@ export const useGameHooks = (gameState, setGameState) => {
       clearTimeout(animationTimer);
     }
 
+    // Timer for showing failure overlay and starting fade out
     const newTimer = setTimeout(() => {
-      // Start fade out animation
-      setIsFadingOut(true);
-      setFailureOverlay(true);
+      if (!isFadingOut) { // Only trigger if not already fading out
+        setIsFadingOut(true);
+        setFailureOverlay(true);
 
-      // After fade out, switch to next object
-      setTimeout(() => {
-        setFailureOverlay(false);
-        setIsFadingOut(false);
-        setCurrentObjectIndex(prev => (prev + 1) % TRY_ANIMATIONS_BY_SIZE[currentSize].length);
-        
-        // Get next animation outside of state updates
-        const nextIndex = (currentObjectIndex + 1) % TRY_ANIMATIONS_BY_SIZE[currentSize].length;
-        const nextAnimation = TRY_ANIMATIONS_BY_SIZE[currentSize][nextIndex];
-        setCurrentTargetAnimation(nextAnimation);
-        setButtonPosition(getRandomPosition());
-      }, ANIMATION_DURATIONS.FADE_OUT);
-    }, ANIMATION_DURATIONS.CLICK_WINDOW);
+        // Reset after fade duration
+        setTimeout(() => {
+          setFailureOverlay(false);
+          setIsFadingOut(false);
+          
+          // Update to next animation
+          const nextIndex = (currentObjectIndex + 1) % TRY_ANIMATIONS_BY_SIZE[currentSize].length;
+          setCurrentObjectIndex(nextIndex);
+          setCurrentTargetAnimation(TRY_ANIMATIONS_BY_SIZE[currentSize][nextIndex]);
+          setButtonPosition(getRandomPosition());
+          
+          // Start new timer for next cycle
+          startObjectTimer();
+        }, FADE_DURATION);
+      }
+    }, ANIMATION_WINDOW);
 
     setAnimationTimer(newTimer);
   }, [
     currentSize,
     currentObjectIndex,
-    animationTimer // Only include essential dependencies
+    isFadingOut
   ]);
 
   // 2. Update handleButtonClick to avoid circular dependencies
@@ -1030,6 +1016,7 @@ export const useGameHooks = (gameState, setGameState) => {
             />
           </div>
         )}
+
         {/* Trail elements */}
         {gameState === GAME_STATES.PLAYING && !showAnimation && trailElements.map(element => (
           <div
@@ -1061,15 +1048,16 @@ export const useGameHooks = (gameState, setGameState) => {
         <div
           ref={buttonRef}
           className={`absolute transform -translate-x-1/2 -translate-y-1/2 button-animation
-            ${isFadingOut ? 'opacity-0' : 'opacity-100'}`}
+            ${isFadingOut ? 'opacity-0' : 'opacity-100'}
+            ${isPathPaused ? 'paused' : ''}`}
           style={{
             offsetPath: `path("${currentPath}")`,
-            animation: !showAnimation ? `moveAlongPath ${FULL_DURATION}ms ease-in-out infinite` : 'none',
-            touchAction: 'none',
-            willChange: 'transform',
-            zIndex: 10,
+            offsetDistance: `${currentProgress * 100}%`,
             offsetRotate: "0deg",
-            transition: 'opacity 0.5s ease-out',
+            touchAction: 'none',
+            willChange: 'transform, offset-distance',
+            zIndex: 10,
+            transition: isPathPaused ? 'none' : 'offset-distance 0.016s linear',
           }}
         >
           <button
@@ -1082,46 +1070,57 @@ export const useGameHooks = (gameState, setGameState) => {
             }}
           >
             {!showAnimation && (
-              // Target animation
-              <>
-                <img
-                  src={currentTargetAnimation}
-                  alt="Target"
-                  className="w-[200px] h-[200px] xs:w-[240px] xs:h-[240px] sm:w-[280px] sm:h-[280px] object-contain pointer-events-none mix-blend-screen"
-                  style={{
-                    imageRendering: 'pixelated',
-                    WebkitMaskImage: '-webkit-radial-gradient(white, black)',
-                    willChange: 'transform',
-                  }}
-                  draggable="false"
-                />
-                {failureOverlay && (
-                  <img
-                    src={FAILURE_OVERLAY.IMAGE}
-                    alt="Failure"
-                    className="absolute top-0 left-0 w-full h-full object-contain pointer-events-none"
-                    style={{
-                      zIndex: 20,
-                    }}
-                  />
-                )}
-              </>
+              <img
+                src={currentTargetAnimation}
+                alt="Target"
+                className="w-[200px] h-[200px] xs:w-[240px] xs:h-[240px] sm:w-[280px] sm:h-[280px] object-contain pointer-events-none mix-blend-screen"
+                style={{
+                  imageRendering: 'pixelated',
+                  WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+                  willChange: 'transform',
+                }}
+                draggable="false"
+              />
             )}
           </button>
         </div>
+
+        {/* Separate failure overlay container */}
+        {failureOverlay && !showAnimation && (
+          <div
+            className={`absolute transform -translate-x-1/2 -translate-y-1/2 button-animation
+              ${isPathPaused ? 'paused' : ''}`}
+            style={{
+              offsetPath: `path("${currentPath}")`,
+              offsetDistance: `${currentProgress * 100}%`,
+              offsetRotate: "0deg",
+              touchAction: 'none',
+              willChange: 'transform',
+              zIndex: 30,
+              transition: isPathPaused ? 'none' : 'offset-distance 0.016s linear',
+            }}
+          >
+            <img
+              src={FAILURE_OVERLAY.IMAGE}
+              alt="Failure"
+              className="w-[200px] h-[200px] xs:w-[240px] xs:h-[240px] sm:w-[280px] sm:h-[280px] object-contain pointer-events-none mix-blend-screen"
+              style={{
+                imageRendering: 'pixelated',
+              }}
+            />
+          </div>
+        )}
       </div>
     );
   }, [
     currentPath,
-    animationPosition,
+    currentProgress,
+    isFadingOut,
+    isPathPaused,
     showAnimation,
     currentTargetAnimation,
-    currentSuccessAnimation,
     handleButtonClick,
-    trailElements,
-    isFadingOut,
-    failureOverlay,
-    gameState
+    failureOverlay
   ]);
 
   // Effect to set initial position
