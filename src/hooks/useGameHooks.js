@@ -7,6 +7,7 @@ import { checkAchievementsUnlocked, ACHIEVEMENTS } from '../utils/achievements';
 import { 
   SUCCESS_ANIMATIONS_BY_SIZE, 
   TRY_ANIMATIONS_BY_SIZE,
+  FIREWORKS_BY_SIZE,
   ANIMATION_DURATIONS,
   FAILURE_OVERLAY
 } from '../constants/animations';
@@ -67,6 +68,16 @@ export const useGameHooks = (gameState, setGameState) => {
   const [showAnimation, setShowAnimation] = useState(false);
   const [animationPosition, setAnimationPosition] = useState({ x: 0, y: 0 });
   const [isAnimationPlaying, setIsAnimationPlaying] = useState(false);
+  // Add new state for fireworks
+  const [showFireworks, setShowFireworks] = useState(false);
+  const [currentFirework, setCurrentFirework] = useState(null);
+  const fireworkTimerRef = useRef(null);
+
+  // Helper function to get matching firework for current animation
+  const getMatchingFirework = useCallback((tryAnimationIndex) => {
+    const currentSize = 'LARGE'; // We're using LARGE size for main gameplay
+    return FIREWORKS_BY_SIZE[currentSize][tryAnimationIndex];
+  }, []);
 
   // Game state
   const [gameStarted, setGameStarted] = useState(false);
@@ -799,35 +810,46 @@ export const useGameHooks = (gameState, setGameState) => {
     if (animationTimer) {
       clearTimeout(animationTimer);
     }
+    if (fireworkTimerRef.current) {
+      clearTimeout(fireworkTimerRef.current);
+    }
 
-    // Timer for showing failure overlay and starting fade out
+    // Start fireworks timer
+    fireworkTimerRef.current = setTimeout(() => {
+      if (!isFadingOut && !showAnimation) {
+        setShowFireworks(true);
+        setCurrentFirework(getMatchingFirework(currentObjectIndex));
+      }
+    }, 4000); // Show fireworks after 4 seconds of inactivity
+
+    // Original failure overlay timer
     const newTimer = setTimeout(() => {
-      if (!isFadingOut) { // Only trigger if not already fading out
+      if (!isFadingOut) {
         setIsFadingOut(true);
         setFailureOverlay(true);
+        setShowFireworks(false); // Hide fireworks when failure overlay shows
 
-        // Reset after fade duration
         setTimeout(() => {
           setFailureOverlay(false);
           setIsFadingOut(false);
           
-          // Update to next animation
           const nextIndex = (currentObjectIndex + 1) % TRY_ANIMATIONS_BY_SIZE[currentSize].length;
           setCurrentObjectIndex(nextIndex);
           setCurrentTargetAnimation(TRY_ANIMATIONS_BY_SIZE[currentSize][nextIndex]);
           setButtonPosition(getRandomPosition());
           
-          // Start new timer for next cycle
           startObjectTimer();
         }, FADE_DURATION);
       }
-    }, FAILURE_INTERVAL); // Use FAILURE_INTERVAL for the timer
+    }, FAILURE_INTERVAL);
 
     setAnimationTimer(newTimer);
   }, [
     currentSize,
     currentObjectIndex,
-    isFadingOut
+    isFadingOut,
+    showAnimation,
+    getMatchingFirework
   ]);
 
   // Ensure the failure overlay timer is reset when the game state changes
@@ -847,11 +869,17 @@ export const useGameHooks = (gameState, setGameState) => {
   const handleButtonClick = useCallback(() => {
     if (gameState !== GAME_STATES.PLAYING || isFadingOut) return;
 
-    // Clear existing timer first
+    // Clear existing timers
     if (animationTimer) {
-        clearTimeout(animationTimer);
-        setAnimationTimer(null);
+      clearTimeout(animationTimer);
+      setAnimationTimer(null);
     }
+    if (fireworkTimerRef.current) {
+      clearTimeout(fireworkTimerRef.current);
+    }
+
+    // Hide fireworks on click
+    setShowFireworks(false);
 
     // Get click coordinates from the button element
     const buttonElement = buttonRef.current;
@@ -943,6 +971,7 @@ export const useGameHooks = (gameState, setGameState) => {
     getMascotMessage,
     updatePath,
     startObjectTimer,
+    setShowFireworks,
     animationTimer,
     currentProgress // Add currentProgress to dependencies
 ]);
@@ -1022,7 +1051,7 @@ export const useGameHooks = (gameState, setGameState) => {
   const renderButton = useCallback(() => {
     return (
       <div className="absolute inset-0">
-        {/* Show success animation at click position */}
+        {/* Existing success animation */}
         {showAnimation && (
           <div
             className="absolute transform -translate-x-1/2 -translate-y-1/2"
@@ -1035,6 +1064,29 @@ export const useGameHooks = (gameState, setGameState) => {
             <img
               src={currentSuccessAnimation}
               alt="Success"
+              className="w-[200px] h-[200px] xs:w-[240px] xs:h-[240px] sm:w-[280px] sm:h-[280px] object-contain pointer-events-none mix-blend-screen"
+              style={{
+                imageRendering: 'pixelated',
+                willChange: 'transform',
+              }}
+            />
+          </div>
+        )}
+
+        {/* Add fireworks animation */}
+        {showFireworks && !showAnimation && !failureOverlay && (
+          <div
+            className="absolute transform -translate-x-1/2 -translate-y-1/2"
+            style={{
+              offsetPath: `path("${currentPath}")`,
+              offsetDistance: `${currentProgress * 100}%`,
+              offsetRotate: "0deg",
+              zIndex: 15,
+            }}
+          >
+            <img
+              src={currentFirework}
+              alt="Fireworks"
               className="w-[200px] h-[200px] xs:w-[240px] xs:h-[240px] sm:w-[280px] sm:h-[280px] object-contain pointer-events-none mix-blend-screen"
               style={{
                 imageRendering: 'pixelated',
@@ -1148,7 +1200,9 @@ export const useGameHooks = (gameState, setGameState) => {
     showAnimation,
     currentTargetAnimation,
     handleButtonClick,
-    failureOverlay
+    failureOverlay,
+    showFireworks,
+    currentFirework,
   ]);
 
   // Effect to set initial position
@@ -1283,6 +1337,15 @@ export const useGameHooks = (gameState, setGameState) => {
     };
   }, [handleContainerClick]);
 
+  // Add cleanup effect for fireworks timer
+  useEffect(() => {
+    return () => {
+      if (fireworkTimerRef.current) {
+        clearTimeout(fireworkTimerRef.current);
+      }
+    };
+  }, []);
+
   // Function to calculate button position based on current progress
   const getButtonPositionFromProgress = (progress) => {
     const container = document.querySelector('.game-container');
@@ -1342,6 +1405,9 @@ export const useGameHooks = (gameState, setGameState) => {
     failureOverlay,
     isFadingOut,
     currentObjectIndex,
+    showFireworks,
+    currentFirework,
+    
 
     // Setters
     setWakeLockActive,
@@ -1385,6 +1451,8 @@ export const useGameHooks = (gameState, setGameState) => {
     setFailureOverlay,
     setIsFadingOut,
     setCurrentObjectIndex,
+    setShowFireworks,
+    setCurrentFirework,
 
     // Functions
     getAnimationConfig,
