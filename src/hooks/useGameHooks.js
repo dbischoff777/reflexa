@@ -833,7 +833,7 @@ export const useGameHooks = (gameState, setGameState) => {
   // 2. Update handleButtonClick to avoid circular dependencies
   const handleButtonClick = useCallback(() => {
     if (gameState !== GAME_STATES.PLAYING || isFadingOut) return;
-    
+
     // Clear existing timer first
     if (animationTimer) {
         clearTimeout(animationTimer);
@@ -884,8 +884,22 @@ export const useGameHooks = (gameState, setGameState) => {
         const nextIndex = (currentObjectIndex + 1) % TRY_ANIMATIONS_BY_SIZE[currentSize].length;
         setCurrentObjectIndex(nextIndex);
         setCurrentTargetAnimation(TRY_ANIMATIONS_BY_SIZE[currentSize][nextIndex]);
-        setButtonPosition(getRandomPosition());
-        updatePath();
+        
+        // Update button position based on the current path progress
+        const newProgress = currentProgress + SEGMENT_PROGRESS; // Move forward along the path
+        if (newProgress <= 1) {
+            setCurrentProgress(newProgress); // Update the current progress
+        } else {
+            // Handle the case when the path is completed
+            setCurrentProgress(0); // Reset progress or handle as needed
+            // Optionally, you can call updatePath() here if you want to generate a new path
+        }
+
+        // Update the button position based on the current progress
+        setButtonPosition(getButtonPositionFromProgress(newProgress)); // Function to calculate position from progress
+
+        // Only update the path here if needed
+        updatePath(); // Uncomment if you want to generate a new path after completing the current one
         playSound('trySound');
 
         // Start new timer after state updates are complete
@@ -904,27 +918,27 @@ export const useGameHooks = (gameState, setGameState) => {
     }
 
     setConsecutiveFailures(0);
-  }, [
+}, [
     gameState,
     isFadingOut,
     startTime,
     multiplier,
     currentSize,
     currentObjectIndex,
-    buttonPosition,
     gameStats.currentStreak,
     playSound,
     getMascotMessage,
     updatePath,
     startObjectTimer,
-    animationTimer
-  ]);
+    animationTimer,
+    currentProgress // Add currentProgress to dependencies
+]);
 
   const [trailElements, setTrailElements] = useState([]);
   const lastTrailTime = useRef(0);
-  const TRAIL_INTERVAL = 400; // Increased to 300ms for more spacing
-  const TRAIL_DURATION = 1500; // 25 seconds fade duration
-  const MAX_TRAIL_ELEMENTS = 6; // Keep 8 elements max
+  const TRAIL_INTERVAL = 400; // Increased to 400ms for more spacing
+  const TRAIL_DURATION = 1500; // 1.5 seconds fade duration
+  const MAX_TRAIL_ELEMENTS = 6; // Keep 6 elements max
   const [lastPosition, setLastPosition] = useState({ x: 0, y: 0 });
 
   const updateTrail = useCallback((buttonElement) => {
@@ -1233,7 +1247,43 @@ export const useGameHooks = (gameState, setGameState) => {
     };
   }, [gameState, updatePath]);
 
+  // Prevent any clicks outside the button from affecting the animation
+  const handleContainerClick = useCallback((event) => {
+    const buttonElement = buttonRef.current;
+    if (buttonElement && !buttonElement.contains(event.target)) {
+        // Prevent any action if the click is outside the button
+        return;
+    }
+  }, []);
 
+  // Add event listener for clicks on the container
+  useEffect(() => {
+    const container = document.querySelector('.game-container');
+    if (container) {
+        container.addEventListener('click', handleContainerClick);
+    }
+    return () => {
+        if (container) {
+            container.removeEventListener('click', handleContainerClick);
+        }
+    };
+  }, [handleContainerClick]);
+
+  // Function to calculate button position based on current progress
+  const getButtonPositionFromProgress = (progress) => {
+    const container = document.querySelector('.game-container');
+    if (!container) return { x: 0, y: 0 };
+
+    const bounds = container.getBoundingClientRect();
+    const maxWidth = bounds.width;
+    const maxHeight = bounds.height;
+
+    // Calculate the button's position based on the current progress along the path
+    const x = progress * maxWidth; // Adjust this calculation based on your path logic
+    const y = Math.sin(progress * Math.PI * 2) * (maxHeight / 2) + (maxHeight / 2); // Example for a wave-like path
+
+    return { x, y };
+  };
 
   return {
     // Game states
