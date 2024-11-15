@@ -1081,7 +1081,7 @@ export const useGameHooks = (gameState, setGameState) => {
               offsetPath: `path("${currentPath}")`,
               offsetDistance: `${currentProgress * 100}%`,
               offsetRotate: "0deg",
-              zIndex: 15,
+              zIndex: 9,
             }}
           >
             <img
@@ -1091,6 +1091,9 @@ export const useGameHooks = (gameState, setGameState) => {
               style={{
                 imageRendering: 'pixelated',
                 willChange: 'transform',
+                scale: 2,
+                opacity: 0.6, // Add opacity
+                filter: 'brightness(1.2)', 
               }}
             />
           </div>
