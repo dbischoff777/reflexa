@@ -50,7 +50,7 @@ const RAF_TIMESTAMP = typeof performance !== 'undefined'
 // Update timing constants to be in sync
 const ANIMATION_WINDOW = 3000;  // Time window for clicking (3 seconds)
 const FADE_DURATION = 800;      // Duration of fade out animation
-const FAILURE_INTERVAL = ANIMATION_WINDOW; // Match the animation window
+const FAILURE_INTERVAL = 10000; // Set to 10 seconds
 const FAILURE_DURATION = FADE_DURATION;    // Match the fade duration
 
 export const useGameHooks = (gameState, setGameState) => {
@@ -821,7 +821,7 @@ export const useGameHooks = (gameState, setGameState) => {
           startObjectTimer();
         }, FADE_DURATION);
       }
-    }, ANIMATION_WINDOW);
+    }, FAILURE_INTERVAL); // Use FAILURE_INTERVAL for the timer
 
     setAnimationTimer(newTimer);
   }, [
@@ -829,6 +829,19 @@ export const useGameHooks = (gameState, setGameState) => {
     currentObjectIndex,
     isFadingOut
   ]);
+
+  // Ensure the failure overlay timer is reset when the game state changes
+  useEffect(() => {
+    if (gameState === GAME_STATES.PLAYING) {
+        startObjectTimer(); // Start the timer when the game is playing
+    }
+
+    return () => {
+        if (failureTimerRef.current) {
+            clearTimeout(failureTimerRef.current);
+        }
+    };
+  }, [gameState, startObjectTimer]);
 
   // 2. Update handleButtonClick to avoid circular dependencies
   const handleButtonClick = useCallback(() => {
