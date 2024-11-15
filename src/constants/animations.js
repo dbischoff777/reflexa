@@ -14,6 +14,15 @@ import tryAnimation5 from '../assets/animations/try/Object_5.gif';
 //fail animation
 import failAnimation1 from '../assets/animations/fail/fail1.gif';
 
+//fireworks
+import fireworks1 from '../assets/animations/fireworks/fireworks animated_1.gif';
+import fireworks2 from '../assets/animations/fireworks/fireworks animated_2.gif';
+import fireworks3 from '../assets/animations/fireworks/fireworks animated_3.gif';
+import fireworks4 from '../assets/animations/fireworks/fireworks animated_4.gif';
+import fireworks5 from '../assets/animations/fireworks/fireworks animated_5.gif';
+import fireworks6 from '../assets/animations/fireworks/fireworks animated_6.gif';
+
+
 // Animation durations in milliseconds
 export const ANIMATION_DURATIONS = {
   LONG: 3000,    // 3 seconds
@@ -32,7 +41,7 @@ export const TRY_ANIMATIONS_BY_SIZE = {
 
 // Success animations by size
 export const SUCCESS_ANIMATIONS_BY_SIZE = {
-  LARGE: [successAnimation1, successAnimation2], //add fireworks for every success animation 2-3seconds //paw as cursor
+  LARGE: [successAnimation1, successAnimation2, successAnimation3, successAnimation4], //add fireworks for every success animation 2-3seconds //paw as cursor
   MEDIUM: [successAnimation3, successAnimation4],
   SMALL: [successAnimation4]
 };
@@ -50,6 +59,13 @@ export const ANIMATION_SEQUENCE = {
 export const FAILURE_OVERLAY = {
   IMAGE: failAnimation1, // Using existing fail animation
   DURATION: ANIMATION_DURATIONS.MEDIUM
+};
+
+// firework animations by size
+export const FIREWORKS_BY_SIZE = {
+  LARGE: [fireworks1, fireworks2, fireworks3, fireworks4, fireworks5, fireworks6], 
+  MEDIUM: [fireworks3, fireworks4],
+  SMALL: [fireworks5]
 };
 
 // Constants for game logic
