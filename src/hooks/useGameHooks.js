@@ -622,7 +622,7 @@ export const useGameHooks = (gameState, setGameState) => {
     const width = window.innerWidth;
     const height = window.innerHeight;
     
-    // Use 70% of height and 80% of width for better vertical coverage
+    // Use 70% of height and 80% of width for better coverage
     const usableWidth = width * 0.8;
     const usableHeight = height * 0.6;
     
@@ -630,33 +630,84 @@ export const useGameHooks = (gameState, setGameState) => {
     const offsetX = (width - usableWidth) / 2;
     const offsetY = (height - usableHeight) / 2;
     
-    // Create wave-like vertical path
-    const numWaves = Math.floor(Math.random() * 3) + 3; // Random number between 3-5 waves
-    const points = [];
+    // Randomly choose a pattern type
+    const patterns = ['wave', 'topToBottom', 'bottomToTop'];
+    const patternType = patterns[Math.floor(Math.random() * patterns.length)];
     
-    // Generate points for a wave pattern
-    for (let i = 0; i <= numWaves * 2; i++) {
-      const progress = i / (numWaves * 2);
-      points.push({
-        x: offsetX + (i % 2 === 0 ? usableWidth * 0.2 : usableWidth * 0.8),
-        y: offsetY + (progress * usableHeight)
-      });
+    const points = [];
+    let path = '';
+    
+    // Shared wave parameters
+    const baseAmplitude = usableWidth * 0.3; // 30% of usable width
+    const numWaves = Math.floor(Math.random() * 2) + 2; // 2-3 waves
+    
+    switch (patternType) {
+      case 'topToBottom': {
+        // Create vertical wave pattern from top to bottom
+        const numPoints = 50;
+        for (let i = 0; i <= numPoints; i++) {
+          const progress = i / numPoints;
+          const wavePhase = progress * Math.PI * 2 * numWaves;
+          const yOffset = Math.sin(wavePhase) * baseAmplitude; // Apply wave to Y instead of X
+          
+          points.push({
+            x: offsetX + (progress * usableWidth), // Straight line horizontally
+            y: (offsetY + usableHeight * 0.6) + yOffset // Add wave pattern to vertical movement
+          });
+        }
+        break;
+      }
+        
+      case 'bottomToTop': {
+        // Create vertical wave pattern from bottom to top
+        const numPoints = 50;
+        for (let i = 0; i <= numPoints; i++) {
+          const progress = i / numPoints;
+          const wavePhase = progress * Math.PI * 2 * numWaves;
+          const yOffset = Math.sin(wavePhase) * baseAmplitude; // Apply wave to Y instead of X
+          
+          points.push({
+            x: offsetX + (progress * usableWidth), // Straight line horizontally
+            y: (offsetY + usableHeight * 0.6) - yOffset // Start from bottom and wave upward
+          });
+        }
+        break;
+      }
+        
+      case 'wave':
+      default: {
+        // Horizontal wave pattern
+        const numPoints = 50; // Increase number of points for smoother waves
+        for (let i = 0; i <= numPoints; i++) {
+          const progress = i / numPoints;
+          const wavePhase = progress * Math.PI * 2 * numWaves;
+          const xOffset = Math.sin(wavePhase) * baseAmplitude;
+          
+          points.push({
+            x: offsetX + (usableWidth * 0.5) + xOffset,
+            y: offsetY + (progress * usableHeight)
+          });
+        }
+        break;
+      }
     }
     
-    // Create the path
-    let path = `M ${points[0].x},${points[0].y}`;
+    // Create the path with Bezier curves for smooth waves
+    path = `M ${points[0].x},${points[0].y}`;
     
-    // Connect points with smooth curves
+    // Use cubic Bezier curves to create smooth transitions
     for (let i = 0; i < points.length - 1; i++) {
       const current = points[i];
       const next = points[i + 1];
       
-      // Control points for smooth vertical waves
-      const midY = (current.y + next.y) / 2;
-      const cp1x = current.x;
-      const cp1y = midY;
-      const cp2x = next.x;
-      const cp2y = midY;
+      // Calculate control points for smooth curves
+      const dx = next.x - current.x;
+      const dy = next.y - current.y;
+      
+      const cp1x = current.x + dx * 0.25;
+      const cp1y = current.y + dy * 0.25;
+      const cp2x = current.x + dx * 0.75;
+      const cp2y = current.y + dy * 0.75;
       
       path += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${next.x},${next.y}`;
     }
