@@ -1158,7 +1158,7 @@ export const useGameHooks = (gameState, setGameState) => {
             className="absolute pointer-events-none"
             style={{
               offsetPath: `path("${currentPath}")`,
-              offsetDistance: `${element.progress * 95}%`,
+              offsetDistance: `${element.progress * 100}%`,
               offsetRotate: "0deg",
               opacity: element.opacity,
               transition: 'opacity 1s ease-out',
