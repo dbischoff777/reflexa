@@ -622,8 +622,8 @@ export const useGameHooks = (gameState, setGameState) => {
     const width = window.innerWidth;
     const height = window.innerHeight;
     
-    // Use 70% of width and 80% of height for better vertical coverage
-    const usableWidth = width * 0.9;
+    // Use 70% of height and 80% of width for better vertical coverage
+    const usableWidth = width * 0.8;
     const usableHeight = height * 0.7;
     
     // Center the usable area
@@ -631,7 +631,7 @@ export const useGameHooks = (gameState, setGameState) => {
     const offsetY = (height - usableHeight) / 2;
     
     // Create wave-like vertical path
-    const numWaves = 6; // Number of vertical waves
+    const numWaves = Math.floor(Math.random() * 3) + 3; // Random number between 3-5 waves
     const points = [];
     
     // Generate points for a wave pattern
@@ -978,7 +978,7 @@ export const useGameHooks = (gameState, setGameState) => {
 
   const [trailElements, setTrailElements] = useState([]);
   const lastTrailTime = useRef(0);
-  const TRAIL_INTERVAL = 250; // Increased to 400ms for more spacing
+  const TRAIL_INTERVAL = 400; // Increased to 400ms for more spacing
   const TRAIL_DURATION = 1500; // 1.5 seconds fade duration
   const MAX_TRAIL_ELEMENTS = 6; // Keep 6 elements max
   const [lastPosition, setLastPosition] = useState({ x: 0, y: 0 });
