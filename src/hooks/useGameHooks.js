@@ -639,7 +639,7 @@ export const useGameHooks = (gameState, setGameState) => {
     
     // Shared wave parameters
     const baseAmplitude = usableWidth * 0.3; // 30% of usable width
-    const numWaves = Math.floor(Math.random() * 2) + 2; // 2-3 waves
+    const numWaves = 4 //Math.floor(Math.random() * 2) + 2; // 2-3 waves
     
     switch (patternType) {
       case 'topToBottom': {
@@ -1158,7 +1158,7 @@ export const useGameHooks = (gameState, setGameState) => {
             className="absolute pointer-events-none"
             style={{
               offsetPath: `path("${currentPath}")`,
-              offsetDistance: `${element.progress * 100}%`,
+              offsetDistance: `${element.progress * 95}%`,
               offsetRotate: "0deg",
               opacity: element.opacity,
               transition: 'opacity 1s ease-out',
@@ -1205,6 +1205,7 @@ export const useGameHooks = (gameState, setGameState) => {
               userSelect: 'none',
               WebkitUserSelect: 'none',
               transform: 'translate(50%, 50%)', // center the button on the path
+              transform: `translate(50%, 50%) scale(${isPathPaused ? 1.4 : 1})`, // Move scale here
             }}
           >
             {!showAnimation && (
@@ -1223,7 +1224,7 @@ export const useGameHooks = (gameState, setGameState) => {
           </button>
         </div>
 
-        {/* Separate failure overlay container */}
+        {/* Separate failure overlay container
         {failureOverlay && !showAnimation && (
           <div
             className={`absolute transform -translate-x-1/2 -translate-y-1/2 button-animation
@@ -1248,7 +1249,7 @@ export const useGameHooks = (gameState, setGameState) => {
               }}
             />
           </div>
-        )}
+        )} */}
       </div>
     );
   }, [
