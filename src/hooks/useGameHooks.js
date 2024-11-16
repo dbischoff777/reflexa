@@ -1029,39 +1029,25 @@ export const useGameHooks = (gameState, setGameState) => {
 
   const [trailElements, setTrailElements] = useState([]);
   const lastTrailTime = useRef(0);
-  const TRAIL_INTERVAL = 400; // Increased to 400ms for more spacing
+  const TRAIL_INTERVAL = 250; // Increased to 400ms for more spacing
   const TRAIL_DURATION = 1500; // 1.5 seconds fade duration
   const MAX_TRAIL_ELEMENTS = 6; // Keep 6 elements max
   const [lastPosition, setLastPosition] = useState({ x: 0, y: 0 });
 
-  const updateTrail = useCallback((buttonElement) => {
-    if (!buttonElement) return;
-
+  // Update the updateTrail function to use path progress
+  const updateTrail = useCallback(() => {
     const currentTime = Date.now();
     
-    // Only create new paw if enough time has passed
+    // Only create new trail if enough time has passed
     if (currentTime - lastTrailTime.current >= TRAIL_INTERVAL) {
-      const rect = buttonElement.getBoundingClientRect();
-      const x = rect.left + rect.width / 2;
-      const y = rect.top + rect.height / 2;
-
-      // Calculate angle based on movement direction
-      const angle = Math.atan2(
-        y - lastPosition.y,
-        x - lastPosition.x
-      ) * (180 / Math.PI);
-
       setTrailElements(prevElements => {
         const newElement = {
           id: Date.now() + Math.random(),
-          x,
-          y,
-          angle: angle + 90,
+          progress: currentProgress, // Store the current progress instead of x,y coordinates
           opacity: 1,
           timestamp: currentTime
         };
         
-        // Keep more elements and fade them out over longer duration
         const updatedElements = prevElements
           .filter(element => currentTime - element.timestamp < TRAIL_DURATION)
           .map(element => ({
@@ -1074,9 +1060,8 @@ export const useGameHooks = (gameState, setGameState) => {
       });
 
       lastTrailTime.current = currentTime;
-      setLastPosition({ x, y });
     }
-  }, [lastPosition]);
+  }, [currentProgress]); // Add currentProgress as dependency
 
   // Reference to the animated button
   const buttonRef = useRef(null);
@@ -1172,11 +1157,14 @@ export const useGameHooks = (gameState, setGameState) => {
             key={element.id}
             className="absolute pointer-events-none"
             style={{
-              left: element.x,
-              top: element.y,
-              transform: `translate(50%, 50%) rotate(${element.angle}deg)`,
+              offsetPath: `path("${currentPath}")`,
+              offsetDistance: `${element.progress * 95}%`,
+              offsetRotate: "0deg",
               opacity: element.opacity,
               transition: 'opacity 1s ease-out',
+              transformOrigin: 'center center',
+              transform: `translate(-50%, -50%) rotate(${getAngleAtProgress(element.progress) + 90}deg)`,
+              zIndex: 5,
             }}
           >
             <TrailElement type="paw" />
@@ -1438,6 +1426,29 @@ export const useGameHooks = (gameState, setGameState) => {
 
     return { x, y };
   };
+
+  // Add this helper function to calculate the angle at a given progress point
+  const getAngleAtProgress = useCallback((progress) => {
+    // Get two nearby points to calculate direction
+    const delta = 0.01; // Small delta for calculating tangent
+    const p1 = progress;
+    const p2 = Math.min(progress + delta, 1);
+    
+    // Get points from SVG path
+    const path = document.querySelector('#motionPath');
+    if (!path) return 0;
+    
+    const point1 = path.getPointAtLength(p1 * path.getTotalLength());
+    const point2 = path.getPointAtLength(p2 * path.getTotalLength());
+    
+    // Calculate angle between points
+    const angle = Math.atan2(
+      point2.y - point1.y,
+      point2.x - point1.x
+    ) * (180 / Math.PI);
+    
+    return angle;
+  }, []);
 
   return {
     // Game states
