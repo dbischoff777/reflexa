@@ -624,7 +624,7 @@ export const useGameHooks = (gameState, setGameState) => {
     
     // Use 70% of height and 80% of width for better vertical coverage
     const usableWidth = width * 0.8;
-    const usableHeight = height * 0.7;
+    const usableHeight = height * 0.6;
     
     // Center the usable area
     const offsetX = (width - usableWidth) / 2;
@@ -1047,10 +1047,23 @@ export const useGameHooks = (gameState, setGameState) => {
     };
   }, [updateTrail]);
 
-  // 3. Then define renderButton which uses handleButtonClick
+  // Add new state for debug visualization
+  const [showDebugPath, setShowDebugPath] = useState(false);
+
+  // Update renderButton to include debug visualization
   const renderButton = useCallback(() => {
     return (
       <div className="absolute inset-0">
+            {/* Debug visualization overlay - always visible */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 100 }}>
+        {/* Main path */}
+        <path
+          d={currentPath}
+          stroke="rgba(255, 0, 0, 0.5)"
+          strokeWidth="2"
+          fill="none"
+        />
+      </svg>
         {/* Existing success animation */}
         {showAnimation && (
           <div
@@ -1207,7 +1220,13 @@ export const useGameHooks = (gameState, setGameState) => {
     failureOverlay,
     showFireworks,
     currentFirework,
+    showDebugPath,
   ]);
+
+  // Add debug toggle function
+  const toggleDebugPath = useCallback(() => {
+    setShowDebugPath(prev => !prev);
+  }, []);
 
   // Effect to set initial position
   useEffect(() => {
@@ -1411,6 +1430,7 @@ export const useGameHooks = (gameState, setGameState) => {
     currentObjectIndex,
     showFireworks,
     currentFirework,
+    showDebugPath,
     
 
     // Setters
@@ -1457,6 +1477,7 @@ export const useGameHooks = (gameState, setGameState) => {
     setCurrentObjectIndex,
     setShowFireworks,
     setCurrentFirework,
+    setShowDebugPath,
 
     // Functions
     getAnimationConfig,
@@ -1495,5 +1516,6 @@ export const useGameHooks = (gameState, setGameState) => {
     setGameState,
     containerRef,
     startObjectTimer,
+    toggleDebugPath,
   };
 }; 
