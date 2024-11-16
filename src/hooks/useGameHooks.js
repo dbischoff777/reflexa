@@ -1084,18 +1084,19 @@ export const useGameHooks = (gameState, setGameState) => {
               zIndex: 9,
             }}
           >
-            <img
+            <div className="transform scale-[1.2] origin-center">
+              <img
               src={currentFirework}
               alt="Fireworks"
               className="w-[200px] h-[200px] xs:w-[240px] xs:h-[240px] sm:w-[280px] sm:h-[280px] object-contain pointer-events-none mix-blend-screen"
               style={{
                 imageRendering: 'pixelated',
                 willChange: 'transform',
-                scale: 2,
                 opacity: 0.6, // Add opacity
-                filter: 'brightness(1.2)', 
+                filter: 'brightness(1.5)', 
               }}
-            />
+              />
+            </div>
           </div>
         )}
 
@@ -1179,7 +1180,7 @@ export const useGameHooks = (gameState, setGameState) => {
               offsetRotate: "0deg",
               touchAction: 'none',
               willChange: 'transform',
-              zIndex: 30,
+              zIndex: 10,
               //transition: isPathPaused ? 'none' : 'offset-distance 0.016s linear',
             }}
           >
