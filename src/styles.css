@@ -179,3 +179,12 @@ html, body {
 .failure-overlay-exit {
     animation: scaleOut 2s forwards; /* Animation for disappearing */
 }
+
+/* Scale fireworks animation */
+.scale-125 {
+  transform: scale(1.25);
+}
+
+.transition-transform {
+  transition: transform 300ms ease-out;
+}

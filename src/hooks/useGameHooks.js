@@ -50,7 +50,7 @@ const RAF_TIMESTAMP = typeof performance !== 'undefined'
 
 // Update timing constants to be in sync
 const ANIMATION_WINDOW = 3000;  // Time window for clicking (3 seconds)
-const FADE_DURATION = 4000;      // Duration of fade out animation
+const FADE_DURATION = 1200;      // Duration of fade out animation
 const FAILURE_INTERVAL = 10000; // Set to 10 seconds
 const FAILURE_DURATION = FADE_DURATION;    // Match the fade duration
 
@@ -717,7 +717,7 @@ export const useGameHooks = (gameState, setGameState) => {
 
   // First, declare all state variables
   const [currentObjectIndex, setCurrentObjectIndex] = useState(0);
-  const [failureOverlay, setFailureOverlay] = useState(false);
+  //const [failureOverlay, setFailureOverlay] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
   const [currentPath, setCurrentPath] = useState(generateRandomPath());
   const [currentProgress, setCurrentProgress] = useState(0);
@@ -752,15 +752,16 @@ export const useGameHooks = (gameState, setGameState) => {
   // Add this function to generate random speeds for each segment
   const generateSegmentSpeeds = useCallback(() => {
     return Array(NUM_SEGMENTS).fill(0).map(() => 
-      MIN_SPEED + Math.random() * (MAX_SPEED - MIN_SPEED)
+      showFireworks ? 0 : MIN_SPEED + Math.random() * (MAX_SPEED - MIN_SPEED)
     );
-  }, []);
+  }, [showFireworks]); // Add showFireworks as dependency
 
   // Update the animate function to be simpler and smoother
   animateRef.current = (startTimestamp, startProgress, endProgress, segmentIndex) => {
     const now = RAF_TIMESTAMP();
     const elapsed = now - startTimestamp;
-    const duration = SEGMENT_TIME / segmentSpeeds[segmentIndex];
+    const speed = showFireworks ? 0 : segmentSpeeds[segmentIndex]; // Set speed to 0 when fireworks show
+    const duration = SEGMENT_TIME / speed;
     
     // Calculate progress with simple linear interpolation
     const progress = Math.min(elapsed / duration, 1);
@@ -821,7 +822,7 @@ export const useGameHooks = (gameState, setGameState) => {
     setSegmentSpeeds(generateSegmentSpeeds());
     setIsPathPaused(false);
     setCurrentProgress(0);
-    setFailureOverlay(false);
+    //(false);
     
     startNewSegmentRef.current(0, 0);
 
@@ -835,9 +836,6 @@ export const useGameHooks = (gameState, setGameState) => {
     };
   };
 
-  // Create memoized versions of the functions for use in effects and callbacks
-  const animate = useCallback((...args) => animateRef.current(...args), []);
-  const startNewSegment = useCallback((...args) => startNewSegmentRef.current(...args), []);
   const updatePath = useCallback((...args) => updatePathRef.current(...args), []);
 
   // Add cleanup in the main effect
@@ -849,7 +847,7 @@ export const useGameHooks = (gameState, setGameState) => {
     return () => {
       setIsPathPaused(true);
       setCurrentProgress(0);
-      setFailureOverlay(false);
+      //setFailureOverlay(false);
       if (failureTimerRef.current) {
         clearTimeout(failureTimerRef.current);
       }
@@ -865,24 +863,21 @@ export const useGameHooks = (gameState, setGameState) => {
       clearTimeout(fireworkTimerRef.current);
     }
 
-    // Start fireworks timer
-    fireworkTimerRef.current = setTimeout(() => {
-      if (!isFadingOut && !showAnimation) {
-        setShowFireworks(true);
-        setCurrentFirework(getMatchingFirework(currentObjectIndex));
-      }
-    }, 4000); // Show fireworks after 4 seconds of inactivity
-
-    // Original failure overlay timer
     const newTimer = setTimeout(() => {
       if (!isFadingOut) {
         setIsFadingOut(true);
-        setFailureOverlay(true);
-        setShowFireworks(false); // Hide fireworks when failure overlay shows
+        //setFailureOverlay(true);
+        setIsPathPaused(true); // Pause the path when showing fireworks
+        
+        // Show fireworks when fading out starts
+        setShowFireworks(true);
+        setCurrentFirework(getMatchingFirework(currentObjectIndex));
 
         setTimeout(() => {
-          setFailureOverlay(false);
+          //setFailureOverlay(false);
           setIsFadingOut(false);
+          setShowFireworks(false);
+          setIsPathPaused(false); // Resume the path after fireworks
           
           const nextIndex = (currentObjectIndex + 1) % TRY_ANIMATIONS_BY_SIZE[currentSize].length;
           setCurrentObjectIndex(nextIndex);
@@ -900,7 +895,8 @@ export const useGameHooks = (gameState, setGameState) => {
     currentObjectIndex,
     isFadingOut,
     showAnimation,
-    getMatchingFirework
+    getMatchingFirework,
+    getRandomPosition
   ]);
 
   // Ensure the failure overlay timer is reset when the game state changes
@@ -1123,10 +1119,11 @@ export const useGameHooks = (gameState, setGameState) => {
           </div>
         )}
 
-        {/* Add fireworks animation */}
-        {showFireworks && !showAnimation && !failureOverlay && (
+        {/* Update fireworks animation container */}
+        {showFireworks && isFadingOut && !showAnimation && (
           <div
-            className="absolute transform -translate-x-1/2 -translate-y-1/2"
+            className={`absolute transform -translate-x-1/2 -translate-y-1/2
+              ${isPathPaused ? 'scale-125 transition-transform duration-300' : ''}`}
             style={{
               offsetPath: `path("${currentPath}")`,
               offsetDistance: `${currentProgress * 100}%`,
@@ -1134,18 +1131,18 @@ export const useGameHooks = (gameState, setGameState) => {
               zIndex: 9,
             }}
           >
-            <div className="transform scale-[1.2] origin-center">
+            <div className="origin-center">
               <img
-              src={currentFirework}
-              alt="Fireworks"
-              className="w-[200px] h-[200px] xs:w-[240px] xs:h-[240px] sm:w-[280px] sm:h-[280px] object-contain pointer-events-none mix-blend-screen"
-              style={{
-                imageRendering: 'pixelated',
-                willChange: 'transform',
-                transform: 'translate(50%, 50%)', // center the button on the path
-                opacity: 0.6, // Add opacity
-                filter: 'brightness(1.5)', 
-              }}
+                src={currentFirework}
+                alt="Fireworks"
+                className="w-[200px] h-[200px] xs:w-[240px] xs:h-[240px] sm:w-[280px] sm:h-[280px] object-contain pointer-events-none mix-blend-screen"
+                style={{
+                  imageRendering: 'pixelated',
+                  willChange: 'transform',
+                  transform: 'translate(50%, 50%)',
+                  opacity: 0.6,
+                  filter: 'brightness(1.5)', 
+                }}
               />
             </div>
           </div>
@@ -1260,7 +1257,7 @@ export const useGameHooks = (gameState, setGameState) => {
     showAnimation,
     currentTargetAnimation,
     handleButtonClick,
-    failureOverlay,
+    //failureOverlay,
     showFireworks,
     currentFirework,
     showDebugPath,
@@ -1491,7 +1488,7 @@ export const useGameHooks = (gameState, setGameState) => {
     maxLevel,
     timeLimit,
     buttonPosition,
-    failureOverlay,
+    //failureOverlay,
     isFadingOut,
     currentObjectIndex,
     showFireworks,
@@ -1538,7 +1535,7 @@ export const useGameHooks = (gameState, setGameState) => {
     setMaxLevel,
     setTimeLimit,
     setButtonPosition,
-    setFailureOverlay,
+    //setFailureOverlay,
     setIsFadingOut,
     setCurrentObjectIndex,
     setShowFireworks,
