@@ -1029,9 +1029,9 @@ export const useGameHooks = (gameState, setGameState) => {
 
   const [trailElements, setTrailElements] = useState([]);
   const lastTrailTime = useRef(0);
-  const TRAIL_INTERVAL = 250; // Increased to 400ms for more spacing
-  const TRAIL_DURATION = 1500; // 1.5 seconds fade duration
-  const MAX_TRAIL_ELEMENTS = 6; // Keep 6 elements max
+  const TRAIL_INTERVAL = 600; // Increased to XXXms for more spacing
+  const TRAIL_DURATION = 2000; // X seconds fade duration
+  const MAX_TRAIL_ELEMENTS = 9; // Keep X elements max
   const [lastPosition, setLastPosition] = useState({ x: 0, y: 0 });
 
   // Update the updateTrail function to use path progress
