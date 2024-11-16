@@ -1132,6 +1132,7 @@ export const useGameHooks = (gameState, setGameState) => {
               style={{
                 imageRendering: 'pixelated',
                 willChange: 'transform',
+                transform: 'translate(50%, 50%)', // center the button on the path
               }}
             />
           </div>
@@ -1156,6 +1157,7 @@ export const useGameHooks = (gameState, setGameState) => {
               style={{
                 imageRendering: 'pixelated',
                 willChange: 'transform',
+                transform: 'translate(50%, 50%)', // center the button on the path
                 opacity: 0.6, // Add opacity
                 filter: 'brightness(1.5)', 
               }}
@@ -1172,7 +1174,7 @@ export const useGameHooks = (gameState, setGameState) => {
             style={{
               left: element.x,
               top: element.y,
-              transform: `translate(-50%, -50%) rotate(${element.angle}deg)`,
+              transform: `translate(50%, 50%) rotate(${element.angle}deg)`,
               opacity: element.opacity,
               transition: 'opacity 1s ease-out',
             }}
@@ -1214,6 +1216,7 @@ export const useGameHooks = (gameState, setGameState) => {
               touchAction: 'none',
               userSelect: 'none',
               WebkitUserSelect: 'none',
+              transform: 'translate(50%, 50%)', // center the button on the path
             }}
           >
             {!showAnimation && (
