@@ -50,7 +50,7 @@ const RAF_TIMESTAMP = typeof performance !== 'undefined'
 
 // Update timing constants to be in sync
 const ANIMATION_WINDOW = 3000;  // Time window for clicking (3 seconds)
-const FADE_DURATION = 1200;      // Duration of fade out animation
+const FADE_DURATION = 1000;      // Duration of fade out animation
 const FAILURE_INTERVAL = 10000; // Set to 10 seconds
 const FAILURE_DURATION = FADE_DURATION;    // Match the fade duration
 
@@ -752,16 +752,24 @@ export const useGameHooks = (gameState, setGameState) => {
   // Add this function to generate random speeds for each segment
   const generateSegmentSpeeds = useCallback(() => {
     return Array(NUM_SEGMENTS).fill(0).map(() => 
-      showFireworks ? 0 : MIN_SPEED + Math.random() * (MAX_SPEED - MIN_SPEED)
+      MIN_SPEED + Math.random() * (MAX_SPEED - MIN_SPEED)
     );
-  }, [showFireworks]); // Add showFireworks as dependency
+  }, []);
 
-  // Update the animate function to be simpler and smoother
+  // Update the animate function to handle pausing better
   animateRef.current = (startTimestamp, startProgress, endProgress, segmentIndex) => {
     const now = RAF_TIMESTAMP();
     const elapsed = now - startTimestamp;
-    const speed = showFireworks ? 0 : segmentSpeeds[segmentIndex]; // Set speed to 0 when fireworks show
+    const speed = segmentSpeeds[segmentIndex];
     const duration = SEGMENT_TIME / speed;
+    
+    // If showFireworks is true, maintain current position without updating progress
+    if (showFireworks) {
+      animationFrameRef.current = requestAnimationFrame(() => 
+        animateRef.current(startTimestamp, startProgress, endProgress, segmentIndex)
+      );
+      return;
+    }
     
     // Calculate progress with simple linear interpolation
     const progress = Math.min(elapsed / duration, 1);
@@ -1182,16 +1190,19 @@ export const useGameHooks = (gameState, setGameState) => {
         <div
           ref={buttonRef}
           className={`absolute transform -translate-x-1/2 -translate-y-1/2 button-animation
-            ${isFadingOut ? 'opacity-0' : 'opacity-100'}
             ${isPathPaused ? 'paused' : ''}`}
           style={{
             offsetPath: `path("${currentPath}")`,
             offsetDistance: `${currentProgress * 100}%`,
             offsetRotate: "0deg",
             touchAction: 'none',
-            willChange: 'transform, offset-distance',
+            willChange: 'transform, offset-distance, opacity',
             zIndex: 10,
-            transition: isPathPaused ? 'none' : 'offset-distance 0.016s linear',
+            opacity: isFadingOut ? 0 : 1,
+            transition: `
+              ${isPathPaused ? 'none' : 'offset-distance 0.016s linear'},
+              opacity 400ms cubic-bezier(0.4, 0, 0.2, 1)
+            `
           }}
         >
           <button
@@ -1201,8 +1212,8 @@ export const useGameHooks = (gameState, setGameState) => {
               touchAction: 'none',
               userSelect: 'none',
               WebkitUserSelect: 'none',
-              transform: 'translate(50%, 50%)', // center the button on the path
-              transform: `translate(50%, 50%) scale(${isPathPaused ? 1.4 : 1})`, // Move scale here
+              transform: `translate(50%, 50%) scale(${isPathPaused ? 1.4 : 1})`,
+              transition: 'transform 200ms cubic-bezier(0.4, 0, 0.2, 1)'
             }}
           >
             {!showAnimation && (
