@@ -34,14 +34,14 @@ export const ANIMATION_DURATIONS = {
 
 // Group animations by size
 export const TRY_ANIMATIONS_BY_SIZE = {
-  LARGE: [tryAnimation1, tryAnimation2], //bowl #1, hamburger #2, 
+  LARGE: [tryAnimation1, tryAnimation2],
   MEDIUM: [tryAnimation3, tryAnimation4],
   SMALL: [tryAnimation5]
 };
 
 // Success animations by size
 export const SUCCESS_ANIMATIONS_BY_SIZE = {
-  LARGE: [successAnimation1, successAnimation2], //add fireworks for every success animation 2-3seconds //paw as cursor
+  LARGE: [successAnimation1, successAnimation2],
   MEDIUM: [successAnimation3, successAnimation4],
   SMALL: [successAnimation4]
 };
@@ -63,7 +63,7 @@ export const FAILURE_OVERLAY = {
 
 // firework animations by size
 export const FIREWORKS_BY_SIZE = {
-  LARGE: [fireworks2, fireworks3, fireworks4, fireworks5, fireworks6], 
+  LARGE: [fireworks1, fireworks2, fireworks3, fireworks4, fireworks5, fireworks6], 
   MEDIUM: [fireworks3, fireworks4],
   SMALL: [fireworks5]
 };
