@@ -1207,7 +1207,11 @@ export const useGameHooks = (gameState, setGameState) => {
         >
           <button
             className="game-button relative flex items-center justify-center"
-            onClick={handleButtonClick}
+            //onClick={handleButtonClick}
+            onTouchStart={(e) => {
+              e.preventDefault();
+              handleButtonClick();
+            }}
             style={{
               touchAction: 'none',
               userSelect: 'none',

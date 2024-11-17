@@ -231,6 +231,7 @@ code {
 
 .touch-cursor {
   position: fixed;
+  pointer-events: none;
   width: 32px; /* Adjust based on your cursor image size */
   height: 32px; /* Adjust based on your cursor image size */
   background-image: url('./assets/images/pawCursor.png');
