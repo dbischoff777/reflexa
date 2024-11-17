@@ -731,8 +731,8 @@ export const useGameHooks = (gameState, setGameState) => {
   const PAUSE_TIME = 800;    // 0.8 seconds pause between segments
   const FAILURE_INTERVAL = 10000; // Show failure overlay every 10 seconds
   const MAX_TIME = FULL_DURATION; // Time until complete reset (30 seconds)
-  const MIN_SPEED = 0.3;        // Minimum speed multiplier
-  const MAX_SPEED = 0.6;        // Maximum speed multiplier
+  const MIN_SPEED = 0.2;        // Minimum speed multiplier
+  const MAX_SPEED = 0.4;        // Maximum speed multiplier
 
   // Each segment will move 20% of the path (1/NUM_SEGMENTS)
   const SEGMENT_PROGRESS = 1 / NUM_SEGMENTS;
@@ -758,46 +758,60 @@ export const useGameHooks = (gameState, setGameState) => {
 
   // Update the animate function to handle pausing better
   animateRef.current = (startTimestamp, startProgress, endProgress, segmentIndex) => {
+    // Use performance.now() for more precise timing
     const now = RAF_TIMESTAMP();
-    const elapsed = now - startTimestamp;
-    const speed = segmentSpeeds[segmentIndex];
-    const duration = SEGMENT_TIME / speed;
     
-    // If showFireworks is true, maintain current position without updating progress
+    // Early return if fireworks are showing to prevent unnecessary calculations
     if (showFireworks) {
       animationFrameRef.current = requestAnimationFrame(() => 
         animateRef.current(startTimestamp, startProgress, endProgress, segmentIndex)
       );
       return;
     }
-    
-    // Calculate progress with simple linear interpolation
+
+    // Optimize calculations by caching values
+    const speed = segmentSpeeds[segmentIndex];
+    const duration = SEGMENT_TIME / speed;
+    const elapsed = now - startTimestamp;
     const progress = Math.min(elapsed / duration, 1);
+    
+    // Use a single calculation for new progress
     const newProgress = startProgress + (progress * SEGMENT_PROGRESS);
 
+    // Batch state updates using a single condition
     if (progress < 1) {
+      // Continue animation
       setCurrentProgress(newProgress);
       animationFrameRef.current = requestAnimationFrame(() => 
         animateRef.current(startTimestamp, startProgress, endProgress, segmentIndex)
       );
-    } else {
-      setCurrentProgress(endProgress);
-      
-      if (endProgress < 1) {
-        setIsPathPaused(true);
-        pauseTimerRef.current = setTimeout(() => {
+      return;
+    }
+
+    // Handle animation completion
+    setCurrentProgress(endProgress);
+    
+    if (endProgress < 1) {
+      // Handle segment transition
+      setIsPathPaused(true);
+      pauseTimerRef.current = setTimeout(() => {
+        // Batch state updates
+        requestAnimationFrame(() => {
           setIsPathPaused(false);
           startNewSegmentRef.current(endProgress, segmentIndex + 1);
-        }, PAUSE_TIME);
-      } else {
-        // Reset path and generate new speeds
-        setCurrentPath(generateRandomPath());
-        setSegmentSpeeds(generateSegmentSpeeds());
-        setCurrentProgress(0);
-        startTimeRef.current = now;
-        startNewSegmentRef.current(0, 0);
-      }
+        });
+      }, PAUSE_TIME);
+      return;
     }
+
+    // Handle path completion - batch updates in a single frame
+    requestAnimationFrame(() => {
+      setCurrentPath(generateRandomPath());
+      setSegmentSpeeds(generateSegmentSpeeds());
+      setCurrentProgress(0);
+      startTimeRef.current = now;
+      startNewSegmentRef.current(0, 0);
+    });
   };
 
   // Update startNewSegment to handle timestamps correctly
@@ -1163,7 +1177,7 @@ export const useGameHooks = (gameState, setGameState) => {
             className="absolute pointer-events-none"
             style={{
               offsetPath: `path("${currentPath}")`,
-              offsetDistance: `${element.progress * 95}%`,
+              offsetDistance: `${element.progress * 98}%`,
               offsetRotate: "0deg",
               opacity: element.opacity,
               transition: 'opacity 1s ease-out',
@@ -1211,7 +1225,7 @@ export const useGameHooks = (gameState, setGameState) => {
             onTouchStart={(e) => {
               e.preventDefault();
               handleButtonClick();
-            }}
+            }}  
             style={{
               touchAction: 'none',
               userSelect: 'none',
