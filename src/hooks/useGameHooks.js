@@ -623,8 +623,8 @@ export const useGameHooks = (gameState, setGameState) => {
     const height = window.innerHeight;
     
     // Use 70% of height and 80% of width for better coverage
-    const usableWidth = width * 0.8;
-    const usableHeight = height * 0.6;
+    const usableWidth = width * 0.9;
+    const usableHeight = height * 0.9;
     
     // Center the usable area
     const offsetX = (width - usableWidth) / 2;
@@ -642,7 +642,8 @@ export const useGameHooks = (gameState, setGameState) => {
     const numWaves = 4 //Math.floor(Math.random() * 2) + 2; // 2-3 waves
     
     switch (patternType) {
-      case 'topToBottom': {
+      case 'topToBottom': 
+      default: {
         // Create vertical wave pattern from top to bottom
         const numPoints = 50;
         for (let i = 0; i <= numPoints; i++) {
@@ -674,7 +675,7 @@ export const useGameHooks = (gameState, setGameState) => {
         break;
       }
         
-      case 'wave':
+      /* case 'wave':
       default: {
         // Horizontal wave pattern
         const numPoints = 50; // Increase number of points for smoother waves
@@ -689,7 +690,7 @@ export const useGameHooks = (gameState, setGameState) => {
           });
         }
         break;
-      }
+      } */
     }
     
     // Create the path with Bezier curves for smooth waves
@@ -1177,7 +1178,7 @@ export const useGameHooks = (gameState, setGameState) => {
             className="absolute pointer-events-none"
             style={{
               offsetPath: `path("${currentPath}")`,
-              offsetDistance: `${element.progress * 98}%`,
+              offsetDistance: `${element.progress * 96}%`,
               offsetRotate: "0deg",
               opacity: element.opacity,
               transition: 'opacity 1s ease-out',

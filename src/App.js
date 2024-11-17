@@ -110,20 +110,60 @@ const SplashScreenWrapper = ({ onComplete, loadingProgress, loadingMessage }) =>
 const TouchCursorHandler = () => {
   useEffect(() => {
     const handleTouch = (e) => {
+      // Prevent default touch behavior
+      e.preventDefault();
+      
+      // Only handle the first touch point
+      if (!e.touches[0]) return;
+      
       const touch = e.touches[0];
-      const cursor = document.createElement('div');
-      cursor.className = 'touch-cursor';
+      
+      // Create cursor element if it doesn't exist
+      let cursor = document.querySelector('.touch-cursor');
+      if (!cursor) {
+        cursor = document.createElement('div');
+        cursor.className = 'touch-cursor';
+        cursor.style.position = 'fixed';
+        cursor.style.pointerEvents = 'none';
+        cursor.style.zIndex = '9999';
+        cursor.style.transform = 'translate(-50%, -50%)';
+        document.body.appendChild(cursor);
+      }
+      
+      // Update cursor position
       cursor.style.left = `${touch.clientX}px`;
       cursor.style.top = `${touch.clientY}px`;
-      document.body.appendChild(cursor);
-
-      setTimeout(() => {
-        cursor.remove();
-      }, 500); // Adjust duration as needed
+      
+      // Add active state
+      cursor.classList.add('active');
+      
+      // Remove cursor after animation
+      const timeoutId = setTimeout(() => {
+        cursor?.remove();
+      }, 500);
+      
+      // Cleanup on touch end
+      const handleTouchEnd = () => {
+        cursor?.classList.remove('active');
+        document.removeEventListener('touchend', handleTouchEnd);
+      };
+      
+      document.addEventListener('touchend', handleTouchEnd);
+      
+      return () => {
+        clearTimeout(timeoutId);
+        document.removeEventListener('touchend', handleTouchEnd);
+      };
     };
 
-    document.addEventListener('touchstart', handleTouch);
-    return () => document.removeEventListener('touchstart', handleTouch);
+    // Add touch event listener with passive: false to allow preventDefault
+    document.addEventListener('touchstart', handleTouch, { passive: false });
+    
+    return () => {
+      document.removeEventListener('touchstart', handleTouch);
+      // Clean up any remaining cursors on unmount
+      document.querySelectorAll('.touch-cursor').forEach(el => el.remove());
+    };
   }, []);
 
   return null;

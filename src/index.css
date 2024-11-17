@@ -260,7 +260,18 @@ code {
     /* This creates a "touch ripple" effect using the cursor image */
     -webkit-tap-highlight-color: transparent;
   }
-  
+
+  /* Fix cursor positioning for touch devices */
+  .cursor-container {
+    pointer-events: none;
+    touch-action: none;
+  }
+
+  /* Hide any system-default touch indicators */
+  :active {
+    -webkit-tap-highlight-color: transparent;
+  }
+
   *:active::after {
     content: '';
     position: fixed;
@@ -274,6 +285,15 @@ code {
     transform: translate(-50%, -50%);
     /* Will be positioned at touch point via JavaScript */
   }
+}
+
+/* Ensure cursor is properly positioned relative to viewport */
+.cursor-container {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  will-change: transform;
+  contain: layout style size;
 }
 
 img {
