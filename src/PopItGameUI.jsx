@@ -15,6 +15,7 @@ import Tutorial from './components/Tutorial';
 import { useSettings } from './Settings';
 import NavigationBar from './components/NavigationBar';
 import './styles.css';
+import { ScreenOrientation } from '@capacitor/screen-orientation';
 
 const GameContent = ({
   settings,
@@ -446,6 +447,37 @@ const GameContent = ({
     exitGame();
   };
 
+  // Inside GameContent component, add this effect:
+  useEffect(() => {
+    const lockOrientation = async () => {
+      try {
+        // Check if we're running in Capacitor
+        if (window.Capacitor) {
+          if (gameState === GAME_STATES.PLAYING || gameState === GAME_STATES.COUNTDOWN) {
+            // Force landscape
+            await ScreenOrientation.lock({
+              orientation: 'landscape'
+            });
+          } else {
+            // Allow any orientation when not playing
+            await ScreenOrientation.unlock();
+          }
+        }
+      } catch (error) {
+        console.error('Failed to lock orientation:', error);
+      }
+    };
+
+    lockOrientation();
+
+    // Cleanup function
+    return () => {
+      if (window.Capacitor) {
+        ScreenOrientation.unlock().catch(console.error);
+      }
+    };
+  }, [gameState]);
+  
   return (
     <div className="relative">
       {/* Hide NavigationBar during gameplay states */}
@@ -697,15 +729,18 @@ const GameContent = ({
       
           {/* Game Area Container */}
           {gameState !== 'menu' ? (
-            <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-black">
+            <div className={`fixed inset-0 w-screen h-screen overflow-hidden bg-black ${gameState !== 'menu' ? 'landscape-container' : 'landscape-disabled'}`}>
               <div 
-                className="game-container absolute inset-0 w-full h-full"
+                className={`game-container absolute inset-0 ${gameState !== 'menu' ? 'landscape-content' : ''}`}
                 ref={containerRef}
                 style={{
                   backgroundImage: `url(${floorBackground})`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                   backgroundRepeat: 'no-repeat',
+                  width: '100%',
+                  height: '100%',
+                  overflow: 'hidden',
                 }}
               >
                 {/* Quit Button - Only show during PLAYING state */}

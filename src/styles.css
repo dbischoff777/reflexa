@@ -15,6 +15,27 @@
   }
 } 
 
+/* Add these additional styles for smoother transitions */
+.landscape-container,
+.landscape-content {
+  transition: transform 0.3s ease-out;
+  will-change: transform;
+}
+
+/* Add a class for when we want to disable the forced landscape */
+.landscape-disabled {
+  transform: none !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+}
+
+.landscape-disabled .landscape-content {
+  transform: none !important;
+}
+
 /* Prevent scrolling and remove white spaces */
 html, body {
   margin: 0;
