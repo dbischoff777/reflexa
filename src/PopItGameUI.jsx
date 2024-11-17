@@ -500,10 +500,6 @@ const GameContent = ({
   
   return (
     <div className="relative">
-      {/* Hide NavigationBar during gameplay states */}
-      {gameState === GAME_STATES.MENU && (
-        <NavigationBar gameState={gameState} />
-      )}
       <div 
         className={`
           min-h-screen w-full fixed inset-0 
