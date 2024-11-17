@@ -220,70 +220,59 @@ code {
   animation: slideInFromTop 0.5s ease-out forwards;
 }
 
-* {
-  -webkit-user-drag: none;
-  -webkit-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  cursor: url('./assets/images/pawCursor.png'), auto;
-  touch-action: manipulation;
-}
-
 .touch-cursor {
   position: fixed;
   pointer-events: none;
-  width: 32px; /* Adjust based on your cursor image size */
-  height: 32px; /* Adjust based on your cursor image size */
+  width: 32px;
+  height: 32px;
   background-image: url('./assets/images/pawCursor.png');
   background-size: contain;
   background-repeat: no-repeat;
-  pointer-events: none;
   z-index: 9999;
+  opacity: 0;
   transform: translate(-50%, -50%);
-  animation: cursorFade 0.5s ease-out forwards;
+  will-change: transform, opacity;
 }
 
-@keyframes cursorFade {
+.touch-cursor.active {
+  animation: cursorFadeInOut 300ms ease-out forwards;
+}
+
+@keyframes cursorFadeInOut {
   0% {
+    transform: scale(1.2) translate(-50%, -50%);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.5) translate(-50%, -50%);
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
   }
   100% {
+    transform: scale(2) translate(-50%, -50%);
     opacity: 0;
-    transform: translate(-50%, -50%) scale(1.5);
   }
 }
 
-/* Add these rules for touch devices */
+/* Hide cursor on non-touch devices */
+@media (hover: hover) and (pointer: fine) {
+  .touch-cursor {
+    display: none !important;
+  }
+}
+
+/* Ensure touch devices don't show default effects */
 @media (hover: none) and (pointer: coarse) {
   * {
-    /* This creates a "touch ripple" effect using the cursor image */
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Fix cursor positioning for touch devices */
   .cursor-container {
     pointer-events: none;
     touch-action: none;
   }
 
-  /* Hide any system-default touch indicators */
   :active {
     -webkit-tap-highlight-color: transparent;
-  }
-
-  *:active::after {
-    content: '';
-    position: fixed;
-    width: 32px; /* Adjust based on your cursor image size */
-    height: 32px; /* Adjust based on your cursor image size */
-    background-image: url('./assets/images/pawCursor.png');
-    background-size: contain;
-    background-repeat: no-repeat;
-    pointer-events: none;
-    z-index: 9999;
-    transform: translate(-50%, -50%);
-    /* Will be positioned at touch point via JavaScript */
   }
 }
 
