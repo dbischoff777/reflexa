@@ -454,7 +454,7 @@ const GameContent = ({
         // Check if we're running in Capacitor
         if (window.Capacitor) {
           if (gameState === GAME_STATES.PLAYING || gameState === GAME_STATES.COUNTDOWN) {
-            // Force landscape
+            // Force landscape in Capacitor
             await ScreenOrientation.lock({
               orientation: 'landscape'
             });
@@ -462,9 +462,19 @@ const GameContent = ({
             // Allow any orientation when not playing
             await ScreenOrientation.unlock();
           }
+        } else {
+          // Web fallback using Screen Orientation API
+          if (window?.screen?.orientation?.lock && typeof window.screen.orientation.lock === 'function') {
+            if (gameState === GAME_STATES.PLAYING || gameState === GAME_STATES.COUNTDOWN) {
+              await window.screen.orientation.lock('landscape');
+            } else {
+              await window.screen.orientation.unlock();
+            }
+          }
         }
       } catch (error) {
-        console.error('Failed to lock orientation:', error);
+        // Log error but don't throw - orientation locking is enhancement, not critical
+        console.debug('Orientation lock not available:', error);
       }
     };
 
@@ -472,9 +482,19 @@ const GameContent = ({
 
     // Cleanup function
     return () => {
-      if (window.Capacitor) {
-        ScreenOrientation.unlock().catch(console.error);
-      }
+      const unlockOrientation = async () => {
+        try {
+          if (window.Capacitor) {
+            await ScreenOrientation.unlock();
+          } else if (window?.screen?.orientation?.unlock) {
+            await window.screen.orientation.unlock();
+          }
+        } catch (error) {
+          console.debug('Error unlocking orientation:', error);
+        }
+      };
+      
+      unlockOrientation();
     };
   }, [gameState]);
   
