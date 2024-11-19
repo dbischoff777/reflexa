@@ -3,6 +3,7 @@ import successAnimation1 from '../assets/animations/success/Success_Object 1.gif
 import successAnimation2 from '../assets/animations/success/Success_Object 3.gif';
 import successAnimation3 from '../assets/animations/success/Success_Object 4.gif';
 import successAnimation4 from '../assets/animations/success/Success_Object 5.gif';
+import successAnimation6 from '../assets/animations/success/Success_Object 6.gif';
 
 //try animations
 import tryAnimation1 from '../assets/animations/try/Object_1.gif';
@@ -41,7 +42,7 @@ export const TRY_ANIMATIONS_BY_SIZE = {
 
 // Success animations by size
 export const SUCCESS_ANIMATIONS_BY_SIZE = {
-  LARGE: [successAnimation1, successAnimation2],
+  LARGE: [successAnimation6, successAnimation1, successAnimation2],
   MEDIUM: [successAnimation3, successAnimation4],
   SMALL: [successAnimation4]
 };
