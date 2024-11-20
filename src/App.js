@@ -196,13 +196,9 @@ const AnimatedPage = ({ children }) => {
       style={{
         width: '100%',
         minHeight: '100vh',
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
+        position: 'relative',
         willChange: 'transform, opacity',
-        overflowY: 'auto',
+        overflowY: 'visible',
         overflowX: 'hidden',
         zIndex: 1,
         cursor: 'url(/assets/images/pawCursor.png), auto',
@@ -211,7 +207,7 @@ const AnimatedPage = ({ children }) => {
         msUserSelect: 'none',
         userSelect: 'none',
         WebkitUserDrag: 'none',
-        touchAction: 'manipulation',
+        touchAction: 'pan-y',
       }}
     >
       <motion.div

@@ -525,7 +525,6 @@ const GameContent = ({
           MozUserSelect: 'none',
           msUserSelect: 'none',
           userSelect: 'none',
-          overscrollBehavior: 'none', // Prevent overscroll bounce
         }}
       >
         {gameState !== GAME_STATES.PLAYING && (
