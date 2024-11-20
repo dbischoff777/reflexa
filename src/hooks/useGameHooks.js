@@ -1214,6 +1214,7 @@ export const useGameHooks = (gameState, setGameState) => {
             willChange: 'transform, offset-distance, opacity',
             zIndex: 10,
             opacity: isFadingOut ? 0 : 1,
+            transform: `rotate(${Math.sin(Date.now() / 300) * 15}deg)`, // Slight tilt effect
             transition: `
               ${isPathPaused ? 'none' : 'offset-distance 0.016s linear'},
               opacity 400ms cubic-bezier(0.4, 0, 0.2, 1)
@@ -1231,8 +1232,7 @@ export const useGameHooks = (gameState, setGameState) => {
               touchAction: 'none',
               userSelect: 'none',
               WebkitUserSelect: 'none',
-              transform: `translate(50%, 50%) scale(${isPathPaused ? 1.4 : 1})`,
-              transition: 'transform 200ms cubic-bezier(0.4, 0, 0.2, 1)'
+              animation: isPathPaused ? 'pulse 0.6s infinite' : 'none',
             }}
           >
             {!showAnimation && (
