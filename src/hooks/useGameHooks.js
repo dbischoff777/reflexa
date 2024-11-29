@@ -623,15 +623,15 @@ export const useGameHooks = (gameState, setGameState) => {
     const height = window.innerHeight;
     
     // Use 70% of height and 80% of width for better coverage
-    const usableWidth = width * 0.9;
-    const usableHeight = height * 0.9;
+    const usableWidth = width * 0.8;
+    const usableHeight = height * 0.7;
     
     // Center the usable area
     const offsetX = (width - usableWidth) / 2;
     const offsetY = (height - usableHeight) / 2;
     
     // Randomly choose a pattern type
-    const patterns = ['wave', 'topToBottom', 'bottomToTop'];
+    const patterns = ['topToBottom', 'bottomToTop'];
     const patternType = patterns[Math.floor(Math.random() * patterns.length)];
     
     const points = [];
@@ -1004,13 +1004,14 @@ export const useGameHooks = (gameState, setGameState) => {
             // Handle the case when the path is completed
             setCurrentProgress(0); // Reset progress or handle as needed
             // Optionally, you can call updatePath() here if you want to generate a new path
+            updatePath();
         }
 
         // Update the button position based on the current progress
         setButtonPosition(getButtonPositionFromProgress(newProgress)); // Function to calculate position from progress
 
         // Only update the path here if needed
-        updatePath(); // Uncomment if you want to generate a new path after completing the current one
+        //updatePath(); // Uncomment if you want to generate a new path after completing the current one
         playSound('trySound');
 
         // Start new timer after state updates are complete
@@ -1136,7 +1137,6 @@ export const useGameHooks = (gameState, setGameState) => {
               style={{
                 imageRendering: 'pixelated',
                 willChange: 'transform',
-                transform: 'translate(50%, 50%)', // center the button on the path
               }}
             />
           </div>
@@ -1183,6 +1183,7 @@ export const useGameHooks = (gameState, setGameState) => {
               opacity: element.opacity,
               transition: 'opacity 1s ease-out',
               transformOrigin: 'center center',
+              willChange: 'transform',
               transform: `translate(-50%, -50%) rotate(${getAngleAtProgress(element.progress) + 90}deg)`,
               zIndex: 5,
             }}
