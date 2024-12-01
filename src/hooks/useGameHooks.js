@@ -1108,6 +1108,11 @@ export const useGameHooks = (gameState, setGameState) => {
 
   // Update renderButton to include debug visualization
   const renderButton = useCallback(() => {
+    // Return null if game state is not PLAYING
+    if (gameState !== GAME_STATES.PLAYING) {
+      return null;
+    }   
+  
     return (
       <div className="absolute inset-0">
             {/* Debug visualization overlay - always visible */}
