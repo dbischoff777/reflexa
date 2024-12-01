@@ -39,6 +39,11 @@ class AssetLoader {
     };
   }
 
+  getRandomMessage(type) {
+    const messages = this.loadingMessages[type];
+    return messages[Math.floor(Math.random() * messages.length)];
+  }
+
   async scanProjectAssets() {
     try {
       // Import all assets using Webpack's require.context
@@ -149,11 +154,6 @@ class AssetLoader {
   async loadAssets(assets, onProgress = () => {}) {
     const total = Object.values(assets).flat().length;
     let loaded = 0;
-
-    const getRandomMessage = (type) => {
-      const messages = this.loadingMessages[type];
-      return messages[Math.floor(Math.random() * messages.length)];
-    };
 
     console.log('🚀 Starting optimized asset loading for', this.isMobile ? 'mobile' : 'desktop');
 
