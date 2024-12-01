@@ -5,10 +5,10 @@ class AssetLoader {
     this.assetsLoaded = false;
     this.loadingPromise = null;
     this.batchSizes = {
-      images: this.isMobile ? 5 : 10,
-      sounds: this.isMobile ? 3 : 6,
-      videos: this.isMobile ? 2 : 4,
-      animations: this.isMobile ? 3 : 6
+      images: this.isMobile ? 3 : 8,
+      sounds: this.isMobile ? 2 : 4,
+      videos: this.isMobile ? 1 : 2,
+      animations: this.isMobile ? 2 : 4
     };
     this.loadingMessages = {
       images: [
@@ -31,6 +31,11 @@ class AssetLoader {
         "Preparing smooth animations... 🎭",
         "Loading the fancy moves... 💃",
       ]
+    };
+    this.timeouts = {
+      images: this.isMobile ? 5000 : 10000,
+      sounds: this.isMobile ? 8000 : 10000,
+      videos: this.isMobile ? 10000 : 15000
     };
   }
 
@@ -87,8 +92,11 @@ class AssetLoader {
         } else {
           reject(new Error(`Timeout loading image: ${src}`));
         }
-      }, 10000);
+      }, this.timeouts.images);
 
+      img.loading = this.isMobile ? 'lazy' : 'eager';
+      img.decoding = 'async';
+      
       img.onload = () => {
         clearTimeout(timeout);
         resolve(img);
@@ -100,7 +108,6 @@ class AssetLoader {
         reject(new Error(`Failed to load image: ${src}`));
       };
 
-      img.loading = 'eager';
       img.src = src;
     });
 
@@ -116,27 +123,22 @@ class AssetLoader {
     const promise = new Promise((resolve, reject) => {
       const audio = new Audio();
       
-      const timeout = setTimeout(() => {
-        if (this.isMobile) {
-          console.warn(`⚠️ Audio load timed out: ${src}, resolving anyway`);
-          resolve(audio);
-        } else {
-          reject(new Error(`Timeout loading audio: ${src}`));
-        }
-      }, 10000);
+      if (this.isMobile) {
+        audio.preload = 'metadata';
+        audio.load();
+      } else {
+        audio.preload = 'auto';
+      }
 
       audio.oncanplaythrough = () => {
-        clearTimeout(timeout);
         resolve(audio);
       };
 
       audio.onerror = (e) => {
-        clearTimeout(timeout);
         console.error(`❌ Audio load error for ${src}:`, e);
         reject(new Error(`Failed to load audio: ${src}`));
       };
 
-      audio.preload = this.isMobile ? 'metadata' : 'auto';
       audio.src = src;
     });
 
@@ -153,81 +155,96 @@ class AssetLoader {
       return messages[Math.floor(Math.random() * messages.length)];
     };
 
-    console.log('🚀 Starting asset loading journey!');
-    console.log('Assets to load:', {
-      images: assets.images?.length || 0,
-      sounds: assets.sounds?.length || 0,
-      videos: assets.videos?.length || 0,
-      animations: assets.animations?.length || 0
-    });
+    console.log('🚀 Starting optimized asset loading for', this.isMobile ? 'mobile' : 'desktop');
 
-    const loadBatch = async (items, loader, type) => {
-      if (!items?.length) return;
-      
-      const batchSize = this.batchSizes[type] || (this.isMobile ? 3 : 5);
-      const currentMessage = getRandomMessage(type);
-      console.log(`\n${currentMessage}`);
-      
-      for (let i = 0; i < items.length; i += batchSize) {
-        const batch = items.slice(i, i + batchSize);
-        
-        try {
-          const results = await Promise.allSettled(
-            batch.map(async (src) => {
-              try {
-                await loader.call(this, src);
-                loaded++;
-                const progress = Math.round((loaded / total) * 100);
-                const fileName = src.split('/').pop();
-                console.log(`✅ Loaded: ${fileName} (${loaded}/${total}) - ${progress}%`);
-                onProgress(progress, currentMessage);
-                return true;
-              } catch (error) {
-                console.warn(`❌ Failed: ${src.split('/').pop()}`);
-                loaded++;
-                const progress = Math.round((loaded / total) * 100);
-                onProgress(progress, currentMessage);
-                return false;
-              }
-            })
-          );
-
-          const batchResults = results.map((result, index) => ({
-            asset: batch[index],
-            status: result.status,
-            success: result.status === 'fulfilled' && result.value
-          }));
-          console.log(`Batch results:`, batchResults);
-
-        } catch (error) {
-          console.error(`Batch error for ${type}:`, error);
-          batch.forEach(() => {
-            loaded++;
-            const progress = Math.round((loaded / total) * 100);
-            onProgress(progress, currentMessage);
-          });
-        }
-
-        await new Promise(resolve => setTimeout(resolve, 50));
-      }
-    };
+    const loadOrder = this.isMobile ? [
+      ['images', this.preloadImage],
+      ['animations', this.preloadImage],
+      ['sounds', this.preloadAudio],
+      ['videos', this.preloadVideo]
+    ] : [
+      ['images', this.preloadImage],
+      ['animations', this.preloadImage, 'sounds', this.preloadAudio],
+      ['videos', this.preloadVideo]
+    ];
 
     try {
-      await Promise.all([
-        loadBatch(assets.images, this.preloadImage, 'images'),
-        loadBatch(assets.animations, this.preloadImage, 'animations')
-      ]);
+      for (const batch of loadOrder) {
+        if (Array.isArray(batch[0])) {
+          await Promise.all(batch.map(([type, loader]) => 
+            this.loadBatch(assets[type], loader, type, onProgress)
+          ));
+        } else {
+          const [type, loader] = batch;
+          await this.loadBatch(assets[type], loader, type, onProgress);
+        }
+      }
 
-      await Promise.all([
-        loadBatch(assets.sounds, this.preloadAudio, 'sounds'),
-        loadBatch(assets.videos, this.preloadVideo, 'videos')
-      ]);
-
-      console.log('✅ All assets loaded. Final count:', loaded);
+      console.log('✅ All assets loaded successfully');
       return true;
     } catch (error) {
       console.error('❌ Error in loadAssets:', error);
+      if (this.isMobile) {
+        console.log('Continuing despite error on mobile...');
+        return true;
+      }
       return false;
+    }
+  }
+
+  async loadBatch(items, loader, type, onProgress) {
+    if (!items?.length) return;
+    
+    const batchSize = this.batchSizes[type];
+    const currentMessage = this.getRandomMessage(type);
+    const batchDelay = this.isMobile ? 100 : 50;
+    
+    // Initialize tracking variables at the start
+    let loadedCount = 0;
+    const totalItems = items.length;
+
+    console.log(`\n${currentMessage}`);
+    
+    for (let i = 0; i < items.length; i += batchSize) {
+      const batch = items.slice(i, i + batchSize);
+      
+      try {
+        const results = await Promise.allSettled(
+          batch.map(async (src) => {
+            try {
+              await loader.call(this, src);
+              loadedCount++;
+              const progress = Math.round((loadedCount / totalItems) * 100);
+              const fileName = src.split('/').pop();
+              console.log(`✅ Loaded: ${fileName} (${loadedCount}/${totalItems}) - ${progress}%`);
+              onProgress(progress, currentMessage);
+              return true;
+            } catch (error) {
+              console.warn(`❌ Failed: ${src.split('/').pop()}`);
+              loadedCount++;
+              const progress = Math.round((loadedCount / totalItems) * 100);
+              onProgress(progress, currentMessage);
+              return false;
+            }
+          })
+        );
+
+        // Check results if needed
+        const failedInBatch = results.filter(r => r.status === 'rejected').length;
+        if (failedInBatch > 0) {
+          console.warn(`${failedInBatch} items failed to load in this batch`);
+        }
+
+      } catch (error) {
+        console.error(`Batch error for ${type}:`, error);
+        batch.forEach(() => {
+          loadedCount++;
+          const progress = Math.round((loadedCount / totalItems) * 100);
+          onProgress(progress, currentMessage);
+        });
+      }
+
+      await new Promise(resolve => setTimeout(resolve, batchDelay));
     }
   }
 
@@ -303,6 +320,46 @@ class AssetLoader {
   clearCache() {
     this.cache.clear();
     this.assetsLoaded = false;
+  }
+
+  clearCacheByType(type) {
+    for (const [key, value] of this.cache.entries()) {
+      if (key.match(new RegExp(`\.(${type})$`, 'i'))) {
+        this.cache.delete(key);
+      }
+    }
+  }
+
+  async preloadCriticalAssets(criticalAssets) {
+    if (this.isMobile) {
+      const results = await Promise.allSettled(
+        criticalAssets.map(src => this.preloadImage(src))
+      );
+      return results.every(result => result.status === 'fulfilled');
+    }
+    return true;
+  }
+
+  async loadCriticalAssets(assets) {
+    const criticalAssets = {
+      images: assets.images.filter(img => 
+        img.includes('ui/') || 
+        img.includes('mascot/') || 
+        img.includes('buttons/')
+      ),
+      sounds: assets.sounds.filter(sound => 
+        sound.includes('ui/') || 
+        sound.includes('effects/basic/')
+      )
+    };
+
+    try {
+      await this.loadAssets(criticalAssets, () => {});
+      return true;
+    } catch (error) {
+      console.error('Failed to load critical assets:', error);
+      return this.isMobile; // Continue on mobile even if critical assets fail
+    }
   }
 }
 

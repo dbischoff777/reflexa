@@ -340,6 +340,7 @@ function App() {
   const [assetsLoaded, setAssetsLoaded] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [loadingMessage, setLoadingMessage] = useState('');
+  const [loadingError, setLoadingError] = useState(null);
   const [gameState, setGameState] = useState(() => {
     const savedState = localStorage.getItem('gameState');
     return savedState ? JSON.parse(savedState) : GAME_STATES.MENU;
@@ -355,14 +356,26 @@ function App() {
 
       try {
         const assets = await assetLoader.scanProjectAssets();
+        
+        // First load critical assets
+        setLoadingMessage('Loading essential game assets...');
+        await assetLoader.loadCriticalAssets(assets);
+
+        // Then load remaining assets
         await assetLoader.loadAssetsOnce(assets, (progress, message) => {
           setLoadingProgress(Math.round(progress));
           if (message) setLoadingMessage(message);
         });
+
         setAssetsLoaded(true);
       } catch (error) {
         console.error('Failed to load assets:', error);
-        setAssetsLoaded(true);
+        // On mobile, continue even if some assets fail
+        if (assetLoader.isMobile) {
+          setAssetsLoaded(true);
+        } else {
+          setLoadingError('Failed to load game assets. Please check your connection and try again.');
+        }
       }
     };
 
