@@ -868,64 +868,69 @@ export const useGameHooks = (gameState, setGameState) => {
         clearTimeout(animationTimer);
     }
 
+    // Store all timeouts to clear them on reset
+    const timeouts = [];
+
     // Sync with current time
     const cycleStartTime = startTimeRef.current || RAF_TIMESTAMP();
     const timeOffset = RAF_TIMESTAMP() - cycleStartTime;
 
     // First firework at 6.8 seconds
-    const firstFirework = setTimeout(() => {
+    timeouts.push(setTimeout(() => {
         setShowFireworks(true);
         setCurrentFirework(FIREWORKS_BY_SIZE[currentSize][0]);
         
-        setTimeout(() => {
+        timeouts.push(setTimeout(() => {
             setShowFireworks(false);
-        }, 800);
-    }, Math.max(0, 6800 - timeOffset));
+        }, 800));
+    }, Math.max(0, 6800 - timeOffset)));
 
     // First zoom occurs 5 seconds into cycle
-    const firstZoom = setTimeout(() => {
+    timeouts.push(setTimeout(() => {
         setIsPathPaused(true);
-        setTimeout(() => {
+        timeouts.push(setTimeout(() => {
             setIsPathPaused(false);
-        }, TIMING.ZOOM_DURATION);
-    }, Math.max(0, TIMING.FIRST_ZOOM - timeOffset));
+        }, TIMING.ZOOM_DURATION));
+    }, Math.max(0, TIMING.FIRST_ZOOM - timeOffset)));
 
     // Start fade transition before changing object
-    const startFadeOut = setTimeout(() => {
+    timeouts.push(setTimeout(() => {
         setIsFading(true);
         setPreviousObjectIndex(currentObjectIndex);
-    }, Math.max(0, TIMING.SECOND_OBJECT - 1500)); // Start fade 1.5s before object change
+    }, Math.max(0, TIMING.SECOND_OBJECT - 1500)));
 
     // Second object appears at 10 seconds (halfway)
-    const secondObject = setTimeout(() => {
+    timeouts.push(setTimeout(() => {
         setCurrentObjectIndex(1);
         setCurrentTargetAnimation(TRY_ANIMATIONS_BY_SIZE[currentSize][1]);
-        // Remove fade after transition completes
-        setTimeout(() => {
+        timeouts.push(setTimeout(() => {
             setIsFading(false);
-        }, 1500);
-    }, Math.max(0, TIMING.SECOND_OBJECT - timeOffset));
+        }, 1500));
+    }, Math.max(0, TIMING.SECOND_OBJECT - timeOffset)));
 
     // Second firework at 12.6 seconds
-    const secondFirework = setTimeout(() => {
+    timeouts.push(setTimeout(() => {
         setShowFireworks(true);
         setCurrentFirework(FIREWORKS_BY_SIZE[currentSize][1]);
         
-        setTimeout(() => {
+        timeouts.push(setTimeout(() => {
             setShowFireworks(false);
-        }, 800);
-    }, Math.max(0, 12600 - timeOffset));
+        }, 800));
+    }, Math.max(0, 12600 - timeOffset)));
 
     // Second zoom occurs at 15 seconds
-    const secondZoom = setTimeout(() => {
+    timeouts.push(setTimeout(() => {
         setIsPathPaused(true);
-        setTimeout(() => {
+        timeouts.push(setTimeout(() => {
             setIsPathPaused(false);
-        }, TIMING.ZOOM_DURATION);
-    }, Math.max(0, TIMING.SECOND_ZOOM - timeOffset));
+        }, TIMING.ZOOM_DURATION));
+    }, Math.max(0, TIMING.SECOND_ZOOM - timeOffset)));
 
     // Reset the entire cycle after 20 seconds
     const resetTimer = setTimeout(() => {
+        // Clear all running timeouts
+        timeouts.forEach(timeout => clearTimeout(timeout));
+        
         setIsFading(true);
         setPreviousObjectIndex(currentObjectIndex);
         
@@ -933,20 +938,17 @@ export const useGameHooks = (gameState, setGameState) => {
             setCurrentObjectIndex(0);
             setCurrentTargetAnimation(TRY_ANIMATIONS_BY_SIZE[currentSize][0]);
             setIsFading(false);
+            startTimeRef.current = RAF_TIMESTAMP(); // Reset the cycle start time
             startObjectTimer(); // Start next cycle
         }, 1500);
     }, Math.max(0, TIMING.TOTAL_CYCLE - 1500 - timeOffset));
 
+    timeouts.push(resetTimer);
     setAnimationTimer(resetTimer);
 
     return () => {
-        clearTimeout(firstFirework);
-        clearTimeout(firstZoom);
-        clearTimeout(startFadeOut);
-        clearTimeout(secondObject);
-        clearTimeout(secondFirework);
-        clearTimeout(secondZoom);
-        clearTimeout(resetTimer);
+        // Clear all timeouts on cleanup
+        timeouts.forEach(timeout => clearTimeout(timeout));
     };
 }, [currentSize, currentObjectIndex]);
 
