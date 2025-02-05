@@ -882,7 +882,7 @@ export const useGameHooks = (gameState, setGameState) => {
         
         timeouts.push(setTimeout(() => {
             setShowFireworks(false);
-        }, 800));
+        }, 1000));
     }, Math.max(0, 6800 - timeOffset)));
 
     // First zoom occurs 5 seconds into cycle
