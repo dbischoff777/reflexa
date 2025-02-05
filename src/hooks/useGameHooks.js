@@ -716,121 +716,10 @@ export const useGameHooks = (gameState, setGameState) => {
     return path;
   }, []);
 
-  // First, declare all state variables
-  const [currentObjectIndex, setCurrentObjectIndex] = useState(0);
-  //const [failureOverlay, setFailureOverlay] = useState(false);
-  const [isFadingOut, setIsFadingOut] = useState(false);
-  const [currentPath, setCurrentPath] = useState(generateRandomPath());
-  const [currentProgress, setCurrentProgress] = useState(0);
-  const [isPathPaused, setIsPathPaused] = useState(false);
-  const [animationTimer, setAnimationTimer] = useState(null);
-
-  // Constants
-  const FULL_DURATION = 30000;  // Base total duration (30 seconds)
-  const NUM_SEGMENTS = 5;       // Number of movement segments
-  const SEGMENT_TIME = 3000;    // 3 seconds per segment
-  const PAUSE_TIME = 800;    // 0.8 seconds pause between segments
-  const FAILURE_INTERVAL = 10000; // Show failure overlay every 10 seconds
-  const MAX_TIME = FULL_DURATION; // Time until complete reset (30 seconds)
-  const MIN_SPEED = 0.2;        // Minimum speed multiplier
-  const MAX_SPEED = 0.4;        // Maximum speed multiplier
-
-  // Each segment will move 20% of the path (1/NUM_SEGMENTS)
-  const SEGMENT_PROGRESS = 1 / NUM_SEGMENTS;
-
-  // Refs
-  const startTimeRef = useRef(null);
-  const animationFrameRef = useRef();
-  const pauseTimerRef = useRef();
-  const fadeTimerRef = useRef();
-  const animateRef = useRef();
-  const startNewSegmentRef = useRef();
+  // First define updatePathRef
   const updatePathRef = useRef();
 
-  // Add new state for segment speeds
-  const [segmentSpeeds, setSegmentSpeeds] = useState([]);
-
-  // Add this function to generate random speeds for each segment
-  const generateSegmentSpeeds = useCallback(() => {
-    return Array(NUM_SEGMENTS).fill(0).map(() => 
-      MIN_SPEED + Math.random() * (MAX_SPEED - MIN_SPEED)
-    );
-  }, []);
-
-  // Update the animate function to handle pausing better
-  animateRef.current = (startTimestamp, startProgress, endProgress, segmentIndex) => {
-    // Use performance.now() for more precise timing
-    const now = RAF_TIMESTAMP();
-    
-    // Early return if fireworks are showing to prevent unnecessary calculations
-    if (showFireworks) {
-      animationFrameRef.current = requestAnimationFrame(() => 
-        animateRef.current(startTimestamp, startProgress, endProgress, segmentIndex)
-      );
-      return;
-    }
-
-    // Optimize calculations by caching values
-    const speed = segmentSpeeds[segmentIndex];
-    const duration = SEGMENT_TIME / speed;
-    const elapsed = now - startTimestamp;
-    const progress = Math.min(elapsed / duration, 1);
-    
-    // Use a single calculation for new progress
-    const newProgress = startProgress + (progress * SEGMENT_PROGRESS);
-
-    // Batch state updates using a single condition
-    if (progress < 1) {
-      // Continue animation
-      setCurrentProgress(newProgress);
-      animationFrameRef.current = requestAnimationFrame(() => 
-        animateRef.current(startTimestamp, startProgress, endProgress, segmentIndex)
-      );
-      return;
-    }
-
-    // Handle animation completion
-    setCurrentProgress(endProgress);
-    
-    if (endProgress < 1) {
-      // Handle segment transition
-      setIsPathPaused(true);
-      pauseTimerRef.current = setTimeout(() => {
-        // Batch state updates
-        requestAnimationFrame(() => {
-          setIsPathPaused(false);
-          startNewSegmentRef.current(endProgress, segmentIndex + 1);
-        });
-      }, PAUSE_TIME);
-      return;
-    }
-
-    // Handle path completion - batch updates in a single frame
-    requestAnimationFrame(() => {
-      setCurrentPath(generateRandomPath());
-      setSegmentSpeeds(generateSegmentSpeeds());
-      setCurrentProgress(0);
-      startTimeRef.current = now;
-      startNewSegmentRef.current(0, 0);
-    });
-  };
-
-  // Update startNewSegment to handle timestamps correctly
-  startNewSegmentRef.current = (startProgress, segmentIndex) => {
-    const now = RAF_TIMESTAMP();
-    
-    if (startProgress === 0) {
-      startTimeRef.current = now;
-    }
-    
-    const endProgress = Math.min(startProgress + SEGMENT_PROGRESS, 1);
-    animateRef.current(now, startProgress, endProgress, segmentIndex);
-  };
-
-  // Add this to track the failure overlay timer
-  const failureTimerRef = useRef(null);
-
-  // Update updatePath to include failure overlay logic
+  // Then define the ref implementation
   updatePathRef.current = () => {
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
@@ -845,7 +734,6 @@ export const useGameHooks = (gameState, setGameState) => {
     setSegmentSpeeds(generateSegmentSpeeds());
     setIsPathPaused(false);
     setCurrentProgress(0);
-    //(false);
     
     startNewSegmentRef.current(0, 0);
 
@@ -859,9 +747,14 @@ export const useGameHooks = (gameState, setGameState) => {
     };
   };
 
-  const updatePath = useCallback((...args) => updatePathRef.current(...args), []);
+  // Now create the updatePath function
+  const updatePath = useCallback(() => {
+    if (updatePathRef.current) {
+      return updatePathRef.current();
+    }
+  }, []);
 
-  // Add cleanup in the main effect
+  // Move any hooks that depend on updatePath after its definition
   useEffect(() => {
     if (gameState === GAME_STATES.PLAYING) {
       updatePath();
@@ -870,57 +763,149 @@ export const useGameHooks = (gameState, setGameState) => {
     return () => {
       setIsPathPaused(true);
       setCurrentProgress(0);
-      //setFailureOverlay(false);
-      if (failureTimerRef.current) {
-        clearTimeout(failureTimerRef.current);
-      }
     };
   }, [gameState, updatePath]);
 
-  // 1. First define startObjectTimer with minimal dependencies
+  // First, declare all state variables
+  const [currentObjectIndex, setCurrentObjectIndex] = useState(0);
+  //const [failureOverlay, setFailureOverlay] = useState(false);
+  const [isFadingOut, setIsFadingOut] = useState(false);
+  const [currentPath, setCurrentPath] = useState(generateRandomPath());
+  const [currentProgress, setCurrentProgress] = useState(0);
+  const [isPathPaused, setIsPathPaused] = useState(false);
+  const [animationTimer, setAnimationTimer] = useState(null);
+
+  // Constants
+  const NUM_SEGMENTS = 5;       // Number of movement segments
+  const MIN_SPEED = 0.2;        // Minimum speed multiplier
+  const MAX_SPEED = 0.4;        // Maximum speed multiplier
+
+  // Each segment will move 20% of the path (1/NUM_SEGMENTS)
+  const SEGMENT_PROGRESS = 1 / NUM_SEGMENTS;
+
+  // Refs
+  const startTimeRef = useRef(null);
+  const animationFrameRef = useRef();
+  const pauseTimerRef = useRef();
+  const fadeTimerRef = useRef();
+  const animateRef = useRef();
+  const failureTimerRef = useRef(null);
+
+  // Add new state for segment speeds
+  const [segmentSpeeds, setSegmentSpeeds] = useState([]);
+
+  // Add this function to generate random speeds for each segment
+  const generateSegmentSpeeds = useCallback(() => {
+    return Array(NUM_SEGMENTS).fill(0).map(() => 
+      MIN_SPEED + Math.random() * (MAX_SPEED - MIN_SPEED)
+    );
+  }, []);
+
+  // Add new state for debug timer
+  const [debugTimer, setDebugTimer] = useState(0);
+
+  // First define the TIMING constants
+  const TIMING = {
+    TOTAL_CYCLE: 20000,    // 20 seconds total cycle
+    FIRST_ZOOM: 5000,      // First zoom at 5 seconds
+    SECOND_OBJECT: 10000,  // Second object appears at 10 seconds
+    SECOND_ZOOM: 15000,    // Second zoom at 15 seconds
+    ZOOM_DURATION: 800,    // Duration of zoom effect
+    CYCLE_DURATION: 20000  // Add this explicit cycle duration
+  };
+
+  // Update animateRef to use linear progress based on total time
+  animateRef.current = (startTimestamp, startProgress, endProgress, segmentIndex) => {
+    const now = RAF_TIMESTAMP();
+    const elapsedTotal = now - startTimeRef.current;
+    
+    // Update debug timer
+    setDebugTimer(elapsedTotal);
+    
+    // Check if we've exceeded the total cycle time
+    if (elapsedTotal >= TIMING.CYCLE_DURATION) {
+      // Reset the cycle
+      startTimeRef.current = now; // Reset the start time first
+      setCurrentProgress(0);
+      setCurrentPath(generateRandomPath());
+      setDebugTimer(0);
+      
+      // Reset object index and animation
+      setCurrentObjectIndex(0);
+      setCurrentTargetAnimation(TRY_ANIMATIONS_BY_SIZE[currentSize][0]);
+      
+      // Clear existing animation timer
+      if (animationTimer) {
+        clearTimeout(animationTimer);
+        setAnimationTimer(null);
+      }
+      
+      // Start the next cycle immediately
+      requestAnimationFrame(() => {
+        startObjectTimer();
+        startNewSegmentRef.current(0, 0);
+      });
+      return;
+    }
+
+    // Calculate linear progress based on total elapsed time
+    const newProgress = Math.min(elapsedTotal / TIMING.TOTAL_CYCLE, 1);
+    
+    setCurrentProgress(newProgress);
+    
+    animationFrameRef.current = requestAnimationFrame(() => 
+      animateRef.current(startTimestamp, startProgress, endProgress, segmentIndex)
+    );
+  };
+
+  // Update startObjectTimer to sync with animation cycle
   const startObjectTimer = useCallback(() => {
     if (animationTimer) {
       clearTimeout(animationTimer);
     }
-    if (fireworkTimerRef.current) {
-      clearTimeout(fireworkTimerRef.current);
-    }
 
-    const newTimer = setTimeout(() => {
-      if (!isFadingOut) {
-        setIsFadingOut(true);
-        //setFailureOverlay(true);
-        setIsPathPaused(true); // Pause the path when showing fireworks
-        
-        // Show fireworks when fading out starts
-        setShowFireworks(true);
-        setCurrentFirework(getMatchingFirework(currentObjectIndex));
+    // Sync with current time
+    const cycleStartTime = startTimeRef.current || RAF_TIMESTAMP();
+    const timeOffset = RAF_TIMESTAMP() - cycleStartTime;
 
-        setTimeout(() => {
-          //setFailureOverlay(false);
-          setIsFadingOut(false);
-          setShowFireworks(false);
-          setIsPathPaused(false); // Resume the path after fireworks
-          
-          const nextIndex = (currentObjectIndex + 1) % TRY_ANIMATIONS_BY_SIZE[currentSize].length;
-          setCurrentObjectIndex(nextIndex);
-          setCurrentTargetAnimation(TRY_ANIMATIONS_BY_SIZE[currentSize][nextIndex]);
-          setButtonPosition(getRandomPosition());
-          
-          startObjectTimer();
-        }, FADE_DURATION);
-      }
-    }, FAILURE_INTERVAL);
+    // First zoom occurs 5 seconds into cycle
+    const firstZoom = setTimeout(() => {
+      setIsPathPaused(true);
+      setTimeout(() => {
+        setIsPathPaused(false);
+      }, TIMING.ZOOM_DURATION);
+    }, Math.max(0, TIMING.FIRST_ZOOM - timeOffset));
 
-    setAnimationTimer(newTimer);
-  }, [
-    currentSize,
-    currentObjectIndex,
-    isFadingOut,
-    showAnimation,
-    getMatchingFirework,
-    getRandomPosition
-  ]);
+    // Second object appears at 10 seconds (halfway)
+    const secondObject = setTimeout(() => {
+      setCurrentObjectIndex(1);
+      setCurrentTargetAnimation(TRY_ANIMATIONS_BY_SIZE[currentSize][1]);
+    }, Math.max(0, TIMING.SECOND_OBJECT - timeOffset));
+
+    // Second zoom occurs at 15 seconds
+    const secondZoom = setTimeout(() => {
+      setIsPathPaused(true);
+      setTimeout(() => {
+        setIsPathPaused(false);
+      }, TIMING.ZOOM_DURATION);
+    }, Math.max(0, TIMING.SECOND_ZOOM - timeOffset));
+
+    // Reset the entire cycle after 20 seconds
+    const resetTimer = setTimeout(() => {
+      setCurrentObjectIndex(0);
+      setCurrentTargetAnimation(TRY_ANIMATIONS_BY_SIZE[currentSize][0]);
+      startObjectTimer(); // Start next cycle
+    }, Math.max(0, TIMING.TOTAL_CYCLE - timeOffset));
+
+    setAnimationTimer(resetTimer);
+
+    return () => {
+      clearTimeout(firstZoom);
+      clearTimeout(secondObject);
+      clearTimeout(secondZoom);
+      clearTimeout(resetTimer);
+    };
+  }, [currentSize]);
 
   // Ensure the failure overlay timer is reset when the game state changes
   useEffect(() => {
@@ -935,7 +920,7 @@ export const useGameHooks = (gameState, setGameState) => {
     };
   }, [gameState, startObjectTimer]);
 
-  // 2. Update handleButtonClick to avoid circular dependencies
+  // Update handleButtonClick to avoid circular dependencies
   const handleButtonClick = useCallback(() => {
     if (gameState !== GAME_STATES.PLAYING || isFadingOut) return;
 
@@ -1049,7 +1034,7 @@ export const useGameHooks = (gameState, setGameState) => {
 
   const [trailElements, setTrailElements] = useState([]);
   const lastTrailTime = useRef(0);
-  const TRAIL_INTERVAL = 600; // Increased to XXXms for more spacing
+  const TRAIL_INTERVAL = 400; // Increased to XXXms for more spacing
   const TRAIL_DURATION = 2000; // X seconds fade duration
   const MAX_TRAIL_ELEMENTS = 9; // Keep X elements max
   const [lastPosition, setLastPosition] = useState({ x: 0, y: 0 });
@@ -1115,16 +1100,21 @@ export const useGameHooks = (gameState, setGameState) => {
   
     return (
       <div className="absolute inset-0">
-            {/* Debug visualization overlay - always visible */}
-      <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 100 }}>
-        {/* Main path */}
-        <path
-          d={currentPath}
-          stroke="rgba(255, 0, 0, 0.5)"
-          strokeWidth="2"
-          fill="none"
-        />
-      </svg>
+        {/* Debug timer display */}
+        <div className="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-md font-mono z-50">
+          Cycle: {(debugTimer / 1000).toFixed(1)}s
+        </div>
+
+        {/* Debug visualization overlay - always visible */}
+        <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 100 }}>
+          {/* Main path */}
+          <path
+            d={currentPath}
+            stroke="rgba(255, 0, 0, 0.5)"
+            strokeWidth="2"
+            fill="none"
+          />
+        </svg>
         {/* Existing success animation */}
         {showAnimation && (
           <div
@@ -1297,6 +1287,7 @@ export const useGameHooks = (gameState, setGameState) => {
     showFireworks,
     currentFirework,
     showDebugPath,
+    debugTimer,
   ]);
 
   // Add debug toggle function
@@ -1352,7 +1343,7 @@ export const useGameHooks = (gameState, setGameState) => {
     }
   }, [gameState, countdown, playSound, setGameState]);
 
-  // 3. Update the game state effect
+  // Update the game state effect
   useEffect(() => {
     let timeoutId;
     
@@ -1369,7 +1360,7 @@ export const useGameHooks = (gameState, setGameState) => {
     };
   }, [gameState, animationTimer, startObjectTimer]);
 
-  // 4. Add a cleanup effect for animations
+  // Add a cleanup effect for animations
   useEffect(() => {
     return () => {
       if (animationTimer) {
@@ -1378,29 +1369,6 @@ export const useGameHooks = (gameState, setGameState) => {
       }
     };
   }, [animationTimer]);
-
-  // Add effect to start movement when game starts
-  useEffect(() => {
-    if (gameState === GAME_STATES.PLAYING) {
-      updatePath();
-    }
-    
-    return () => {
-      setIsPathPaused(true);
-      setCurrentProgress(0);
-    };
-  }, [gameState, updatePath]);
-
-  // Add cleanup effect for the animation timers
-  useEffect(() => {
-    let moveTimer;
-    let pauseTimer;
-
-    return () => {
-      if (moveTimer) clearTimeout(moveTimer);
-      if (pauseTimer) clearTimeout(pauseTimer);
-    };
-  }, []);
 
   // Add effect to start movement when game starts
   useEffect(() => {
@@ -1463,6 +1431,11 @@ export const useGameHooks = (gameState, setGameState) => {
 
   // Add this helper function to calculate the angle at a given progress point
   const getAngleAtProgress = useCallback((progress) => {
+    // Validate progress is a finite number between 0 and 1
+    if (!Number.isFinite(progress) || progress < 0 || progress > 1) {
+      return 0;
+    }
+
     // Get two nearby points to calculate direction
     const delta = 0.01; // Small delta for calculating tangent
     const p1 = progress;
@@ -1472,17 +1445,86 @@ export const useGameHooks = (gameState, setGameState) => {
     const path = document.querySelector('#motionPath');
     if (!path) return 0;
     
-    const point1 = path.getPointAtLength(p1 * path.getTotalLength());
-    const point2 = path.getPointAtLength(p2 * path.getTotalLength());
+    const totalLength = path.getTotalLength();
+    if (!Number.isFinite(totalLength) || totalLength <= 0) return 0;
     
-    // Calculate angle between points
-    const angle = Math.atan2(
-      point2.y - point1.y,
-      point2.x - point1.x
-    ) * (180 / Math.PI);
-    
-    return angle;
+    try {
+      const point1 = path.getPointAtLength(p1 * totalLength);
+      const point2 = path.getPointAtLength(p2 * totalLength);
+      
+      // Validate points
+      if (!point1 || !point2 || 
+          !Number.isFinite(point1.x) || !Number.isFinite(point1.y) ||
+          !Number.isFinite(point2.x) || !Number.isFinite(point2.y)) {
+        return 0;
+      }
+      
+      // Calculate angle between points
+      const angle = Math.atan2(
+        point2.y - point1.y,
+        point2.x - point1.x
+      ) * (180 / Math.PI);
+      
+      return Number.isFinite(angle) ? angle : 0;
+    } catch (error) {
+      console.warn('Error calculating path angle:', error);
+      return 0;
+    }
   }, []);
+
+  // Add startNewSegmentRef definition
+  const startNewSegmentRef = useRef();
+
+  // Define the startNewSegment implementation
+  startNewSegmentRef.current = (startProgress, segmentIndex) => {
+    const now = RAF_TIMESTAMP();
+    
+    if (startProgress === 0) {
+      startTimeRef.current = now;
+    }
+    
+    animateRef.current(now, startProgress, 1, segmentIndex);
+  };
+
+  // Then define updatePathRef implementation
+  updatePathRef.current = () => {
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+    if (pauseTimerRef.current) {
+      clearTimeout(pauseTimerRef.current);
+    }
+
+    startTimeRef.current = RAF_TIMESTAMP();
+    setTrailElements([]);
+    setCurrentPath(generateRandomPath());
+    setSegmentSpeeds(generateSegmentSpeeds());
+    setIsPathPaused(false);
+    setCurrentProgress(0);
+    
+    startNewSegmentRef.current(0, 0);
+
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      if (pauseTimerRef.current) {
+        clearTimeout(pauseTimerRef.current);
+      }
+    };
+  };
+
+  // Move any hooks that depend on updatePath after its definition
+  useEffect(() => {
+    if (gameState === GAME_STATES.PLAYING) {
+      updatePath();
+    }
+    
+    return () => {
+      setIsPathPaused(true);
+      setCurrentProgress(0);
+    };
+  }, [gameState, updatePath]);
 
   return {
     // Game states
