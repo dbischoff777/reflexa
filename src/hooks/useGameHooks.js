@@ -858,7 +858,11 @@ export const useGameHooks = (gameState, setGameState) => {
     );
   };
 
-  // Update startObjectTimer to include firework animations
+  // Add new state for fade transition
+  const [isFading, setIsFading] = useState(false);
+  const [previousObjectIndex, setPreviousObjectIndex] = useState(0);
+
+  // Update startObjectTimer to include fade transitions
   const startObjectTimer = useCallback(() => {
     if (animationTimer) {
         clearTimeout(animationTimer);
@@ -873,7 +877,6 @@ export const useGameHooks = (gameState, setGameState) => {
         setShowFireworks(true);
         setCurrentFirework(FIREWORKS_BY_SIZE[currentSize][0]);
         
-        // Hide firework after 400ms
         setTimeout(() => {
             setShowFireworks(false);
         }, 800);
@@ -887,10 +890,20 @@ export const useGameHooks = (gameState, setGameState) => {
         }, TIMING.ZOOM_DURATION);
     }, Math.max(0, TIMING.FIRST_ZOOM - timeOffset));
 
+    // Start fade transition before changing object
+    const startFadeOut = setTimeout(() => {
+        setIsFading(true);
+        setPreviousObjectIndex(currentObjectIndex);
+    }, Math.max(0, TIMING.SECOND_OBJECT - 1500)); // Start fade 1.5s before object change
+
     // Second object appears at 10 seconds (halfway)
     const secondObject = setTimeout(() => {
         setCurrentObjectIndex(1);
         setCurrentTargetAnimation(TRY_ANIMATIONS_BY_SIZE[currentSize][1]);
+        // Remove fade after transition completes
+        setTimeout(() => {
+            setIsFading(false);
+        }, 1500);
     }, Math.max(0, TIMING.SECOND_OBJECT - timeOffset));
 
     // Second firework at 12.6 seconds
@@ -898,7 +911,6 @@ export const useGameHooks = (gameState, setGameState) => {
         setShowFireworks(true);
         setCurrentFirework(FIREWORKS_BY_SIZE[currentSize][1]);
         
-        // Hide firework after 400ms
         setTimeout(() => {
             setShowFireworks(false);
         }, 800);
@@ -914,22 +926,29 @@ export const useGameHooks = (gameState, setGameState) => {
 
     // Reset the entire cycle after 20 seconds
     const resetTimer = setTimeout(() => {
-        setCurrentObjectIndex(0);
-        setCurrentTargetAnimation(TRY_ANIMATIONS_BY_SIZE[currentSize][0]);
-        startObjectTimer(); // Start next cycle
-    }, Math.max(0, TIMING.TOTAL_CYCLE - timeOffset));
+        setIsFading(true);
+        setPreviousObjectIndex(currentObjectIndex);
+        
+        setTimeout(() => {
+            setCurrentObjectIndex(0);
+            setCurrentTargetAnimation(TRY_ANIMATIONS_BY_SIZE[currentSize][0]);
+            setIsFading(false);
+            startObjectTimer(); // Start next cycle
+        }, 1500);
+    }, Math.max(0, TIMING.TOTAL_CYCLE - 1500 - timeOffset));
 
     setAnimationTimer(resetTimer);
 
     return () => {
         clearTimeout(firstFirework);
         clearTimeout(firstZoom);
+        clearTimeout(startFadeOut);
         clearTimeout(secondObject);
         clearTimeout(secondFirework);
         clearTimeout(secondZoom);
         clearTimeout(resetTimer);
     };
-}, [currentSize]);
+}, [currentSize, currentObjectIndex]);
 
   // Ensure the failure overlay timer is reset when the game state changes
   useEffect(() => {
@@ -1115,7 +1134,7 @@ export const useGameHooks = (gameState, setGameState) => {
   // Add new state for debug visualization
   const [showDebugPath, setShowDebugPath] = useState(false);
 
-  // Update renderButton to include debug visualization
+  // Update renderButton to include fade transitions
   const renderButton = useCallback(() => {
     if (gameState !== GAME_STATES.PLAYING) {
       return null;
@@ -1221,7 +1240,7 @@ export const useGameHooks = (gameState, setGameState) => {
           />
         </svg>
 
-        {/* Button container */}
+        {/* Button container with fade transitions */}
         <div
           ref={buttonRef}
           className={`absolute transform -translate-x-1/2 -translate-y-1/2 button-animation
@@ -1233,42 +1252,43 @@ export const useGameHooks = (gameState, setGameState) => {
             touchAction: 'none',
             willChange: 'transform, offset-distance, opacity',
             zIndex: 10,
-            opacity: isFadingOut ? 0 : 1,
-            transform: `rotate(${Math.sin(Date.now() / 300) * 15}deg)`, // Slight tilt effect
+            transform: `rotate(${Math.sin(Date.now() / 300) * 15}deg)`,
             transition: `
               ${isPathPaused ? 'none' : 'offset-distance 0.016s linear'},
-              opacity 400ms cubic-bezier(0.4, 0, 0.2, 1)
+              opacity 1500ms cubic-bezier(0.4, 0, 0.2, 1)
             `
           }}
         >
-          <button
-            className="game-button relative flex items-center justify-center"
-            //onClick={handleButtonClick}
-            onTouchStart={(e) => {
-              e.preventDefault();
-              handleButtonClick();
-            }}  
-            style={{
-              touchAction: 'none',
-              userSelect: 'none',
-              WebkitUserSelect: 'none',
-              animation: isPathPaused ? 'pulse 0.6s infinite' : 'none',
-            }}
-          >
-            {!showAnimation && (
-              <img
-                src={currentTargetAnimation}
-                alt="Target"
-                className="w-[200px] h-[200px] xs:w-[240px] xs:h-[240px] sm:w-[280px] sm:h-[280px] object-contain pointer-events-none mix-blend-screen"
-                style={{
-                  imageRendering: 'pixelated',
-                  WebkitMaskImage: '-webkit-radial-gradient(white, black)',
-                  willChange: 'transform',
-                }}
-                draggable="false"
-              />
-            )}
-          </button>
+          {/* Previous animation fading out */}
+          {isFading && (
+            <img
+              src={TRY_ANIMATIONS_BY_SIZE[currentSize][previousObjectIndex]}
+              alt="Previous Target"
+              className="absolute w-[200px] h-[200px] xs:w-[240px] xs:h-[240px] sm:w-[280px] sm:h-[280px] object-contain pointer-events-none mix-blend-screen"
+              style={{
+                imageRendering: 'pixelated',
+                opacity: 0,
+                transition: 'opacity 1500ms cubic-bezier(0.4, 0, 0.2, 1)',
+                willChange: 'opacity',
+              }}
+            />
+          )}
+          
+          {/* Current animation fading in */}
+          {!showAnimation && (
+            <img
+              src={currentTargetAnimation}
+              alt="Target"
+              className="w-[200px] h-[200px] xs:w-[240px] xs:h-[240px] sm:w-[280px] sm:h-[280px] object-contain pointer-events-none mix-blend-screen"
+              style={{
+                imageRendering: 'pixelated',
+                opacity: isFading ? 0 : 1,
+                transition: 'opacity 1500ms cubic-bezier(0.4, 0, 0.2, 1)',
+                willChange: 'opacity, transform',
+              }}
+              draggable="false"
+            />
+          )}
         </div>
 
         {/* Separate failure overlay container
@@ -1311,6 +1331,8 @@ export const useGameHooks = (gameState, setGameState) => {
     currentFirework,
     showDebugPath,
     debugTimer,
+    isFading,
+    previousObjectIndex,
   ]);
 
   // Add debug toggle function
