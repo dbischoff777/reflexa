@@ -1171,8 +1171,8 @@ export const useGameHooks = (gameState, setGameState) => {
               touchAction: 'none',
               willChange: 'transform',
               zIndex: 9,
-              transform: `rotate(${Math.sin(Date.now() / 300) * 15}deg) scale(2)`, // Added scale(2)
-              transition: isPathPaused ? 'none' : 'offset-distance 0.016s linear'
+              transform: `rotate(${Math.sin(Date.now() / 300) * 15}deg) scale(2.5)`, // Added scale(2)
+              //transition: isPathPaused ? 'none' : 'offset-distance 0.016s linear'
             }}
           >
             <img
@@ -1248,6 +1248,7 @@ export const useGameHooks = (gameState, setGameState) => {
           className={`absolute transform -translate-x-1/2 -translate-y-1/2 button-animation
             ${isPathPaused ? 'paused' : ''}`}
           style={{
+            animation: isPathPaused ? 'pulse 1s' : 'none',
             offsetPath: `path("${currentPath}")`,
             offsetDistance: `${currentProgress * 100}%`,
             offsetRotate: "0deg",
