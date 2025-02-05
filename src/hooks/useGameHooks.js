@@ -858,54 +858,78 @@ export const useGameHooks = (gameState, setGameState) => {
     );
   };
 
-  // Update startObjectTimer to sync with animation cycle
+  // Update startObjectTimer to include firework animations
   const startObjectTimer = useCallback(() => {
     if (animationTimer) {
-      clearTimeout(animationTimer);
+        clearTimeout(animationTimer);
     }
 
     // Sync with current time
     const cycleStartTime = startTimeRef.current || RAF_TIMESTAMP();
     const timeOffset = RAF_TIMESTAMP() - cycleStartTime;
 
+    // First firework at 6.8 seconds
+    const firstFirework = setTimeout(() => {
+        setShowFireworks(true);
+        setCurrentFirework(FIREWORKS_BY_SIZE[currentSize][0]);
+        
+        // Hide firework after 400ms
+        setTimeout(() => {
+            setShowFireworks(false);
+        }, 800);
+    }, Math.max(0, 6800 - timeOffset));
+
     // First zoom occurs 5 seconds into cycle
     const firstZoom = setTimeout(() => {
-      setIsPathPaused(true);
-      setTimeout(() => {
-        setIsPathPaused(false);
-      }, TIMING.ZOOM_DURATION);
+        setIsPathPaused(true);
+        setTimeout(() => {
+            setIsPathPaused(false);
+        }, TIMING.ZOOM_DURATION);
     }, Math.max(0, TIMING.FIRST_ZOOM - timeOffset));
 
     // Second object appears at 10 seconds (halfway)
     const secondObject = setTimeout(() => {
-      setCurrentObjectIndex(1);
-      setCurrentTargetAnimation(TRY_ANIMATIONS_BY_SIZE[currentSize][1]);
+        setCurrentObjectIndex(1);
+        setCurrentTargetAnimation(TRY_ANIMATIONS_BY_SIZE[currentSize][1]);
     }, Math.max(0, TIMING.SECOND_OBJECT - timeOffset));
+
+    // Second firework at 12.6 seconds
+    const secondFirework = setTimeout(() => {
+        setShowFireworks(true);
+        setCurrentFirework(FIREWORKS_BY_SIZE[currentSize][1]);
+        
+        // Hide firework after 400ms
+        setTimeout(() => {
+            setShowFireworks(false);
+        }, 800);
+    }, Math.max(0, 12600 - timeOffset));
 
     // Second zoom occurs at 15 seconds
     const secondZoom = setTimeout(() => {
-      setIsPathPaused(true);
-      setTimeout(() => {
-        setIsPathPaused(false);
-      }, TIMING.ZOOM_DURATION);
+        setIsPathPaused(true);
+        setTimeout(() => {
+            setIsPathPaused(false);
+        }, TIMING.ZOOM_DURATION);
     }, Math.max(0, TIMING.SECOND_ZOOM - timeOffset));
 
     // Reset the entire cycle after 20 seconds
     const resetTimer = setTimeout(() => {
-      setCurrentObjectIndex(0);
-      setCurrentTargetAnimation(TRY_ANIMATIONS_BY_SIZE[currentSize][0]);
-      startObjectTimer(); // Start next cycle
+        setCurrentObjectIndex(0);
+        setCurrentTargetAnimation(TRY_ANIMATIONS_BY_SIZE[currentSize][0]);
+        startObjectTimer(); // Start next cycle
     }, Math.max(0, TIMING.TOTAL_CYCLE - timeOffset));
 
     setAnimationTimer(resetTimer);
 
     return () => {
-      clearTimeout(firstZoom);
-      clearTimeout(secondObject);
-      clearTimeout(secondZoom);
-      clearTimeout(resetTimer);
+        clearTimeout(firstFirework);
+        clearTimeout(firstZoom);
+        clearTimeout(secondObject);
+        clearTimeout(secondFirework);
+        clearTimeout(secondZoom);
+        clearTimeout(resetTimer);
     };
-  }, [currentSize]);
+}, [currentSize]);
 
   // Ensure the failure overlay timer is reset when the game state changes
   useEffect(() => {
@@ -1093,7 +1117,6 @@ export const useGameHooks = (gameState, setGameState) => {
 
   // Update renderButton to include debug visualization
   const renderButton = useCallback(() => {
-    // Return null if game state is not PLAYING
     if (gameState !== GAME_STATES.PLAYING) {
       return null;
     }   
@@ -1105,9 +1128,8 @@ export const useGameHooks = (gameState, setGameState) => {
           Cycle: {(debugTimer / 1000).toFixed(1)}s
         </div>
 
-        {/* Debug visualization overlay - always visible */}
+        {/* Debug visualization overlay */}
         <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 100 }}>
-          {/* Main path */}
           <path
             d={currentPath}
             stroke="rgba(255, 0, 0, 0.5)"
@@ -1115,6 +1137,37 @@ export const useGameHooks = (gameState, setGameState) => {
             fill="none"
           />
         </svg>
+
+        {/* Update fireworks with doubled size */}
+        {showFireworks && (
+          <div
+            className={`absolute transform -translate-x-1/2 -translate-y-1/2 button-animation
+              ${isPathPaused ? 'scale-125 transition-transform duration-300' : ''}`}
+            style={{
+              offsetPath: `path("${currentPath}")`,
+              offsetDistance: `${currentProgress * 100}%`,
+              offsetRotate: "0deg",
+              touchAction: 'none',
+              willChange: 'transform',
+              zIndex: 9,
+              transform: `rotate(${Math.sin(Date.now() / 300) * 15}deg) scale(2)`, // Added scale(2)
+              transition: isPathPaused ? 'none' : 'offset-distance 0.016s linear'
+            }}
+          >
+            <img
+              src={currentFirework}
+              alt="Fireworks"
+              className="w-[200px] h-[200px] xs:w-[240px] xs:h-[240px] sm:w-[280px] sm:h-[280px] object-contain pointer-events-none mix-blend-screen"
+              style={{
+                imageRendering: 'pixelated',
+                willChange: 'transform',
+                opacity: 0.8,
+                filter: 'brightness(1.5)',
+              }}
+            />
+          </div>
+        )}
+
         {/* Existing success animation */}
         {showAnimation && (
           <div
@@ -1134,35 +1187,6 @@ export const useGameHooks = (gameState, setGameState) => {
                 willChange: 'transform',
               }}
             />
-          </div>
-        )}
-
-        {/* Update fireworks animation container */}
-        {showFireworks && isFadingOut && !showAnimation && (
-          <div
-            className={`absolute transform -translate-x-1/2 -translate-y-1/2
-              ${isPathPaused ? 'scale-125 transition-transform duration-300' : ''}`}
-            style={{
-              offsetPath: `path("${currentPath}")`,
-              offsetDistance: `${currentProgress * 100}%`,
-              offsetRotate: "0deg",
-              zIndex: 9,
-            }}
-          >
-            <div className="origin-center">
-              <img
-                src={currentFirework}
-                alt="Fireworks"
-                className="w-[200px] h-[200px] xs:w-[240px] xs:h-[240px] sm:w-[280px] sm:h-[280px] object-contain pointer-events-none mix-blend-screen"
-                style={{
-                  imageRendering: 'pixelated',
-                  willChange: 'transform',
-                  transform: 'translate(50%, 50%)',
-                  opacity: 0.6,
-                  filter: 'brightness(1.5)', 
-                }}
-              />
-            </div>
           </div>
         )}
 
@@ -1283,7 +1307,6 @@ export const useGameHooks = (gameState, setGameState) => {
     showAnimation,
     currentTargetAnimation,
     handleButtonClick,
-    //failureOverlay,
     showFireworks,
     currentFirework,
     showDebugPath,
