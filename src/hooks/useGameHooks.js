@@ -862,7 +862,10 @@ export const useGameHooks = (gameState, setGameState) => {
   const [isFading, setIsFading] = useState(false);
   const [previousObjectIndex, setPreviousObjectIndex] = useState(0);
 
-  // Update startObjectTimer to include fade transitions
+  // Add a ref to track if fireworks are currently active
+  const isFireworkActiveRef = useRef(false);
+
+  // Update the startObjectTimer function
   const startObjectTimer = useCallback(() => {
     if (animationTimer) {
         clearTimeout(animationTimer);
@@ -877,12 +880,17 @@ export const useGameHooks = (gameState, setGameState) => {
 
     // First firework at 6.8 seconds
     timeouts.push(setTimeout(() => {
-        setShowFireworks(true);
-        setCurrentFirework(FIREWORKS_BY_SIZE[currentSize][0]);
-        
-        timeouts.push(setTimeout(() => {
-            setShowFireworks(false);
-        }, 1000));
+        // Only show fireworks if not already active
+        if (!isFireworkActiveRef.current) {
+            isFireworkActiveRef.current = true;
+            setShowFireworks(true);
+            setCurrentFirework(FIREWORKS_BY_SIZE[currentSize][0]);
+            
+            timeouts.push(setTimeout(() => {
+                setShowFireworks(false);
+                isFireworkActiveRef.current = false;
+            }, 1000));
+        }
     }, Math.max(0, 6800 - timeOffset)));
 
     // First zoom occurs 5 seconds into cycle
@@ -949,8 +957,10 @@ export const useGameHooks = (gameState, setGameState) => {
     return () => {
         // Clear all timeouts on cleanup
         timeouts.forEach(timeout => clearTimeout(timeout));
+        // Reset the firework active state
+        isFireworkActiveRef.current = false;
     };
-}, [currentSize, currentObjectIndex]);
+}, [currentSize]); // Keep only necessary dependencies
 
   // Ensure the failure overlay timer is reset when the game state changes
   useEffect(() => {
